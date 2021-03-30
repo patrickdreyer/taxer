@@ -1,4 +1,5 @@
 import csv
+from  dateutil import parser
 
 from ..reader import Reader
 from ..buyTrade import BuyTrade
@@ -15,8 +16,8 @@ class CoinbaseProReader(Reader):
         with open(self.__path) as csvFile:
             reader = csv.DictReader(csvFile, delimiter=',')
             for row in reader:
-                if row['product'] != None:
+                if 'product' in row:
                     if row['side'] == 'BUY':
-                        yield BuyTrade('CBP', row['created at'], row['trade id'], row['size unit'], float(row['size']), row['price/fee/total unit'], abs(float(row['total']))-float(row['fee']), float(row['fee']))
-                    if row['side'] == 'SELL':
-                        yield SellTrade('CBP', row['created at'], row['trade id'], row['price/fee/total unit'], abs(float(row['total']))-float(row['fee']), row['size unit'], row['size'], float(row['fee']))
+                        yield BuyTrade('CBP', parser.isoparse(row['created at']), row['trade id'], row['size unit'], float(row['size']), row['price/fee/total unit'], abs(float(row['total']))-float(row['fee']), float(row['fee']))
+                    #if row['side'] == 'SELL':
+                    #    yield SellTrade('CBP', row['created at'], row['trade id'], row['price/fee/total unit'], abs(float(row['total']))-float(row['fee']), row['size unit'], row['size'], float(row['fee']))

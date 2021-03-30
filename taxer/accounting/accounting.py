@@ -1,3 +1,6 @@
 class Accounting:
-    def createTransformer(self):
+    def transform(self, item):
+        pass
+
+    def write(self, filePath):
         pass

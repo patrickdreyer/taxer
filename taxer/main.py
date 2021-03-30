@@ -4,16 +4,13 @@ import argparse
 
 from .accounting.factory import AccountingFactory
 from .mergents.factory import MergentFactory
-from .writers.factory import WriterFactory
 
 def main():
     logging.info('Started')
     args = parseArguments()
     readers = MergentFactory().createFromPath(args.input)
     accounting = AccountingFactory().create('Banana')
-    transformer = accounting.createTransformer()
-    writer = WriterFactory().create('csv')
-    process(readers, transformer, writer)
+    process(readers, accounting, args.output)
     logging.info('Stopped')
 
 def parseArguments():
@@ -22,8 +19,8 @@ def parseArguments():
     parser.add_argument('output', help='File name to write the output to')
     return parser.parse_args()
 
-def process(readers, transformer, writer):
+def process(readers, accounting, output):
     for reader in readers:
-        for mergentTransaction in reader.read():
-            accountingTransactions = transformer.transform(mergentTransaction)
-            writer.write(accountingTransactions)
+        for transaction in reader.read():
+            accounting.transform(transaction)
+    accounting.write(output)

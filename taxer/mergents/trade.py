@@ -3,7 +3,7 @@ from .transaction import Transaction
 
 class Trade(Transaction):
     __mergentId = None
-    __date = None
+    __dateTime = None
     __id = None
     __debitUnit = None
     __debitAmount = None
@@ -11,9 +11,9 @@ class Trade(Transaction):
     __creditAmount = None
     __fee = None
 
-    def __init__(self, mergentId, date, id, debitUnit, debitAmount, creditUnit, creditAmount, fee):
+    def __init__(self, mergentId, dateTime, id, debitUnit, debitAmount, creditUnit, creditAmount, fee):
         self.__mergentId = mergentId
-        self.__date = date
+        self.__dateTime = dateTime
         self.__id = id
         self.__debitUnit = debitUnit
         self.__debitAmount = debitAmount
@@ -26,8 +26,8 @@ class Trade(Transaction):
         return self.__mergentId
 
     @property
-    def date(self):
-        return self.__date
+    def dateTime(self):
+        return self.__dateTime
 
     @property
     def id(self):
