@@ -16,25 +16,28 @@ class BananaAccounting(Accounting):
         self.__currencyConverter = currencyConverter
 
     def transform(self, item):
-        # portfolio,trade id,product,side,created at,size,size unit,price,fee,total,price/fee/total unit
-        # default,2985581,BTC-USDC,SELL,2020-11-25T11:29:22.362Z,0.75789000,BTC,19295.00,51.182206425,14572.305343575,USDC
-        if (isinstance(item, BuyTrade)):
-            description = 'Kauf; {0}'.format(item.debitUnit)
-            debitAccount = self.__accounts.get(item.debitUnit, item.mergentId)
-            creditAccount = self.__accounts.get(item.creditUnit, item.mergentId)
-            debitCostCenter = '{0}{1}'.format(item.debitUnit, item.mergentId)
-            creditCostCenter = '-{0}{1}'.format(item.creditUnit, item.mergentId)
-        elif (isinstance(item, SellTrade)):
-            description = 'Verkauf; {0}'.format(item.creditUnit)
-            raise ValueError('Unsupported item')
-
         date = item.dateTime.date().strftime('%d.%m.%Y')
-        # fiat                      date, receipt, description, debit,                    credit,                   amount,            currency,        exchangeRate,                                           baseCurrencyAmount,                                                   shares, costCenter1
-        self.__transactions.append([date, item.id, description, self.__accounts.transfer, creditAccount,            item.creditAmount, item.creditUnit, self.__currencyConverter.exchangeRate(item.creditUnit), self.__currencyConverter.convert(item.creditAmount, item.creditUnit), '', creditCostCenter])
-        # crypto
-        self.__transactions.append([date, item.id, description, debitAccount,             self.__accounts.transfer, item.debitAmount,  item.debitUnit,  self.__currencyConverter.exchangeRate(item.debitUnit),  self.__currencyConverter.convert(item.debitAmount, item.debitUnit),   '', debitCostCenter])
-        # fee
-        self.__transactions.append([date, item.id, description, self.__accounts.fees,     creditAccount,            item.fee,          item.creditUnit, self.__currencyConverter.exchangeRate(item.creditUnit), self.__currencyConverter.convert(item.fee, item.creditUnit),          '', creditCostCenter])
+        cryptoAccount = self.__accounts.get(item.cryptoUnit, item.mergentId)
+        fiatAccount = self.__accounts.get(item.fiatUnit, item.mergentId)
+        cryptoCostCenter = '{0}{1}'.format(item.cryptoUnit, item.mergentId)
+        fiatCostCenter = '-{0}{1}'.format(item.fiatUnit, item.mergentId)
+        if (isinstance(item, BuyTrade)):
+            description = 'Kauf; {0}'.format(item.cryptoUnit)
+            # fiat                      date, receipt, description, debit,                    credit,                   amount,                           currency,        exchangeRate,                                           baseCurrencyAmount,                                                   shares, costCenter1
+            self.__transactions.append([date, item.id, description, self.__accounts.transfer, fiatAccount,              item.fiatAmount + item.feeAmount, item.fiatUnit,   self.__currencyConverter.exchangeRate(item.fiatUnit),   self.__currencyConverter.convert(item.fiatAmount, item.fiatUnit),     '',     fiatCostCenter])
+            # crypto
+            self.__transactions.append([date, item.id, description, cryptoAccount,            self.__accounts.transfer, item.cryptoAmount,                item.cryptoUnit, self.__currencyConverter.exchangeRate(item.cryptoUnit), self.__currencyConverter.convert(item.cryptoAmount, item.cryptoUnit), '',     cryptoCostCenter])
+            # fee
+            self.__transactions.append([date, item.id, description, self.__accounts.fees,     self.__accounts.transfer, item.feeAmount,                   item.fiatUnit,   self.__currencyConverter.exchangeRate(item.fiatUnit),   self.__currencyConverter.convert(item.feeAmount, item.fiatUnit),      '',     ''])
+        elif (isinstance(item, SellTrade)):
+            description = 'Verkauf; {0}'.format(item.cryptoUnit)
+            # crypto                    date, receipt, description, debit,                    credit,                   amount,            currency,        exchangeRate,                                           baseCurrencyAmount,                                                   shares, costCenter1
+            self.__transactions.append([date, item.id, description, self.__accounts.transfer, cryptoAccount,            item.cryptoAmount, item.cryptoUnit, self.__currencyConverter.exchangeRate(item.cryptoUnit), self.__currencyConverter.convert(item.cryptoAmount, item.cryptoUnit), '',     cryptoCostCenter])
+            # fiat
+            self.__transactions.append([date, item.id, description, fiatAccount,              self.__accounts.transfer, item.fiatAmount,   item.fiatUnit,   self.__currencyConverter.exchangeRate(item.fiatUnit),   self.__currencyConverter.convert(item.fiatAmount, item.fiatUnit),     '',     fiatCostCenter])
+            # fee
+            self.__transactions.append([date, item.id, description, self.__accounts.fees,     self.__accounts.transfer, item.feeAmount,    item.feeUnit,    self.__currencyConverter.exchangeRate(item.fiatUnit),   self.__currencyConverter.convert(item.feeAmount, item.fiatUnit),      '',     ''])
+
 
     def write(self, filePath):
         with open(filePath, 'w') as file:

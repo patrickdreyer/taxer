@@ -5,21 +5,21 @@ class Trade(Transaction):
     __mergentId = None
     __dateTime = None
     __id = None
-    __debitUnit = None
-    __debitAmount = None
-    __creditUnit = None
-    __creditAmount = None
-    __fee = None
+    __cryptoUnit = None
+    __cryptoAmount = None
+    __fiatUnit = None
+    __fiatAmount = None
+    __feeAmount = None
 
-    def __init__(self, mergentId, dateTime, id, debitUnit, debitAmount, creditUnit, creditAmount, fee):
+    def __init__(self, mergentId, dateTime, id, cryptoUnit, cryptoAmount, fiatUnit, fiatAmount, feeAmount):
         self.__mergentId = mergentId
         self.__dateTime = dateTime
         self.__id = id
-        self.__debitUnit = debitUnit
-        self.__debitAmount = debitAmount
-        self.__creditUnit = creditUnit
-        self.__creditAmount = creditAmount
-        self.__fee = fee
+        self.__cryptoUnit = cryptoUnit
+        self.__cryptoAmount = cryptoAmount
+        self.__fiatUnit = fiatUnit
+        self.__fiatAmount = fiatAmount
+        self.__feeAmount = feeAmount
 
     @property
     def mergentId(self):
@@ -34,21 +34,21 @@ class Trade(Transaction):
         return self.__id
 
     @property
-    def debitUnit(self):
-        return self.__debitUnit
+    def cryptoUnit(self):
+        return self.__cryptoUnit
 
     @property
-    def debitAmount(self):
-        return self.__debitAmount
+    def cryptoAmount(self):
+        return self.__cryptoAmount
 
     @property
-    def creditUnit(self):
-        return self.__creditUnit
+    def fiatUnit(self):
+        return self.__fiatUnit
 
     @property
-    def creditAmount(self):
-        return self.__creditAmount
+    def fiatAmount(self):
+        return self.__fiatAmount
 
     @property
-    def fee(self):
-        return self.__fee
+    def feeAmount(self):
+        return self.__feeAmount
