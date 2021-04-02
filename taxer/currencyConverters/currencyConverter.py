@@ -1,22 +1,27 @@
 from .coinGecko import CoinGeckoCurrencyConverter
-from .exchangeRatesApiIo import ExchangeRatesApiIo
+from .excelRates import ExcelRates
 
 
 class CurrencyConverter:
     __coinGecko = CoinGeckoCurrencyConverter()
-    __exchangeRatesApiTo = ExchangeRatesApiIo()
-    __providers = {
-        'AXN' : __coinGecko,
-        'BTC' : __coinGecko,
-        'ETH' : __coinGecko,
-        'HEX' : __coinGecko,
-        'XRM' : __coinGecko,
-        'XRP' : __coinGecko,
-        'EUR' : __exchangeRatesApiTo,
-        'USD' : __exchangeRatesApiTo,
-        'USDC': __coinGecko
-    }
+    __excelRates = None
+    __providers = None
+
+    def __init__(self, path):
+        self.__excelRates = ExcelRates(path)
+        self.__providers = {
+            'AXN' : self.__coinGecko,
+            'BTC' : self.__coinGecko,
+            'ETH' : self.__coinGecko,
+            'HEX' : self.__coinGecko,
+            'XRM' : self.__coinGecko,
+            'XRP' : self.__coinGecko,
+            'EUR' : self.__excelRates,
+            'USD' : self.__excelRates,
+            'USDC': self.__coinGecko
+        }
 
     def exchangeRate(self, unit, date):
         provider = self.__providers[unit]
-        return provider.exchangeRate(unit, date)
+        rate = provider.exchangeRate(unit, date)
+        return rate

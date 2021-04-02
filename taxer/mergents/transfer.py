@@ -2,7 +2,18 @@ from .transaction import Transaction
 
 
 class Transfer(Transaction):
-    __id = None
-    def __init__(self, id, unit, time, amount):
-        super(Transfer, self).__init__(unit, time, amount)
-        self.__id = id
+    __unit = None
+    __amount = None
+
+    def __init__(self, mergentId, dateTime, id, unit, amount):
+        super().__init__(mergentId, dateTime, id)
+        self.__unit = unit
+        self.__amount = amount
+
+    @property
+    def unit(self):
+        return self.__unit
+
+    @property
+    def amount(self):
+        return self.__amount
