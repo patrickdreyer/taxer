@@ -1,8 +1,8 @@
 import sys
 
-from taxer.main import main
+from taxer.application import Application
 
 
 if __name__ == '__main__':
-    main()
+    Application().main()
     sys.exit(0)
