@@ -1,6 +1,3 @@
 class Accounting:
-    def transform(self, item):
-        pass
-
-    def write(self, filePath):
+    def write(self, transactions, filePath):
         pass

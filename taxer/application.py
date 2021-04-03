@@ -13,13 +13,13 @@ class Application:
     def main(self):
         self.initializeLogging()
 
-        self.__log.info('Started')
+        self.__log.info('BEGIN')
         args = self.parseArguments()
         readers = MergentFactory().createFromPath(args.input)
         currencyConverter = CurrencyConverter(args.input)
         accounting = AccountingFactory(currencyConverter).create('Banana')
         self.process(readers, accounting, args.output)
-        self.__log.info('Stopped')
+        self.__log.info('END')
 
     def initializeLogging(self):
         logging.basicConfig(level=logging.DEBUG,
@@ -42,10 +42,7 @@ class Application:
 
     def process(self, readers, accounting, output):
         transactions = self.reading(readers)
-        transactions = sorted(transactions, key=lambda t: t.dateTime.timestamp())
-        for transaction in transactions:
-            accounting.transform(transaction)
-        accounting.write(output)
+        accounting.write(transactions, output)
 
     def reading(self, readers):
         for reader in readers:

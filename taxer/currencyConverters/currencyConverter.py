@@ -4,8 +4,7 @@ from .excelRates import ExcelRates
 
 class CurrencyConverter:
     __coinGecko = CoinGeckoCurrencyConverter()
-    __excelRates = None
-    __providers = None
+    __fiat = ['EUR', 'USD']
 
     def __init__(self, path):
         self.__excelRates = ExcelRates(path)
@@ -25,3 +24,7 @@ class CurrencyConverter:
         provider = self.__providers[unit]
         rate = provider.exchangeRate(unit, date)
         return rate
+
+    @staticmethod
+    def isFiat(unit):
+        return unit in CurrencyConverter.__fiat
