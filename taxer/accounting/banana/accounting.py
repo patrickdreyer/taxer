@@ -61,21 +61,21 @@ class BananaAccounting(Accounting):
             if isinstance(transaction, BuyTrade):
                 BananaAccounting.__log.debug("Buy; %s, %s %s", transaction.mergentId, transaction.cryptoAmount, transaction.cryptoUnit)
                 description = 'Kauf; {0}'.format(transaction.cryptoUnit)
-                # fiat           date,    receipt,               description, debit,                    credit,                   amount,                                                       currency,                      exchangeRate,       baseCurrencyAmount,       shares, costCenter1
-                yield (date[0], [date[1], transaction.id, description, self.__accounts.transfer, fiatAccount,              transaction.fiatAmount + transaction.feeAmount, transaction.fiatUnit,   fiatExchangeRate,   baseCurrencyFiatAmount,   '',     '-'+fiatCostCenter])
+                # fiat           date,    receipt,        description, debit,                    credit,                   amount,                                         currency,               exchangeRate,       baseCurrencyAmount,      shares, costCenter1
+                yield (date[0], [date[1], transaction.id, description, self.__accounts.transfer, fiatAccount,              transaction.fiatAmount + transaction.feeAmount, transaction.fiatUnit,   fiatExchangeRate,   baseCurrencyFiatAmount,  '',     '-'+fiatCostCenter])
                 # crypto
-                yield (date[0], [date[1], transaction.id, description, cryptoAccount,            self.__accounts.transfer, -transaction.cryptoAmount,                             transaction.cryptoUnit, cryptoExchangeRate, -baseCurrencyTotalAmount, '',     cryptoCostCenter])
+                yield (date[0], [date[1], transaction.id, description, cryptoAccount,            self.__accounts.transfer, transaction.cryptoAmount,                       transaction.cryptoUnit, cryptoExchangeRate, baseCurrencyTotalAmount, '',     cryptoCostCenter])
                 # fee
-                yield (date[0], [date[1], transaction.id, description, self.__accounts.fees,     self.__accounts.transfer, -transaction.feeAmount,                                transaction.fiatUnit,   fiatExchangeRate,   -baseCurrencyFeeAmount,   '',     ''])
+                yield (date[0], [date[1], transaction.id, description, self.__accounts.fees,     self.__accounts.transfer, transaction.feeAmount,                          transaction.fiatUnit,   fiatExchangeRate,   baseCurrencyFeeAmount,   '',     ''])
             elif isinstance(transaction, SellTrade):
                 BananaAccounting.__log.debug("Sell; %s, %s %s", transaction.mergentId, transaction.cryptoAmount, transaction.cryptoUnit)
                 description = 'Verkauf; {0}'.format(transaction.cryptoUnit)
-                # crypto         date,    receipt,               description, debit,                    credit,                   amount,                          currency,                      exchangeRate,       baseCurrencyAmount,      shares, costCenter1
+                # crypto         date,    receipt,        description, debit,                    credit,                   amount,                   currency,               exchangeRate,       baseCurrencyAmount,      shares, costCenter1
                 yield (date[0], [date[1], transaction.id, description, self.__accounts.transfer, cryptoAccount,            transaction.cryptoAmount, transaction.cryptoUnit, cryptoExchangeRate, baseCurrencyTotalAmount, '',     '-'+cryptoCostCenter])
                 # fiat
-                yield (date[0], [date[1], transaction.id, description, fiatAccount,              self.__accounts.transfer, -transaction.fiatAmount,  transaction.fiatUnit,   fiatExchangeRate,   -baseCurrencyFiatAmount, '',     fiatCostCenter])
+                yield (date[0], [date[1], transaction.id, description, fiatAccount,              self.__accounts.transfer, transaction.fiatAmount,   transaction.fiatUnit,   fiatExchangeRate,   baseCurrencyFiatAmount,  '',     fiatCostCenter])
                 # fee
-                yield (date[0], [date[1], transaction.id, description, self.__accounts.fees,     self.__accounts.transfer, -transaction.feeAmount,   transaction.fiatUnit,   fiatExchangeRate,   -baseCurrencyFeeAmount,  '',     ''])
+                yield (date[0], [date[1], transaction.id, description, self.__accounts.fees,     self.__accounts.transfer, transaction.feeAmount,    transaction.fiatUnit,   fiatExchangeRate,   baseCurrencyFeeAmount,   '',     ''])
 
     def __transformTransfers(self, transfers):
         deposits = [transfer for transfer in transfers if isinstance(transfer, DepositTransfer)]
@@ -111,16 +111,16 @@ class BananaAccounting(Accounting):
         elif isinstance(transaction, WithdrawTransfer):
             if CurrencyConverters.isFiat(transaction.unit):
                 BananaAccounting.__log.debug("Withdraw; %s, %s %s", transaction.mergentId, transaction.amount, transaction.unit)
-                #                date,    receipt,        description,  debit,                  credit,  amount,              currency,         exchangeRate, baseCurrencyAmount, shares, costCenter1
-                yield (date[0], [date[1], transaction.id, 'Auszahlung', self.__accounts.equity, account, -transaction.amount, transaction.unit, exchangeRate, baseCurrencyAmount, '',     '-'+costCenter])
+                #                date,    receipt,        description,  debit,                  credit,  amount,             currency,         exchangeRate, baseCurrencyAmount, shares, costCenter1
+                yield (date[0], [date[1], transaction.id, 'Auszahlung', self.__accounts.equity, account, transaction.amount, transaction.unit, exchangeRate, baseCurrencyAmount, '',     '-'+costCenter])
             else:
                 BananaAccounting.__log.warn("Transfer; %s->???, %s %s", transaction.mergentId, transaction.amount, transaction.unit)
                 description = 'Transfer nach UNBEKANNT'
                 baseCurrencyFeeAmount = round(transaction.fee * exchangeRate, 2)
-                # crypto         date,    receipt,        description, debit,                credit,  amount,              currency,         exchangeRate, baseCurrencyAmount,     shares, costCenter1
-                yield (date[0], [date[1], transaction.id, description, '',                   account, -transaction.amount, transaction.unit, exchangeRate, -baseCurrencyAmount,    '',     '-'+costCenter])
+                # crypto         date,    receipt,        description, debit,                credit,  amount,             currency,         exchangeRate, baseCurrencyAmount,    shares, costCenter1
+                yield (date[0], [date[1], transaction.id, description, '',                   account, transaction.amount, transaction.unit, exchangeRate, baseCurrencyAmount,    '',     '-'+costCenter])
                 # fee
-                yield (date[0], [date[1], '',             description, self.__accounts.fees, account, -transaction.fee,    transaction.unit, exchangeRate, -baseCurrencyFeeAmount, '',     '-'+costCenter])
+                yield (date[0], [date[1], '',             description, self.__accounts.fees, account, transaction.fee,    transaction.unit, exchangeRate, baseCurrencyFeeAmount, '',     '-'+costCenter])
 
 
     def __transformDoubleTransfers(self, deposit, withdrawal):
@@ -137,12 +137,12 @@ class BananaAccounting(Accounting):
         depositBaseCurrencyAmount = round(deposit.amount * exchangeRate, 2)
         withdrawalBaseCurrencyAmount = round(withdrawal.amount * exchangeRate, 2)
         feeBaseCurrencyAmount = round(withdrawal.fee * exchangeRate, 2)
-        # target                   date,              receipt,       description,           deposit,              withdrawal,         amount,            currency,        exchangeRate, baseCurrencyAmount,            shares, costCenter1
-        yield (depositDate[0],    [depositDate[1],    deposit.id,    depositDescription,    depositAccount,       '',                 deposit.amount,    deposit.unit,    exchangeRate, depositBaseCurrencyAmount,     '',     depositCostCenter])
+        # target                   date,              receipt,       description,           deposit,              withdrawal,        amount,            currency,        exchangeRate, baseCurrencyAmount,           shares, costCenter1
+        yield (depositDate[0],    [depositDate[1],    deposit.id,    depositDescription,    depositAccount,       '',                deposit.amount,    deposit.unit,    exchangeRate, depositBaseCurrencyAmount,    '',     depositCostCenter])
         # source
-        yield (withdrawalDate[0], [withdrawalDate[1], withdrawal.id, withdrawalDescription, '',                   withdrawalAccount, -withdrawal.amount, withdrawal.unit, exchangeRate, -withdrawalBaseCurrencyAmount, '',     '-'+withdrawalCostCenter])
+        yield (withdrawalDate[0], [withdrawalDate[1], withdrawal.id, withdrawalDescription, '',                   withdrawalAccount, withdrawal.amount, withdrawal.unit, exchangeRate, withdrawalBaseCurrencyAmount, '',     '-'+withdrawalCostCenter])
         # fee
-        yield (withdrawalDate[0], [withdrawalDate[1], '',            withdrawalDescription, self.__accounts.fees, withdrawalAccount, -withdrawal.fee,    withdrawal.unit, exchangeRate, -feeBaseCurrencyAmount,        '',     '-'+withdrawalCostCenter])
+        yield (withdrawalDate[0], [withdrawalDate[1], '',            withdrawalDescription, self.__accounts.fees, withdrawalAccount, withdrawal.fee,    withdrawal.unit, exchangeRate, feeBaseCurrencyAmount,        '',     '-'+withdrawalCostCenter])
 
     def __transformReimbursement(self, transaction):
         BananaAccounting.__log.debug("Reimbursement; %s, %s %s", transaction.mergentId, transaction.amount, transaction.unit)
