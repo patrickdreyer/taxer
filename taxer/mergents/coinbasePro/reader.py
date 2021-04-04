@@ -21,10 +21,10 @@ class CoinbaseProReader(Reader):
                     if row['side'] == 'BUY':
                         yield BuyTrade('CBP', parser.isoparse(row['created at']), row['trade id'], row['size unit'], float(row['size']), row['price/fee/total unit'], abs(float(row['total']))-float(row['fee']), float(row['fee']))
                     elif row['side'] == 'SELL':
-                        yield SellTrade('CBP', parser.isoparse(row['created at']), row['trade id'], row['size unit'], float(row['size']), row['price/fee/total unit'], abs(float(row['total']))-float(row['fee']), float(row['fee']))
+                        yield SellTrade('CBP', parser.isoparse(row['created at']), row['trade id'], row['size unit'], float(row['size']), row['price/fee/total unit'], float(row['total'])-float(row['fee']), float(row['fee']))
                 # accounts
                 elif 'type' in row:
                     if row['type'] == 'withdrawal':
-                        yield WithdrawTransfer('CBP', parser.isoparse(row['time']), row['transfer id'], row['amount/balance unit'], float(row['amount']))
+                        yield WithdrawTransfer('CBP', parser.isoparse(row['time']), row['transfer id'], row['amount/balance unit'], abs(float(row['amount'])), 0)
                     elif row['type'] == 'deposit':
                         yield DepositTransfer('CBP', parser.isoparse(row['time']), row['transfer id'], row['amount/balance unit'], float(row['amount']))
