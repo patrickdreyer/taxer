@@ -10,10 +10,6 @@ from ..depositTransfer import DepositTransfer
 
 
 class CexReader(Reader):
-    __path = None
-    __rows = None
-    __row = None
-
     def __init__(self, path=None):
         self.__path = path
 
@@ -96,23 +92,23 @@ class CexReader(Reader):
 
     # keep adding items of the same type until we reach an item with an id actually defining the next block
     def getSameTransactionsIdFirst(self, type):
-        ret = []
-        ret.append(self.__row)
+        transactions = []
+        transactions.append(self.__row)
         self.nextRowIgnoringCancelations()
         while self.__row['Type'] == type and not self.getId(self.__row):
-            ret.append(self.__row)
+            transactions.append(self.__row)
             self.nextRowIgnoringCancelations()
-        return ret
+        return transactions
 
     def getSameTransactionsIdLast(self, type):
-        ret = []
+        transactions = []
         id = None
         while self.__row['Type'] == type:
-            ret.append(self.__row)
+            transactions.append(self.__row)
             self.nextRowIgnoringCancelations()
             id = self.getId(self.__row)
             if id:
-                ret.append(self.__row)
+                transactions.append(self.__row)
                 self.nextRowIgnoringCancelations()
                 break
-        return list(reversed(ret)), id
+        return list(reversed(transactions)), id

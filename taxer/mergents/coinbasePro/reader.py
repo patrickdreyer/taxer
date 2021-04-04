@@ -9,9 +9,7 @@ from ..depositTransfer import DepositTransfer
 
 
 class CoinbaseProReader(Reader):
-    __path = None
-
-    def __init__(self, path=None):
+    def __init__(self, path):
         self.__path = path
 
     def read(self):

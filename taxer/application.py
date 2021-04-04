@@ -13,14 +13,14 @@ class Application:
     def main(self):
         self.initializeLogging()
 
-        self.__log.info('BEGIN')
+        Application.__log.info('BEGIN')
         args = self.parseArguments()
         readers = MergentFactory().createFromPath(args.input)
         currencyConverters = CurrencyConverters().load(args.cache)
         accounting = AccountingFactory(currencyConverters).create('Banana')
         self.process(readers, accounting, args.output)
         currencyConverters.store(args.cache)
-        self.__log.info('END')
+        Application.__log.info('END')
 
     def initializeLogging(self):
         logging.basicConfig(level=logging.DEBUG,
@@ -32,8 +32,8 @@ class Application:
         console.setFormatter(formatter)
         logging.getLogger('').addHandler(console)
 
-        self.__log = logging.getLogger(__name__)
-        self.__log.setLevel(logging.DEBUG)  
+        Application.__log = logging.getLogger(__name__)
+        Application.__log.setLevel(logging.DEBUG)  
 
     def parseArguments(self):
         parser = argparse.ArgumentParser(description='Creates a CSV file ready to import into accounting from exchange reports')

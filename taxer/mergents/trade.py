@@ -2,12 +2,6 @@ from .transaction import Transaction
 
 
 class Trade(Transaction):
-    __cryptoUnit = None
-    __cryptoAmount = None
-    __fiatUnit = None
-    __fiatAmount = None
-    __feeAmount = None
-
     def __init__(self, mergentId, dateTime, id, cryptoUnit, cryptoAmount, fiatUnit, fiatAmount, feeAmount):
         super().__init__(mergentId, dateTime, id)
         self.__cryptoUnit = cryptoUnit

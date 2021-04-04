@@ -47,6 +47,6 @@ class BananaAccounts:
         return '319'
 
     def get(self, unit, mergentId):
-        u = self.__map[unit]
+        u = BananaAccounts.__map[unit]
         m = u[mergentId]
         return m

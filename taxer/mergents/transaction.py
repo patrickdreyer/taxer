@@ -1,8 +1,4 @@
 class Transaction:
-    __mergentId = None
-    __dateTime = None
-    __id = None
-
     def __init__(self, mergentId, dateTime, id):
         self.__mergentId = mergentId
         self.__dateTime = dateTime

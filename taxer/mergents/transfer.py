@@ -2,9 +2,6 @@ from .transaction import Transaction
 
 
 class Transfer(Transaction):
-    __unit = None
-    __amount = None
-
     def __init__(self, mergentId, dateTime, id, unit, amount):
         super().__init__(mergentId, dateTime, id)
         self.__unit = unit
