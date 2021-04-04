@@ -1,8 +1,9 @@
 class Transaction:
-    def __init__(self, mergentId, dateTime, id):
+    def __init__(self, mergentId, dateTime, id, note=''):
         self.__mergentId = mergentId
         self.__dateTime = dateTime
         self.__id = id
+        self.__note = note
 
     @property
     def mergentId(self):
@@ -15,3 +16,7 @@ class Transaction:
     @property
     def id(self):
         return self.__id
+
+    @property
+    def note(self):
+        return self.__note
