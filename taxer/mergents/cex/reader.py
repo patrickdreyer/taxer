@@ -7,6 +7,7 @@ from ..buyTrade import BuyTrade
 from ..sellTrade import SellTrade
 from ..withdrawTransfer import WithdrawTransfer
 from ..depositTransfer import DepositTransfer
+from ..reimbursement import Reimbursement
 
 
 class CexReader(Reader):
@@ -44,16 +45,18 @@ class CexReader(Reader):
 
                 elif self.__row['Type'] == 'deposit':
                     date = parser.isoparse(self.__row['DateUTC'])
-                    id = re.sub(r'.*\s+([0-9a-f]+)$', r'\1', self.__row['Comment'], 1, flags=re.IGNORECASE)
+                    id = self.getId(self.__row)
                     yield DepositTransfer('CEX', date, id, self.__row['Symbol'], float(self.__row['Amount']))
 
                 elif self.__row['Type'] == 'withdraw':
                     date = parser.isoparse(self.__row['DateUTC'])
-                    id = re.sub(r'.*\s+([0-9a-f]+)$', r'\1', self.__row['Comment'], 1, flags=re.IGNORECASE)
+                    id = self.getId(self.__row)
                     yield WithdrawTransfer('CEX', date, id, self.__row['Symbol'], abs(float(self.__row['Amount'])), 0)
 
                 elif self.__row['Type'] == 'costsNothing':
-                    pass
+                    date = parser.isoparse(self.__row['DateUTC'])
+                    id = self.getId(self.__row)
+                    yield Reimbursement("CEX", date, id, self.__row['Symbol'], float(self.__row['Amount']))
 
                 # cancel and canceled items processed by nextRowIgnoringCancelations()
 
