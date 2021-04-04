@@ -1,6 +1,7 @@
 import os
 import re
 
+from .bitbox.mergent import BitBoxMergent
 from .cex.mergent import CexMergent
 from .coinbasePro.mergent import CoinbaseProMergent
 
@@ -18,7 +19,7 @@ class MergentFactory:
                         yield mergent.createReader(filePath)
         
     def evaluateMergents(self):
-        return [CexMergent(), CoinbaseProMergent()]
+        return [BitBoxMergent(), CexMergent(), CoinbaseProMergent()]
         # isParserClass = lambda member: inspect.isclass(member) and issubclass(obj, Parser)
         # for _, obj in inspect.getmembers(sys.modules[__name__], isParserClass):
         #     yield obj
