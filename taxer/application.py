@@ -4,7 +4,7 @@ import argparse
 import time
 
 from .mergents.factory import MergentFactory
-from .currencyConverters.currencyConverter import CurrencyConverter
+from .currencyConverters.currencyConverters import CurrencyConverters
 from .accounting.factory import AccountingFactory
 
 class Application:
@@ -16,9 +16,10 @@ class Application:
         self.__log.info('BEGIN')
         args = self.parseArguments()
         readers = MergentFactory().createFromPath(args.input)
-        currencyConverter = CurrencyConverter(args.input)
-        accounting = AccountingFactory(currencyConverter).create('Banana')
+        currencyConverters = CurrencyConverters().load(args.cache)
+        accounting = AccountingFactory(currencyConverters).create('Banana')
         self.process(readers, accounting, args.output)
+        currencyConverters.store(args.cache)
         self.__log.info('END')
 
     def initializeLogging(self):
@@ -35,9 +36,10 @@ class Application:
         self.__log.setLevel(logging.DEBUG)  
 
     def parseArguments(self):
-        parser = argparse.ArgumentParser()
-        parser.add_argument('input', help='Path to the directory containing the platform exports')
-        parser.add_argument('output', help='File name to write the output to')
+        parser = argparse.ArgumentParser(description='Creates a CSV file ready to import into accounting from exchange reports')
+        parser.add_argument('--input', type=str, help='Path to the directory containing the platform exports')
+        parser.add_argument('--cache', type=str, default='cache', help='Path to the directory containing the cached data')
+        parser.add_argument('--output', type=str, help='File name to write the output to')
         return parser.parse_args()
 
     def process(self, readers, accounting, output):
