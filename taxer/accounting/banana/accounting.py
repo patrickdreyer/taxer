@@ -23,6 +23,7 @@ class BananaAccounting(Accounting):
 
     def write(self, transactions, filePath):
         bookings = self.__transform(transactions)
+        bookings = sorted(bookings, key=lambda b: b[0])
         with open(filePath, 'w') as file:
             writer = csv.writer(file, dialect='unix')
             writer.writerow(['date', 'receipt', 'description', 'debit', 'credit', 'amount', 'currency', 'exchangeRate', 'baseCurrencyAmount', 'shares', 'costCenter1'])
@@ -102,9 +103,8 @@ class BananaAccounting(Accounting):
                 yield (date[0], [date[1], transaction.id, 'Einzahlung', account, self.__accounts.equity, transaction.amount, transaction.unit, exchangeRate, baseCurrencyAmount, '',     costCenter])
             else:
                 BananaAccounting.__log.warn("Transfer; ???->%s, %s %s", transaction.mergentId, transaction.amount, transaction.unit)
-                #                date,    receipt,        description,          debit,   credit, amount,             currency,         exchangeRate, baseCurrencyAmount, shares, costCenter1
-                yield (date[0], [date[1], transaction.id, 'Transfer',           account, '',     transaction.amount, transaction.unit, exchangeRate, baseCurrencyAmount, '',     costCenter])
-                yield (date[0], [date[1], '',             'HERKUNFT UNBEKANNT', '',      '',     '',                 '',               '',           '',                 '',     ''])
+                #                date,    receipt,        description,              debit,   credit, amount,             currency,         exchangeRate, baseCurrencyAmount, shares, costCenter1
+                yield (date[0], [date[1], transaction.id, 'Transfer von UNBEKANNT', account, '',     transaction.amount, transaction.unit, exchangeRate, baseCurrencyAmount, '',     costCenter])
         elif isinstance(transaction, WithdrawTransfer):
             if CurrencyConverters.isFiat(transaction.unit):
                 BananaAccounting.__log.debug("Withdraw; %s, %s %s", transaction.mergentId, transaction.amount, transaction.unit)
@@ -112,18 +112,17 @@ class BananaAccounting(Accounting):
                 yield (date[0], [date[1], transaction.id, 'Auszahlung', self.__accounts.equity, account, -transaction.amount, transaction.unit, exchangeRate, baseCurrencyAmount, '',     '-'+costCenter])
             else:
                 BananaAccounting.__log.warn("Transfer; %s->???, %s %s", transaction.mergentId, transaction.amount, transaction.unit)
-                #                date,    receipt,        description,       debit, credit,  amount,              currency,         exchangeRate, baseCurrencyAmount,  shares, costCenter1
-                yield (date[0], [date[1], '',             'ZIEL UNBEGKANNT', '',    '',      '',                  '',               '',           '',                  '',     ''])
-                yield (date[0], [date[1], transaction.id, 'Transfer',        '',    account, -transaction.amount, transaction.unit, exchangeRate, -baseCurrencyAmount, '',     '-'+costCenter])
+                #                date,    receipt,        description,               debit, credit,  amount,              currency,         exchangeRate, baseCurrencyAmount,  shares, costCenter1
+                yield (date[0], [date[1], transaction.id, 'Transfer nach UNBEKANNT', '',    account, -transaction.amount, transaction.unit, exchangeRate, -baseCurrencyAmount, '',     '-'+costCenter])
 
     def __transformDoubleTransfers(self, deposit, withdrawal):
         BananaAccounting.__log.debug("Transfer; %s->%s, %s %s", withdrawal.mergentId, deposit.mergentId, deposit.amount, deposit.unit)
         depositDate = BananaAccounting.__getDate(deposit)
-        depositDescription = 'Transfer from {0}'.format(deposit.mergentId)
+        depositDescription = 'Transfer von {0}'.format(withdrawal.mergentId)
         depositAccount = self.__accounts.get(deposit.unit, deposit.mergentId)
         depositCostCenter = '{0}{1}'.format(deposit.unit, deposit.mergentId)
         withdrawalDate = BananaAccounting.__getDate(withdrawal)
-        withdrawalDescription = 'Transfer to {0}'.format(deposit.mergentId)
+        withdrawalDescription = 'Transfer nach {0}'.format(deposit.mergentId)
         withdrawalAccount = self.__accounts.get(withdrawal.unit, withdrawal.mergentId)
         withdrawalCostCenter = '{0}{1}'.format(withdrawal.unit, withdrawal.mergentId)
         exchangeRate = self.__currencyConverters.exchangeRate(deposit.unit, deposit.dateTime.date())
