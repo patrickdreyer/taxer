@@ -4,6 +4,7 @@ import argparse
 import time
 
 from .mergents.factory import MergentFactory
+from .payments import Payments
 from .currencyConverters.currencyConverters import CurrencyConverters
 from .accounting.factory import AccountingFactory
 
@@ -16,9 +17,10 @@ class Application:
         Application.__log.info('BEGIN')
         args = self.parseArguments()
         readers = MergentFactory().createFromPath(args.input)
+        payments = Payments(args.input)
         currencyConverters = CurrencyConverters().load(args.cache)
         accounting = AccountingFactory(currencyConverters).create('Banana')
-        self.process(readers, accounting, args.output)
+        self.process(readers, payments, accounting, args.output)
         currencyConverters.store(args.cache)
         Application.__log.info('END')
 
@@ -42,8 +44,9 @@ class Application:
         parser.add_argument('--output', type=str, help='File name to write the output to')
         return parser.parse_args()
 
-    def process(self, readers, accounting, output):
+    def process(self, readers, payments, accounting, output):
         transactions = self.reading(readers)
+        transactions = payments.transform(transactions)
         accounting.write(transactions, output)
 
     def reading(self, readers):
