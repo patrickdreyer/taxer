@@ -24,18 +24,9 @@ class ExcelRates(CurrencyConverter):
         pass
 
     def exchangeRate(self, unit, date):
-        # if not unit in self.__rates:
-        #     unitRates = {}
-        #     filePath = os.path.join(self.__path, 'Excelrates_{0}.csv'.format(unit))
-        #     with open(filePath) as csvFile:
-        #         reader = csv.DictReader(csvFile, delimiter=',')
-        #         for row in reader:
-        #             d = dateutil.parser.parse(row['Date'], self.__parserInfo).strftime('%Y%m%d')
-        #             unitRates[d] = float(row['CHF'])
-        #     self.__rates[unit] = unitRates
-        unitRates = self.__rates[unit]
-        unitRate = unitRates[date.strftime('%Y%m%d')]
-        return unitRate
+        rates = self.__rates[unit]
+        rate = rates[date.strftime('%Y%m%d')]
+        return rate
 
     def __getFileMatches(self, cachePath):
         for dirPath, _, fileNames in os.walk(cachePath):

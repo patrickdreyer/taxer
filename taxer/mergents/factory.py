@@ -6,8 +6,6 @@ from .coinbasePro.mergent import CoinbaseProMergent
 
 
 class MergentFactory:
-    __mergents = None
-
     def __init__(self):
         self.__mergents = self.evaluateMergents()
 

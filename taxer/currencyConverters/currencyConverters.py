@@ -20,11 +20,6 @@ class CurrencyConverters:
         'USDC': __converters['CG']
     }
 
-    def exchangeRate(self, unit, date):
-        provider = self.__providers[unit]
-        rate = provider.exchangeRate(unit, date)
-        return rate
-
     def load(self, path):
         for converter in CurrencyConverters.__converters.values():
             converter.load(path)
@@ -34,6 +29,12 @@ class CurrencyConverters:
         for converter in CurrencyConverters.__converters.values():
             converter.store(path)
 
+    def exchangeRate(self, unit, date):
+        provider = CurrencyConverters.__providers[unit]
+        rate = provider.exchangeRate(unit, date)
+        return rate
+
     @staticmethod
     def isFiat(unit):
-        return unit in CurrencyConverters.__fiat
+        isFiat = unit in CurrencyConverters.__fiat
+        return isFiat
