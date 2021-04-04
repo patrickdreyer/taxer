@@ -26,7 +26,7 @@ class CexReader(Reader):
                     cryptoUnit = items[0]['Symbol']
                     cryptoAmount = abs(float(items[0]['Amount']))
                     fiatUnit = items[1]['Symbol']
-                    fiatAmount = sum(float(r['Amount']) for r in items[1:])
+                    fiatAmount = sum(abs(float(r['Amount'])) for r in items[1:])
                     feeAmount = sum(float(r['FeeAmount']) for r in items[1:])
                     yield SellTrade('CEX', date, id, cryptoUnit, cryptoAmount, fiatUnit, fiatAmount, feeAmount)
                     continue
@@ -35,7 +35,7 @@ class CexReader(Reader):
                     items, id = self.getSameTransactions('buy')
                     date = parser.isoparse(items[0]['DateUTC'])
                     cryptoUnit = items[0]['Symbol']
-                    cryptoAmount = sum(float(r['Amount']) for r in items[1:])
+                    cryptoAmount = sum(abs(float(r['Amount'])) for r in items[1:])
                     fiatUnit = items[0]['Symbol']
                     fiatAmount = abs(float(items[0]['Amount']))
                     feeAmount = sum(float(r['FeeAmount']) for r in items[1:])
@@ -50,7 +50,7 @@ class CexReader(Reader):
                 elif self.__row['Type'] == 'withdraw':
                     date = parser.isoparse(self.__row['DateUTC'])
                     id = re.sub(r'.*\s+([0-9a-f]+)$', r'\1', self.__row['Comment'], 1, flags=re.IGNORECASE)
-                    yield WithdrawTransfer('CEX', date, id, self.__row['Symbol'], float(self.__row['Amount']))
+                    yield WithdrawTransfer('CEX', date, id, self.__row['Symbol'], abs(float(self.__row['Amount'])), 0)
 
                 elif self.__row['Type'] == 'costsNothing':
                     pass
