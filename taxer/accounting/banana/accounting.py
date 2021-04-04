@@ -8,6 +8,7 @@ from ...mergents.sellTrade import SellTrade
 from ...mergents.transfer import Transfer
 from ...mergents.depositTransfer import DepositTransfer
 from ...mergents.withdrawTransfer import WithdrawTransfer
+from ...mergents.reimbursement import Reimbursement
 from ...currencyConverters.currencyConverters import CurrencyConverters
 from ..accounting import Accounting
 from .accounts import BananaAccounts
@@ -38,6 +39,9 @@ class BananaAccounting(Accounting):
                     self.__nextTransaction()
                 elif issubclass(type(self.__transaction), Transfer):
                     transfers.append(self.__transaction)
+                    self.__nextTransaction()
+                elif isinstance(self.__transaction, Reimbursement):
+                    yield from self.__transformReimbursement()
                     self.__nextTransaction()
                 else:
                     BananaAccounting.__log.error("Unknown transaction; class='%s'", type(self.__transaction).__name__)
@@ -139,6 +143,16 @@ class BananaAccounting(Accounting):
         #                          date,              receipt,       description,           deposit,        withdrawal,         amount,             currency,        exchangeRate, baseCurrencyAmount,            shares, costCenter1
         yield (depositDate[0],    [depositDate[1],    deposit.id,    depositDescription,    depositAccount, '',                 deposit.amount,     deposit.unit,    exchangeRate, depositBaseCurrencyAmount,     '',     depositCostCenter])
         yield (withdrawalDate[0], [withdrawalDate[1], withdrawal.id, withdrawalDescription, '',              withdrawalAccount, -withdrawal.amount, withdrawal.unit, exchangeRate, -withdrawalBaseCurrencyAmount, '',     '-'+withdrawalCostCenter])
+
+    def __transformReimbursement(self):
+        BananaAccounting.__log.debug("Reimbursement; %s, %s %s", self.__transaction.mergentId, self.__transaction.amount, self.__transaction.unit)
+        date = BananaAccounting.getDate(self.__transaction)
+        account = self.__accounts.get(self.__transaction.unit, self.__transaction.mergentId)
+        exchangeRate = self.__currencyConverters.exchangeRate(self.__transaction.unit, self.__transaction.dateTime.date())
+        baseCurrencyAmount = round(self.__transaction.amount * exchangeRate, 2)
+        costCenter = '{0}{1}'.format(self.__transaction.unit, self.__transaction.mergentId)
+        #                date,    receipt,               description,      deposit, withdrawal,             amount,                    currency,                exchangeRate, baseCurrencyAmount, shares, costCenter1
+        yield (date[0], [date[1], self.__transaction.id, 'Rückerstattung', account, self.__accounts.equity, self.__transaction.amount, self.__transaction.unit, exchangeRate, baseCurrencyAmount, '',     costCenter])
 
     @staticmethod
     def getDate(transaction):
