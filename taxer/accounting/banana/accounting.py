@@ -44,7 +44,7 @@ class BananaAccounting(Accounting):
         yield from self.__transformTransfers(transfers)
 
     def __transformTrade(self, transaction):
-            date = BananaAccounting.getDate(transaction)
+            date = BananaAccounting.__getDate(transaction)
             cryptoAccount = self.__accounts.get(transaction.cryptoUnit, transaction.mergentId)
             fiatAccount = self.__accounts.get(transaction.fiatUnit, transaction.mergentId)
             fiatExchangeRate = self.__currencyConverters.exchangeRate(transaction.fiatUnit, transaction.dateTime.date())
@@ -90,7 +90,7 @@ class BananaAccounting(Accounting):
             yield from self.__transformSingleTransfer(withdrawal)
 
     def __transformSingleTransfer(self, transaction):
-        date = BananaAccounting.getDate(transaction)
+        date = BananaAccounting.__getDate(transaction)
         account = self.__accounts.get(transaction.unit, transaction.mergentId)
         exchangeRate = self.__currencyConverters.exchangeRate(transaction.unit, transaction.dateTime.date())
         baseCurrencyAmount = round(transaction.amount * exchangeRate, 2)
@@ -118,11 +118,11 @@ class BananaAccounting(Accounting):
 
     def __transformDoubleTransfers(self, deposit, withdrawal):
         BananaAccounting.__log.debug("Transfer; %s->%s, %s %s", withdrawal.mergentId, deposit.mergentId, deposit.amount, deposit.unit)
-        depositDate = BananaAccounting.getDate(deposit)
+        depositDate = BananaAccounting.__getDate(deposit)
         depositDescription = 'Transfer from {0}'.format(deposit.mergentId)
         depositAccount = self.__accounts.get(deposit.unit, deposit.mergentId)
         depositCostCenter = '{0}{1}'.format(deposit.unit, deposit.mergentId)
-        withdrawalDate = BananaAccounting.getDate(withdrawal)
+        withdrawalDate = BananaAccounting.__getDate(withdrawal)
         withdrawalDescription = 'Transfer to {0}'.format(deposit.mergentId)
         withdrawalAccount = self.__accounts.get(withdrawal.unit, withdrawal.mergentId)
         withdrawalCostCenter = '{0}{1}'.format(withdrawal.unit, withdrawal.mergentId)
@@ -135,7 +135,7 @@ class BananaAccounting(Accounting):
 
     def __transformReimbursement(self, transaction):
         BananaAccounting.__log.debug("Reimbursement; %s, %s %s", transaction.mergentId, transaction.amount, transaction.unit)
-        date = BananaAccounting.getDate(transaction)
+        date = BananaAccounting.__getDate(transaction)
         account = self.__accounts.get(transaction.unit, transaction.mergentId)
         exchangeRate = self.__currencyConverters.exchangeRate(transaction.unit, transaction.dateTime.date())
         baseCurrencyAmount = round(transaction.amount * exchangeRate, 2)
@@ -144,5 +144,5 @@ class BananaAccounting(Accounting):
         yield (date[0], [date[1], transaction.id, 'Rückerstattung', account, self.__accounts.equity, transaction.amount, transaction.unit, exchangeRate, baseCurrencyAmount, '',     costCenter])
 
     @staticmethod
-    def getDate(transaction):
+    def __getDate(transaction):
         return [transaction.dateTime.date(), transaction.dateTime.date().strftime('%d.%m.%Y')]
