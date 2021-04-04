@@ -27,7 +27,7 @@ class BananaAccounting(Accounting):
         bookings = sorted(bookings, key=lambda b: b[0])
         with open(filePath, 'w') as file:
             writer = csv.writer(file, dialect='unix')
-            writer.writerow(['date', 'receipt', 'description', 'debit', 'credit', 'amount', 'currency', 'exchangeRate', 'baseCurrencyAmount', 'shares', 'costCenter1'])
+            writer.writerow(['Datum', 'Beleg', 'Beschreibung', 'KtSoll', 'KtHaben', 'Betr.Währung', 'Währung', 'Wechselkurs', 'Betrag CHF', 'Anteile', 'KS1', 'Bemerkungen'])
             writer.writerows(booking[1] for booking in bookings)
 
     def __transform(self, transactions):
@@ -155,14 +155,14 @@ class BananaAccounting(Accounting):
         yield (date[0], [date[1], transaction.id, 'Rückerstattung', account, self.__accounts.equity, transaction.amount, transaction.unit, exchangeRate, baseCurrencyAmount, '',     costCenter])
 
     def __transformPayment(self, transaction):
-        BananaAccounting.__log.debug("Payment; %s, %s %s", transaction.mergentId, transaction.amount, transaction.unit)
+        BananaAccounting.__log.debug("Payment; %s, %s %s, %s", transaction.mergentId, transaction.amount, transaction.unit, transaction.note)
         date = BananaAccounting.__getDate(transaction)
         account = self.__accounts.get(transaction.unit, transaction.mergentId)
         exchangeRate = self.__currencyConverters.exchangeRate(transaction.unit, transaction.dateTime.date())
         baseCurrencyAmount = round(transaction.amount * exchangeRate, 2)
         costCenter = '{0}{1}'.format(transaction.unit, transaction.mergentId)
         #                date,    receipt,        description, deposit, withdrawal,             amount,             currency,         exchangeRate, baseCurrencyAmount, shares, costCenter1
-        yield (date[0], [date[1], transaction.id, 'Bezahlung', account, self.__accounts.equity, transaction.amount, transaction.unit, exchangeRate, baseCurrencyAmount, '',     costCenter])
+        yield (date[0], [date[1], transaction.id, 'Bezahlung', account, self.__accounts.equity, transaction.amount, transaction.unit, exchangeRate, baseCurrencyAmount, '',     costCenter, transaction.note])
 
     @staticmethod
     def __getDate(transaction):

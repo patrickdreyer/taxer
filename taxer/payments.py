@@ -26,4 +26,4 @@ class Payments:
             return transaction
         if not transaction.id in self.__payments:
             return transaction
-        return Payment(transaction)
+        return Payment(transaction, self.__payments[transaction.id])
