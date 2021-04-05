@@ -1,8 +1,8 @@
 import os
 import csv
 
-from .mergents.withdrawTransfer import WithdrawTransfer
-from .mergents.payment import Payment
+from .transactions.withdrawTransfer import WithdrawTransfer
+from .transactions.payment import Payment
 
 
 class Payments:

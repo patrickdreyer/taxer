@@ -3,11 +3,11 @@ import re
 from  dateutil import parser
 
 from ..reader import Reader
-from ..buyTrade import BuyTrade
-from ..sellTrade import SellTrade
-from ..withdrawTransfer import WithdrawTransfer
-from ..depositTransfer import DepositTransfer
-from ..reimbursement import Reimbursement
+from ...transactions.buyTrade import BuyTrade
+from ...transactions.sellTrade import SellTrade
+from ...transactions.withdrawTransfer import WithdrawTransfer
+from ...transactions.depositTransfer import DepositTransfer
+from ...transactions.reimbursement import Reimbursement
 
 
 class CexReader(Reader):
