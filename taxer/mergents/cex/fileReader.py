@@ -2,7 +2,7 @@ import csv
 import re
 from  dateutil import parser
 
-from ..reader import Reader
+from ..fileReader import FileReader
 from ...transactions.buyTrade import BuyTrade
 from ...transactions.sellTrade import SellTrade
 from ...transactions.withdrawTransfer import WithdrawTransfer
@@ -10,13 +10,19 @@ from ...transactions.depositTransfer import DepositTransfer
 from ...transactions.reimbursement import Reimbursement
 
 
-class CexReader(Reader):
-    def __init__(self, path=None):
-        self.__path = path
+class CexFileReader(FileReader):
+    __fileNamePattern = r'.*CEX.*\.csv'
 
-    def read(self):
+    def __init__(self, path):
+        super().__init__(path)
+
+    @property
+    def filePattern(self):
+        return CexFileReader.__fileNamePattern
+
+    def readFile(self, filePath):
         self.__canceled = list()
-        self.__rows = self.readFile()
+        self.__rows = self.__readFile(filePath)
         try:
             self.nextRowIgnoringCancelations()
 
@@ -64,8 +70,8 @@ class CexReader(Reader):
         except StopIteration:
             pass
 
-    def readFile(self):
-        with open(self.__path) as csvFile:
+    def __readFile(self, filePath):
+        with open(filePath) as csvFile:
             reader = csv.DictReader(csvFile, delimiter=',')
             yield from reader
 
