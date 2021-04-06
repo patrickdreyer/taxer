@@ -10,11 +10,11 @@ class FileReader(Reader):
 
     @property
     def filePattern(self): pass
-    def readFile(self, filePath): pass
+    def readFile(self, filePath, year): pass
 
-    def read(self):
+    def read(self, year):
         for dirPath, _, fileNames in os.walk(self.__path):
             for fileName in fileNames:
                 filePath = os.path.join(dirPath, fileName)
                 if re.match(self.filePattern, fileName, flags=re.IGNORECASE):
-                    yield from self.readFile(filePath)
+                    yield from self.readFile(filePath, year)

@@ -13,7 +13,8 @@
             "args": [
                 "--input", "testData",
                 "--cache", "cache",
-                "--output", "test.csv"
+                "--output", "test.csv",
+                "--year", "2020"
             ]
         }
     ]

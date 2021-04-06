@@ -19,11 +19,14 @@ class BitBoxFileReader(FileReader):
     def filePattern(self):
         return BitBoxFileReader.__fileNamePattern
 
-    def readFile(self, filePath):
+    def readFile(self, filePath, year):
         self.__rows = self.__readFile(filePath)
         for self.__row in self.__rows:
-            id = self.__row['Transaction ID']
             date = parser.isoparse(self.__row['Time'])
+            if date.year != year:
+                continue
+
+            id = self.__row['Transaction ID']
             unit = self.__row['Unit']
             amount = float(self.__row['Amount'])
             if unit == 'satoshi':

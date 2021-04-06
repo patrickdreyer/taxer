@@ -20,7 +20,7 @@ class CexFileReader(FileReader):
     def filePattern(self):
         return CexFileReader.__fileNamePattern
 
-    def readFile(self, filePath):
+    def readFile(self, filePath, year):
         self.__canceled = list()
         self.__partialSell = {'id': None, 'fiat': None, 'crypto': list()}
         self.__partialBuy = {'id': None, 'fiat': None, 'crypto': list()}
@@ -28,6 +28,11 @@ class CexFileReader(FileReader):
         try:
             self.__nextRowIgnoringCancelations()
             while True:
+                date = parser.isoparse(self.__row['DateUTC'])
+                if date.year != year:
+                    self.__nextRowIgnoringCancelations()
+                    continue
+
                 id = CexFileReader.__getId(self.__row)
                 if self.__row['Type'] == 'sell':
                     if not id:
@@ -66,17 +71,14 @@ class CexFileReader(FileReader):
                         self.__partialBuy = {'id': id, 'fiat': self.__row, 'crypto': list()}
 
                 elif self.__row['Type'] == 'deposit':
-                    date = parser.isoparse(self.__row['DateUTC'])
                     yield DepositTransfer('CEX', date, id, self.__row['Symbol'], float(self.__row['Amount']))
 
                 elif self.__row['Type'] == 'withdraw':
-                    date = parser.isoparse(self.__row['DateUTC'])
                     yield WithdrawTransfer('CEX', date, id, self.__row['Symbol'], abs(float(self.__row['Amount'])), 0)
 
                 elif self.__row['Type'] == 'costsNothing':
                     # looks like costsNothing is like canceled as related fiat transaction has no crypto transactions
                     self.__canceled.append(id)
-                    date = parser.isoparse(self.__row['DateUTC'])
                     yield Reimbursement("CEX", date, id, self.__row['Symbol'], float(self.__row['Amount']))
 
                 # cancel and canceled items processed by nextRowIgnoringCancelations()
