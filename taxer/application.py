@@ -17,7 +17,8 @@ class Application:
 
         Application.__log.info('BEGIN')
         self.parseArguments()
-        mergents = Mergents(self.__args.input)
+        config = self.__readConfig()
+        mergents = Mergents(config, self.__args.input)
         payments = Payments(self.__args.input)
         currencyConverters = CurrencyConverters().load(self.__args.cache)
         accounting = AccountingFactory(currencyConverters).create('Banana')
@@ -43,6 +44,7 @@ class Application:
         parser.add_argument('--input', type=str, help='Path to the directory containing the platform exports')
         parser.add_argument('--cache', type=str, default='cache', help='Path to the directory containing the cached data')
         parser.add_argument('--output', type=str, help='File name to write the output to')
+        parser.add_argument('--config', type=str, help='File path to configuration')
         parser.add_argument('--year', type=str, help='Fiscal year to report')
         self.__args = parser.parse_args()
 

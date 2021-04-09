@@ -1,2 +1,2 @@
 class Mergent:
-    def createReaders(self, path): pass
+    def createReaders(self, config, path): pass
