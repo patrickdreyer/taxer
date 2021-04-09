@@ -1,41 +1,48 @@
 import csv
-import re
 from  dateutil import parser
 
-from ..reader import Reader
+from ..fileReader import FileReader
 from ...transactions.buyTrade import BuyTrade
 from ...transactions.sellTrade import SellTrade
 from ...transactions.withdrawTransfer import WithdrawTransfer
 from ...transactions.depositTransfer import DepositTransfer
 
 
-class BitBoxReader(Reader):
+class BitBoxFileReader(FileReader):
+    __fileNamePattern = r'BitBox.*\.csv'
     __satoshiToBTC = 0.00000001
 
-    def __init__(self, path=None):
-        self.__path = path
+    def __init__(self, path):
+        super().__init__(path)
 
-    def read(self):
-        self.__rows = self.readFile()
+    @property
+    def filePattern(self):
+        return BitBoxFileReader.__fileNamePattern
+
+    def readFile(self, filePath, year):
+        self.__rows = self.__readFile(filePath)
         for self.__row in self.__rows:
-            id = self.__row['Transaction ID']
             date = parser.isoparse(self.__row['Time'])
+            if date.year != year:
+                continue
+
+            id = self.__row['Transaction ID']
             unit = self.__row['Unit']
             amount = float(self.__row['Amount'])
             if unit == 'satoshi':
                 unit = 'BTC'
-                amount = amount * BitBoxReader.__satoshiToBTC
+                amount = amount * BitBoxFileReader.__satoshiToBTC
 
             if self.__row['Type'] == 'sent':
                 feeAmount = float(self.__row['Fee'])
                 if self.__row['Unit'] == 'satoshi':
-                    feeAmount = feeAmount * BitBoxReader.__satoshiToBTC
+                    feeAmount = feeAmount * BitBoxFileReader.__satoshiToBTC
                 yield WithdrawTransfer('BB2', date, id, unit, amount, feeAmount)
 
             elif self.__row['Type'] == 'received':                        
                 yield DepositTransfer('BB2', date, id, unit, amount)
 
-    def readFile(self):
-        with open(self.__path) as csvFile:
+    def __readFile(self, filePath):
+        with open(filePath) as csvFile:
             reader = csv.DictReader(csvFile, delimiter=',')
             yield from reader

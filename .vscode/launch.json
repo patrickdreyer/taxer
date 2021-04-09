@@ -13,7 +13,9 @@
             "args": [
                 "--input", "testData",
                 "--cache", "cache",
-                "--output", "test.csv"
+                "--output", "test.csv",
+                "--config", "config.json"
+                "--year", "2020"
             ]
         }
     ]

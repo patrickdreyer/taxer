@@ -1,3 +1,2 @@
 class Reader:
-    def read(self):
-        pass
+    def read(self, year): pass

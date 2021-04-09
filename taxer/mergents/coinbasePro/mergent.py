@@ -1,13 +1,9 @@
 import csv
 
 from ..mergent import Mergent
-from .reader import CoinbaseProReader
+from .fileReader import CoinbaseProFileReader
 
 
 class CoinbaseProMergent(Mergent):
-    @property
-    def filePattern(self):
-        return r'.*CoinbasePro.*\.csv'
-
-    def createReader(self, path):
-        return CoinbaseProReader(path)
+    def createReaders(self, config, path):
+        yield CoinbaseProFileReader(path)

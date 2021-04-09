@@ -1,13 +1,11 @@
 import csv
 
 from ..mergent import Mergent
-from .reader import CexReader
+from .fileReader import CexFileReader
+from .apiReader import CexApiReader
 
 
 class CexMergent(Mergent):
-    @property
-    def filePattern(self):
-        return r'.*CEX.*\.csv'
-
-    def createReader(self, path):
-        return CexReader(path)
+    def createReaders(self, config, path):
+        yield CexFileReader(path)
+        yield CexApiReader(config['cex'])

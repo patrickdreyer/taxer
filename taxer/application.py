@@ -1,9 +1,10 @@
-import sys
-import logging
 import argparse
+import json
+import logging
+import sys
 import time
 
-from .mergents.factory import MergentFactory
+from .mergents.mergents import Mergents
 from .payments import Payments
 from .currencyConverters.currencyConverters import CurrencyConverters
 from .accounting.factory import AccountingFactory
@@ -15,13 +16,14 @@ class Application:
         self.initializeLogging()
 
         Application.__log.info('BEGIN')
-        args = self.parseArguments()
-        readers = MergentFactory().createFromPath(args.input)
-        payments = Payments(args.input)
-        currencyConverters = CurrencyConverters().load(args.cache)
+        self.parseArguments()
+        config = self.__readConfig()
+        mergents = Mergents(config, self.__args.input)
+        payments = Payments(self.__args.input)
+        currencyConverters = CurrencyConverters().load(self.__args.cache)
         accounting = AccountingFactory(currencyConverters).create('Banana')
-        self.process(readers, payments, accounting, args.output)
-        currencyConverters.store(args.cache)
+        self.process(mergents, payments, accounting, self.__args.output)
+        currencyConverters.store(self.__args.cache)
         Application.__log.info('END')
 
     def initializeLogging(self):
@@ -42,13 +44,20 @@ class Application:
         parser.add_argument('--input', type=str, help='Path to the directory containing the platform exports')
         parser.add_argument('--cache', type=str, default='cache', help='Path to the directory containing the cached data')
         parser.add_argument('--output', type=str, help='File name to write the output to')
-        return parser.parse_args()
+        parser.add_argument('--config', type=str, help='File path to configuration')
+        parser.add_argument('--year', type=str, help='Fiscal year to report')
+        self.__args = parser.parse_args()
 
-    def process(self, readers, payments, accounting, output):
-        transactions = self.reading(readers)
+    def __readConfig(self):
+        with open(self.__args.config, 'r') as file:
+            return json.loads(file.read())
+
+    def process(self, mergents, payments, accounting, output):
+        transactions = self.__readTransactions(mergents)
         transactions = payments.transform(transactions)
         accounting.write(transactions, output)
 
-    def reading(self, readers):
+    def __readTransactions(self, mergents):
+        readers = mergents.createReaders()
         for reader in readers:
-            yield from reader.read()
+            yield from reader.read(int(self.__args.year))
