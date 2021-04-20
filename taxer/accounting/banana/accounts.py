@@ -4,7 +4,8 @@ class BananaAccounts:
             'BB2': '1000',
             'CB' : '1002',
             'CBP': '1003',
-            'CEX': '1004'
+            'CEX': '1004',
+            'PRM': '1007'
         },
         'ETH': {
             'BB2': '1010',
