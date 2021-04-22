@@ -12,7 +12,7 @@ class BananaAccounts:
         },
         'ETH': {
             'S':   '1010',
-            'CP' : '1012',
+            'CB' : '1012',
             'CBP': '1013',
             'MM' : '1015',
             'HL' : '1016'
@@ -29,7 +29,7 @@ class BananaAccounts:
             'SK' : '1051'
         },
         'EUR': {
-            'CP' : '1110',
+            'CB' : '1110',
             'CBP': '1111'
         },
         'USD': {
