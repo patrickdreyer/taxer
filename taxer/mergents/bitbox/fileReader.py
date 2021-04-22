@@ -9,6 +9,7 @@ from ...transactions.depositTransfer import DepositTransfer
 
 
 class BitBoxFileReader(FileReader):
+    __id = 'S'
     __fileNamePattern = r'BitBox.*\.csv'
     __satoshiToBTC = 0.00000001
 
@@ -37,10 +38,10 @@ class BitBoxFileReader(FileReader):
                 feeAmount = float(self.__row['Fee'])
                 if self.__row['Unit'] == 'satoshi':
                     feeAmount = feeAmount * BitBoxFileReader.__satoshiToBTC
-                yield WithdrawTransfer('BB2', date, id, unit, amount, feeAmount)
+                yield WithdrawTransfer(BitBoxFileReader.__id, date, id, unit, amount, feeAmount)
 
             elif self.__row['Type'] == 'received':                        
-                yield DepositTransfer('BB2', date, id, unit, amount)
+                yield DepositTransfer(BitBoxFileReader.__id, date, id, unit, amount)
 
     def __readFile(self, filePath):
         with open(filePath) as csvFile:
