@@ -5,5 +5,5 @@ from .fileReader import PrimeXBTFileReader
 
 
 class PrimeXBTMergent(Mergent):
-    def createReaders(self, config, path):
-        yield PrimeXBTFileReader(path)
+    def createReaders(self, config, inputPath, cachePath):
+        yield PrimeXBTFileReader(inputPath)

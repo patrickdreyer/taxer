@@ -18,7 +18,7 @@ class Application:
         Application.__log.info('BEGIN')
         self.parseArguments()
         config = self.__readConfig()
-        mergents = Mergents(config, self.__args.input)
+        mergents = Mergents(config, self.__args.input, self.__args.cache)
         payments = Payments(self.__args.input)
         currencyConverters = CurrencyConverters().load(self.__args.cache)
         accounting = AccountingFactory(currencyConverters).create('Banana')
