@@ -1,13 +1,9 @@
-import datetime
-from  dateutil import parser
-import hashlib
-import hmac
 import json
 import os
 import requests
-import web3
 
 
+from .tokenFunctionDecoder import TokenFunctionDecoder
 from ..reader import Reader
 from ...transactions.sellTrade import SellTrade
 from ...transactions.buyTrade import BuyTrade
@@ -19,7 +15,7 @@ class EtherscanApiReader(Reader):
 
     def __init__(self, config, cachePath):
         self.__config = config
-        self.__tokenContracts = EtherscanApiReader.__createTokenContracts(config['tokens'], config['apiKeyToken'], cachePath)
+        self.__tokenFunctionDecoder = TokenFunctionDecoder.create(config, cachePath)
 
     def read(self, year):
         for address in self.__config['addresses']:
@@ -29,29 +25,6 @@ class EtherscanApiReader(Reader):
                 self.__fetchERC20Transactions(year, address)
                 # yield from self.__fetchERC721Transactions(year, address)
         raise Exception('TODO')
-
-    @staticmethod
-    def __createTokenContracts(tokens, apiKeyToken, cachePath):
-        ret = {}
-        w3 = web3.Web3()
-        for token in tokens:
-            abi = EtherscanApiReader.__fetchContractAbi(token['address'], apiKeyToken, cachePath)
-            contract = w3.eth.contract(address=w3.toChecksumAddress(token['address']), abi=abi)
-            ret[token['address']] = contract
-        return ret
-
-    @staticmethod
-    def __fetchContractAbi(contractAddress, etherscanApiKeyToken, cachePath):
-        filePath = os.path.join(cachePath, '{}.abi'.format(contractAddress))
-        if os.path.isfile(filePath):
-            with open(filePath, 'r') as file:
-                return file.read()
-        response = requests.get('{}?module=contract&action=getabi&address={}&apikey={}'.format(EtherscanApiReader.__apiUrl, contractAddress, etherscanApiKeyToken))
-        content = json.loads(response.content)
-        abi = content['result']
-        with open(filePath, 'w') as file:
-            file.write(abi)
-        return abi
 
     def __fetchNormalTransactions(self, year, address):
         response = requests.get('{}?module=account&action=txlist&address={}&startblock=0&endblock=99999999&page=1&offset=1000&sort=asc&apikey={}'.format(EtherscanApiReader.__apiUrl, address, self.__config['apiKeyToken']))
@@ -89,15 +62,10 @@ class EtherscanApiReader(Reader):
 
     # https://github.com/ethereum/web3.py/blob/v4.9.1/docs/contracts.rst#utils
     def __decodeFunction(self, transaction):
-        if transaction['from'] in self.__tokenContracts:
+        if self.__tokenFunctionDecoder.isContractAddress(transaction['from']):
             contractAddress = transaction['from']
-        elif transaction['to'] in self.__tokenContracts:
+        elif self.__tokenFunctionDecoder.isContractAddress(transaction['to']):
             contractAddress = transaction['to']
         else:
             return transaction['input']
-        contract = self.__tokenContracts[contractAddress]
-        try:
-            ret = contract.decode_function_input(transaction['input'])
-            return ret[0].fn_name
-        except:
-            return transaction['input']
+        return self.__tokenFunctionDecoder.decode(contractAddress, transaction['input'])
