@@ -38,7 +38,7 @@ class BitBoxFileReader(FileReader):
                 feeAmount = float(self.__row['Fee'])
                 if self.__row['Unit'] == 'satoshi':
                     feeAmount = feeAmount * BitBoxFileReader.__satoshiToBTC
-                yield WithdrawTransfer(BitBoxFileReader.__id, date, id, unit, amount, feeAmount)
+                yield WithdrawTransfer(BitBoxFileReader.__id, date, id, unit, amount-feeAmount, feeAmount)
 
             elif self.__row['Type'] == 'received':                        
                 yield DepositTransfer(BitBoxFileReader.__id, date, id, unit, amount)
