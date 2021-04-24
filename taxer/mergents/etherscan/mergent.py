@@ -6,4 +6,4 @@ from .apiReader import EtherscanApiReader
 
 class EtherscanMergent(Mergent):
     def createReaders(self, config, inputPath, cachePath):
-        yield EtherscanApiReader(config['etherscan'], cachePath)
+        yield EtherscanApiReader(config['etherscan'], inputPath, cachePath)

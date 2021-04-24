@@ -16,6 +16,7 @@ from ...transactions.reimbursement import Reimbursement
 from ...transactions.payment import Payment
 from ...transactions.covesting import Covesting
 from ...transactions.enterLobby import EnterLobby
+from ...transactions.exitLobby import ExitLobby
 from ...transactions.startStake import StartStake
 from ...transactions.endStake import EndStake
 
@@ -53,6 +54,8 @@ class BananaAccounting(Accounting):
                 yield from self.__transformCovesting(transaction)
             elif isinstance(transaction, EnterLobby):
                 yield from self.__transformEnterLobby(transaction)
+            elif isinstance(transaction, ExitLobby):
+                yield from self.__transformExitLobby(transaction)
             elif isinstance(transaction, StartStake):
                 yield from self.__transformStartStake(transaction)
             elif isinstance(transaction, EndStake):
@@ -220,24 +223,43 @@ class BananaAccounting(Accounting):
 
     def __transformEnterLobby(self, transaction):
         date = BananaAccounting.__getDate(transaction)
-        description = '{} Lobby; Enter'.format(transaction.unitAmount)
-        accountWithdrawal = self.__accounts.get(transaction.unitAmount, transaction.mergentId)
-        accountDeposit = self.__accounts.get(transaction.unitAmount, self.__accounts.lobby)
-        accountFee = self.__accounts.get(transaction.unitFee, transaction.mergentId)
-        exchangeRateAmount = self.__currencyConverters.exchangeRate(transaction.unitAmount, transaction.dateTime.date())
-        exchangeRateFee = self.__currencyConverters.exchangeRate(transaction.unitFee, transaction.dateTime.date())
+        description = '{} Lobby; Enter'.format(transaction.unit)
+        accountWithdrawal = self.__accounts.get(transaction.unit, transaction.mergentId)
+        accountLobby = self.__accounts.get(transaction.unit, transaction.lobby)
+        exchangeRateAmount = self.__currencyConverters.exchangeRate(transaction.unit, transaction.dateTime.date())
+        exchangeRateFee = self.__currencyConverters.exchangeRate(transaction.unit, transaction.dateTime.date())
         baseCurrencyAmount = round(transaction.amount * exchangeRateAmount, 2)
         baseCurrencyFee  = round(transaction.fee * exchangeRateFee, 2)
-        costCenterWithdrawal = '-{0}{1}'.format(transaction.unitAmount, transaction.mergentId)
-        costCenterDeposit = '{0}{1}'.format(transaction.unitAmount, self.__accounts.lobby)
-        costCenterFee = '-{0}{1}'.format(transaction.unitFee, transaction.mergentId)
-        BananaAccounting.__log.debug("Lobby enter; %s, %s %s", transaction.mergentId, transaction.amount, transaction.unitAmount)
-        # withdrawal     date,    receipt,        description, deposit,              withdrawal,        amount,             currency,               exchangeRate,      baseCurrencyAmount,   shares, costCenter1
-        yield (date[0], [date[1], transaction.id, description, '',                   accountWithdrawal, transaction.amount, transaction.unitAmount, exchangeRateAmount, baseCurrencyAmount,  '',     costCenterWithdrawal])
+        costCenterWithdrawal = '{0}{1}'.format(transaction.unit, transaction.mergentId)
+        costCenterLobby = '{0}{1}'.format(transaction.unit, transaction.lobby)
+        BananaAccounting.__log.debug("Lobby enter; %s, %s %s", transaction.lobby, transaction.amount, transaction.unit)
+        # withdrawal     date,    receipt,        description, deposit,              withdrawal,        amount,             currency,         exchangeRate,       baseCurrencyAmount, shares, costCenter1
+        yield (date[0], [date[1], transaction.id, description, '',                   accountWithdrawal, transaction.amount, transaction.unit, exchangeRateAmount, baseCurrencyAmount, '',     '-'+costCenterWithdrawal])
         # deposit
-        yield (date[0], [date[1], transaction.id, description, accountDeposit,       '',                transaction.amount, transaction.unitAmount, exchangeRateAmount, baseCurrencyAmount,  '',     costCenterDeposit])
+        yield (date[0], [date[1], transaction.id, description, accountLobby,         '',                transaction.amount, transaction.unit, exchangeRateAmount, baseCurrencyAmount, '',     costCenterLobby])
         # fee
-        yield (date[0], [date[1], transaction.id, description, self.__accounts.fees, accountFee,        transaction.fee,    transaction.unitFee,    exchangeRateFee,    baseCurrencyFee,     '',     costCenterFee])
+        yield (date[0], [date[1], transaction.id, description, self.__accounts.fees, accountWithdrawal, transaction.fee,    transaction.unit, exchangeRateFee,    baseCurrencyFee,    '',     '-'+costCenterWithdrawal])
+
+    def __transformExitLobby(self, transaction):
+        date = BananaAccounting.__getDate(transaction)
+        description = '{} Lobby; Exit'.format(transaction.unitLobby)
+        amountWithdrawal = self.__accounts.get(transaction.unit, transaction.unitLobby)
+        accountDeposit = self.__accounts.get(transaction.unitLobby, transaction.mergentId)
+        exchangeRateLobby = self.__currencyConverters.exchangeRate(transaction.unitLobby, transaction.dateTime.date())
+        exchangeRateUnit = self.__currencyConverters.exchangeRate(transaction.unit, transaction.dateTime.date())
+        baseCurrencyWithdrawal  = round(transaction.amount * exchangeRateUnit, 2)
+        baseCurrencyDeposit  = round(transaction.amountLobby * exchangeRateLobby, 2)
+        baseCurrencyFee  = round(transaction.fee * exchangeRateUnit, 2)
+        costCenterWithdrawal = '{0}{1}'.format(transaction.unit, transaction.unitLobby)
+        costCenterDeposit = '{0}{1}'.format(transaction.unitLobby, transaction.mergentId)
+        costCenterFee = '{0}{1}'.format(transaction.unit, transaction.mergentId)
+        BananaAccounting.__log.debug("Lobby exit; %s %s", transaction.amountLobby, transaction.unitLobby)
+        # withdrawal     date,    receipt,        description, deposit,              withdrawal,       amount,                  currency,              exchangeRate,      baseCurrencyAmount,     shares, costCenter1
+        yield (date[0], [date[1], transaction.id, description, '',                   amountWithdrawal, transaction.amount,      transaction.unit,      exchangeRateLobby, baseCurrencyWithdrawal, '',     '-'+costCenterWithdrawal])
+        # deposit
+        yield (date[0], [date[1], transaction.id, description, accountDeposit,       '',               transaction.amountLobby, transaction.unitLobby, exchangeRateUnit,  baseCurrencyDeposit,    '',     costCenterDeposit])
+        # fee
+        yield (date[0], [date[1], transaction.id, description, self.__accounts.fees, amountWithdrawal, transaction.fee,         transaction.unit,      exchangeRateLobby, baseCurrencyFee,        '',     '-'+costCenterFee])
 
     def __transformStartStake(self, transaction):
         date = BananaAccounting.__getDate(transaction)

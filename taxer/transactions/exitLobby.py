@@ -1,13 +1,22 @@
 from .lobby import Lobby
 
 
-class EnterLobby(Lobby):
-    def __init__(self, mergentId, dateTime, id, unit, amount, fee, lobby):
+class ExitLobby(Lobby):
+    def __init__(self, mergentId, dateTime, id, unitLobby, amountLobby, unit, amount, fee):
         super().__init__(mergentId, dateTime, id)
+        self.__unitLobby = unitLobby
+        self.__amountLobby = amountLobby
         self.__unit = unit
         self.__amount = amount
         self.__fee = fee
-        self.__lobby = lobby
+
+    @property
+    def unitLobby(self):
+        return self.__unitLobby
+
+    @property
+    def amountLobby(self):
+        return self.__amountLobby
 
     @property
     def unit(self):
@@ -20,7 +29,3 @@ class EnterLobby(Lobby):
     @property
     def fee(self):
         return self.__fee
-
-    @property
-    def lobby(self):
-        return self.__lobby

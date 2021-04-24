@@ -4,11 +4,13 @@ import os
 import requests
 
 
+from .hexFileReader import HEXFileReader
 from .tokenFunctionDecoder import TokenFunctionDecoder
 from ..reader import Reader
 from ...transactions.depositTransfer import DepositTransfer
 from ...transactions.withdrawTransfer import WithdrawTransfer
 from ...transactions.enterLobby import EnterLobby
+from ...transactions.exitLobby import ExitLobby
 from ...transactions.startStake import StartStake
 from ...transactions.endStake import EndStake
 
@@ -17,7 +19,7 @@ class EtherscanApiReader(Reader):
     __apiUrl = 'https://api.etherscan.io/api'
     __divisor = 1000000000000000000
 
-    def __init__(self, config, cachePath):
+    def __init__(self, config, inputPath, cachePath):
         for account in config['accounts']:
             account['address'] = account['address'].lower()
         for token in config['tokens']:
@@ -25,9 +27,11 @@ class EtherscanApiReader(Reader):
         self.__config = config
         self.__tokenFunctionDecoder = TokenFunctionDecoder.create(config, cachePath)
         self.__tokenTransactions = dict()
+        self.__hexFileReader = HEXFileReader(inputPath)
 
     def read(self, year):
         self.__year = year
+        self.__hexTransformations = list(self.__hexFileReader.read(self.__year))
         for account in self.__config['accounts']:
             yield from self.__fetchNormalTransactions(year, account)
             yield from self.__fetchERC20Transactions(year, account)
@@ -42,7 +46,7 @@ class EtherscanApiReader(Reader):
             amount = float(transaction['value']) / EtherscanApiReader.__divisor
             if transaction['function'] == 'xflobbyenter':
                 fee = float(transaction['gasUsed']) * float(transaction['gasPrice']) / EtherscanApiReader.__divisor
-                yield EnterLobby(account['id'], transaction['dateTime'], transaction['hash'], transaction['to'], amount, 'ETH', fee)
+                yield EnterLobby(account['id'], transaction['dateTime'], transaction['hash'], 'ETH', amount, fee, transaction['to'])
             elif (transaction['function'] == 'xflobbyexit'
                 or transaction['function'] == 'stakestart'
                 or transaction['function'] == 'stakeend'):
@@ -63,10 +67,11 @@ class EtherscanApiReader(Reader):
                 if not transaction['hash'] in self.__tokenTransactions:
                     continue
                 tokenTransaction = self.__tokenTransactions[transaction['hash']]
-                amount = float(transaction['value']) / float('1' + '0'*int(transaction['tokenDecimal']))
                 fee = float(tokenTransaction['gasUsed']) * float(tokenTransaction['gasPrice']) / EtherscanApiReader.__divisor
+                amount = float(transaction['value']) / float('1' + '0'*int(transaction['tokenDecimal']))
                 if tokenTransaction['function'] == 'xflobbyexit':
-                    pass
+                    hexTransformation = [t for t in self.__hexTransformations if t['HEX'] == int(amount)][0]
+                    yield ExitLobby(account['id'], tokenTransaction['dateTime'], tokenTransaction['hash'], token['id'], amount, 'ETH', hexTransformation['ETH'], fee)
                 elif tokenTransaction['function'] == 'stakestart':
                     yield StartStake(account['id'], tokenTransaction['dateTime'], tokenTransaction['hash'], token['id'], amount, 'ETH', fee)
                 elif tokenTransaction['function'] == 'stakeend':

@@ -14,10 +14,10 @@ class BananaAccounts:
             'S':   '1010',
             'CB' : '1012',
             'CBP': '1013',
+            'HEX': '1016',
             'MM' : '1015'
         },
         'HEX': {
-            'LOB': '1016',
             'MM' : '1020',
             'SK' : '1021'
         },
@@ -41,10 +41,6 @@ class BananaAccounts:
         }
     }
 
-    __lobbies = {
-        'HEX': 'HL'
-    }
-
     @property
     def transfer(self):
         return '1100'
@@ -56,10 +52,6 @@ class BananaAccounts:
     @property
     def fees(self):
         return '319'
-
-    @property
-    def lobby(self):
-        return 'LOB'
 
     @property
     def staked(self):
