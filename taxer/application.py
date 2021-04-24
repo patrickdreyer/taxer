@@ -18,7 +18,7 @@ class Application:
         Application.__log.info('BEGIN')
         self.parseArguments()
         config = self.__readConfig()
-        mergents = Mergents(config, self.__args.input)
+        mergents = Mergents(config, self.__args.input, self.__args.cache)
         payments = Payments(self.__args.input)
         currencyConverters = CurrencyConverters().load(self.__args.cache)
         accounting = AccountingFactory(currencyConverters).create('Banana')
@@ -50,7 +50,7 @@ class Application:
 
     def __readConfig(self):
         with open(self.__args.config, 'r') as file:
-            return json.loads(file.read())
+            return json.load(file)
 
     def process(self, mergents, payments, accounting, output):
         transactions = self.__readTransactions(mergents)

@@ -5,5 +5,5 @@ from .fileReader import CoinbaseProFileReader
 
 
 class CoinbaseProMergent(Mergent):
-    def createReaders(self, config, path):
-        yield CoinbaseProFileReader(path)
+    def createReaders(self, config, inputPath, cachePath):
+        yield CoinbaseProFileReader(inputPath)

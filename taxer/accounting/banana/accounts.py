@@ -14,8 +14,8 @@ class BananaAccounts:
             'S':   '1010',
             'CB' : '1012',
             'CBP': '1013',
-            'MM' : '1015',
-            'HL' : '1016'
+            'HEX': '1016',
+            'MM' : '1015'
         },
         'HEX': {
             'MM' : '1020',
@@ -52,6 +52,10 @@ class BananaAccounts:
     @property
     def fees(self):
         return '319'
+
+    @property
+    def staked(self):
+        return 'SK'
 
     def get(self, unit, mergentId):
         u = BananaAccounts.__map[unit]
