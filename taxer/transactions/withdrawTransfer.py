@@ -9,3 +9,7 @@ class WithdrawTransfer(Transfer):
     @property
     def fee(self):
         return self.__fee
+
+    def __str__(self):
+        sup = super().__str__().replace('{', '').replace('}', '')
+        return "{{{}, fee='{}'}}".format(sup, self.__fee)

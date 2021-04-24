@@ -20,3 +20,6 @@ class Transaction:
     @property
     def note(self):
         return self.__note
+
+    def __str__(self):
+        return "{{mergentId='{}', dateTime='{}', id='{}'}}".format(self.__mergentId, self.__dateTime, self.__id)

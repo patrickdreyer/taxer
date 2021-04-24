@@ -14,3 +14,7 @@ class Transfer(Transaction):
     @property
     def amount(self):
         return self.__amount
+
+    def __str__(self):
+        sup = super().__str__().replace('{', '').replace('}', '')
+        return "{{{}, unit='{}', amount='{}'}}".format(sup, self.__unit, self.__amount)

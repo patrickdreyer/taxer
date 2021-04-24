@@ -21,7 +21,7 @@ class Application:
         mergents = Mergents(config, self.__args.input, self.__args.cache)
         payments = Payments(self.__args.input)
         currencyConverters = CurrencyConverters().load(self.__args.cache)
-        accounting = AccountingFactory(currencyConverters).create('Banana')
+        accounting = AccountingFactory(config, currencyConverters).create('Banana')
         self.process(mergents, payments, accounting, self.__args.output)
         currencyConverters.store(self.__args.cache)
         Application.__log.info('END')
