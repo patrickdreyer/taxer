@@ -9,6 +9,7 @@ from ..reader import Reader
 from ...transactions.depositTransfer import DepositTransfer
 from ...transactions.withdrawTransfer import WithdrawTransfer
 from ...transactions.startStake import StartStake
+from ...transactions.endStake import EndStake
 
 
 class EtherscanApiReader(Reader):
@@ -34,7 +35,8 @@ class EtherscanApiReader(Reader):
         response = requests.get('{}?module=account&action=txlist&address={}&startblock=0&endblock=99999999&page=1&offset=1000&sort=asc&apikey={}'.format(EtherscanApiReader.__apiUrl, account['address'], self.__config['apiKeyToken']))
         content = json.loads(response.content)
         transactions = map(self.__transformTransaction, content['result'])
-        filteredYear = filter(self.__filterWrongYear, transactions)
+        filteredErrors = filter(self.__filterErrors, transactions)
+        filteredYear = filter(self.__filterWrongYear, filteredErrors)
         for transaction in filteredYear:
             amount = float(transaction['value']) / EtherscanApiReader.__divisor
             if (transaction['function'] == 'xflobbyenter'
@@ -67,7 +69,7 @@ class EtherscanApiReader(Reader):
                 elif tokenTransaction['function'] == 'stakestart':
                     yield StartStake(account['id'], tokenTransaction['dateTime'], tokenTransaction['hash'], token['id'], amount, 'ETH', fee)
                 elif tokenTransaction['function'] == 'stakeend':
-                    pass
+                    yield EndStake(account['id'], tokenTransaction['dateTime'], tokenTransaction['hash'], token['id'], amount, 'ETH', fee)
                 else:
                     pass
 
@@ -84,6 +86,9 @@ class EtherscanApiReader(Reader):
             transaction['function'] = ''
 
         return transaction
+
+    def __filterErrors(self, transaction):
+        return transaction['isError'] == '0'
 
     def __filterWrongYear(self, transaction):
         return transaction['dateTime'].year == self.__year
