@@ -10,8 +10,7 @@ from .primexbt.mergent import PrimeXBTMergent
 
 class Mergents:
     def __init__(self, config, inputPath, cachePath):
-        # self.__mergents = [BitBoxMergent(), CexMergent(), CoinbaseProMergent(), EtherscanMergent(), PrimeXBTMergent()]
-        self.__mergents = [EtherscanMergent()]
+        self.__mergents = [BitBoxMergent(), CexMergent(), CoinbaseProMergent(), EtherscanMergent(), PrimeXBTMergent()]
         self.__config = config
         self.__inputPath = inputPath
         self.__cachePath = cachePath
