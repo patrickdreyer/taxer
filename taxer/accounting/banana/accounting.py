@@ -169,16 +169,15 @@ class BananaAccounting(Accounting):
         elif isinstance(transaction, WithdrawTransfer):
             if CurrencyConverters.isFiat(transaction.unit):
                 BananaAccounting.__log.debug("Withdraw; %s, %s %s", transaction.mergentId, transaction.amount, transaction.unit)
-                #                date,    receipt,        description,  debit,                  credit,  amount,             currency,         exchangeRate, baseCurrencyAmount, shares, costCenter1
-                yield (date[0], [date[1], transaction.id, 'Auszahlung', self.__accounts.equity, account, transaction.amount, transaction.unit, exchangeRate, baseCurrencyAmount, '',     '-'+costCenter])
+                description = 'Auszahlung'
             else:
                 BananaAccounting.__log.warn("Transfer; %s->???, %s %s", transaction.mergentId, transaction.amount, transaction.unit)
                 description = 'Transfer nach UNBEKANNT'
-                # crypto            date,    receipt,        description, debit,                credit,  amount,             currency,         exchangeRate, baseCurrencyAmount,    shares, costCenter1
-                yield    (date[0], [date[1], transaction.id, description, '',                   account, transaction.amount, transaction.unit, exchangeRate, baseCurrencyAmount,    '',     '-'+costCenter])
-                if transaction.fee > 0:
-                    baseCurrencyFeeAmount = round(transaction.fee * exchangeRate, 2)
-                    yield (date[0], [date[1], '',             description, self.__accounts.fees, account, transaction.fee,    transaction.unit, exchangeRate, baseCurrencyFeeAmount, '',     '-'+costCenter])
+            #                    date,    receipt,        description, debit,                  credit,  amount,             currency,         exchangeRate, baseCurrencyAmount,    shares, costCenter1
+            yield     (date[0], [date[1], transaction.id, description, self.__accounts.equity, account, transaction.amount, transaction.unit, exchangeRate, baseCurrencyAmount,    '',     '-'+costCenter])
+            if transaction.fee > 0:
+                baseCurrencyFeeAmount = round(transaction.fee * exchangeRate, 2)
+                yield (date[0], [date[1], '',             description, self.__accounts.fees,   account, transaction.fee,    transaction.unit, exchangeRate, baseCurrencyFeeAmount, '',     '-'+costCenter])
 
 
     def __transformDoubleTransfers(self, deposit, withdrawal):
@@ -194,7 +193,7 @@ class BananaAccounting(Accounting):
         exchangeRate = self.__currencyConverters.exchangeRate(deposit.unit, deposit.dateTime.date())
         baseCurrencyDeposit = round(deposit.amount * exchangeRate, 2)
         baseCurrencyWithdrawal = round(withdrawal.amount * exchangeRate, 2)
-        fee = withdrawal.amount - deposit.amount
+        fee = withdrawal.fee if withdrawal.fee > 0 else withdrawal.amount - deposit.amount
         baseCurrencyFee = round(withdrawal.fee * exchangeRate, 2)
         # target                       date,              receipt,       description,           deposit,              withdrawal,        amount,            currency,        exchangeRate, baseCurrencyAmount,     shares, costCenter1
         yield     (depositDate[0],    [depositDate[1],    deposit.id,    depositDescription,    depositAccount,       '',                deposit.amount,    deposit.unit,    exchangeRate, baseCurrencyDeposit,    '',     depositCostCenter])
