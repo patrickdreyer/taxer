@@ -8,6 +8,7 @@ from .tokenFunctionDecoder import TokenFunctionDecoder
 from ..reader import Reader
 from ...transactions.depositTransfer import DepositTransfer
 from ...transactions.withdrawTransfer import WithdrawTransfer
+from ...transactions.enterLobby import EnterLobby
 from ...transactions.startStake import StartStake
 from ...transactions.endStake import EndStake
 
@@ -39,8 +40,10 @@ class EtherscanApiReader(Reader):
         filteredYear = filter(self.__filterWrongYear, filteredErrors)
         for transaction in filteredYear:
             amount = float(transaction['value']) / EtherscanApiReader.__divisor
-            if (transaction['function'] == 'xflobbyenter'
-                or transaction['function'] == 'xflobbyexit'
+            if transaction['function'] == 'xflobbyenter':
+                fee = float(transaction['gasUsed']) * float(transaction['gasPrice']) / EtherscanApiReader.__divisor
+                yield EnterLobby(account['id'], transaction['dateTime'], transaction['hash'], transaction['to'], amount, 'ETH', fee)
+            elif (transaction['function'] == 'xflobbyexit'
                 or transaction['function'] == 'stakestart'
                 or transaction['function'] == 'stakeend'):
                 self.__tokenTransactions[transaction['hash']] = transaction
@@ -62,9 +65,7 @@ class EtherscanApiReader(Reader):
                 tokenTransaction = self.__tokenTransactions[transaction['hash']]
                 amount = float(transaction['value']) / float('1' + '0'*int(transaction['tokenDecimal']))
                 fee = float(tokenTransaction['gasUsed']) * float(tokenTransaction['gasPrice']) / EtherscanApiReader.__divisor
-                if tokenTransaction['function'] == 'xflobbyenter':
-                    pass
-                elif tokenTransaction['function'] == 'xflobbyexit':
+                if tokenTransaction['function'] == 'xflobbyexit':
                     pass
                 elif tokenTransaction['function'] == 'stakestart':
                     yield StartStake(account['id'], tokenTransaction['dateTime'], tokenTransaction['hash'], token['id'], amount, 'ETH', fee)
