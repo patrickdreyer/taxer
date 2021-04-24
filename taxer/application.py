@@ -50,7 +50,7 @@ class Application:
 
     def __readConfig(self):
         with open(self.__args.config, 'r') as file:
-            return json.loads(file.read())
+            return json.load(file)
 
     def process(self, mergents, payments, accounting, output):
         transactions = self.__readTransactions(mergents)
