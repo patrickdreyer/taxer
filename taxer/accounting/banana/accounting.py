@@ -115,20 +115,24 @@ class BananaAccounting(Accounting):
         yield     (date[0], [date[1], transaction.id, 'Margin Trade - Ausstieg', self.__accounts.fees,   account,                transaction.exitFee,     transaction.unit, exchangeRate, baseCurrencyExitFee,  '',     '-'+costCenter])
 
     def __transformTransfers(self, transfers):
-        deposits = [transfer for transfer in transfers if isinstance(transfer, DepositTransfer)]
-        withdrawals = [transfer for transfer in transfers if isinstance(transfer, WithdrawTransfer)]
-        for deposit in deposits:
-            matches = [withdrawal for withdrawal in withdrawals if withdrawal.mergentId != deposit.mergentId and withdrawal.amount == deposit.amount]
-            if len(matches) == 0:
-                yield from self.__transformSingleTransfer(deposit)
-            elif len(matches) == 1:
-                yield from self.__transformDoubleTransfers(deposit, matches[0])
-                withdrawals.remove(matches[0])
-            else:
-                BananaAccounting.__log.error("Multiple matching transfers; %s, %s", deposit, matches)
-                raise ValueError('Multiple matching transfers')
-        for withdrawal in withdrawals:
-            yield from self.__transformSingleTransfer(withdrawal)
+        sortedByDate = sorted(transfers, key=lambda t:t.dateTime.date())
+        groupedByDate = itertools.groupby(sortedByDate, key=lambda t:t.dateTime.date())
+        for _, dateGroup in groupedByDate:
+            dateGroup = list(dateGroup)
+            deposits = [transfer for transfer in dateGroup if isinstance(transfer, DepositTransfer)]
+            withdrawals = [transfer for transfer in dateGroup if isinstance(transfer, WithdrawTransfer)]
+            for deposit in deposits:
+                matches = [withdrawal for withdrawal in withdrawals if withdrawal.mergentId != deposit.mergentId and withdrawal.amount == deposit.amount]
+                if len(matches) == 0:
+                    yield from self.__transformSingleTransfer(deposit)
+                elif len(matches) == 1:
+                    withdrawals.remove(matches[0])
+                    yield from self.__transformDoubleTransfers(deposit, matches[0])
+                else:
+                    BananaAccounting.__log.error("Multiple matching transfers; deposit=%s, matches=[%s]", deposit, ','.join([match.__str__() for match in matches]))
+                    yield from self.__transformSingleTransfer(deposit)
+            for withdrawal in withdrawals:
+                yield from self.__transformSingleTransfer(withdrawal)
 
     def __transformSingleTransfer(self, transaction):
         date = BananaAccounting.__getDate(transaction)
