@@ -4,6 +4,7 @@ import requests
 import web3
 
 
+# https://github.com/ethereum/web3.py/blob/v4.9.1/docs/contracts.rst#utils
 class TokenFunctionDecoder():
     @staticmethod
     def create(config, cachePath):
@@ -12,9 +13,6 @@ class TokenFunctionDecoder():
         
     def __init__(self, tokenContracts):
         self.__tokenContracts = tokenContracts
-
-    def isContractAddress(self, address):
-        return address in self.__tokenContracts
 
     def decode(self, contractAddress, input):
         contract = self.__tokenContracts[contractAddress]

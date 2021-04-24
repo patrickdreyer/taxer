@@ -53,6 +53,10 @@ class BananaAccounts:
     def fees(self):
         return '319'
 
+    @property
+    def staked(self):
+        return 'SK'
+
     def get(self, unit, mergentId):
         u = BananaAccounts.__map[unit]
         m = u[mergentId]

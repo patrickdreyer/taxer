@@ -1,3 +1,4 @@
+import datetime
 import json
 import os
 import requests
@@ -5,67 +6,90 @@ import requests
 
 from .tokenFunctionDecoder import TokenFunctionDecoder
 from ..reader import Reader
-from ...transactions.sellTrade import SellTrade
-from ...transactions.buyTrade import BuyTrade
+from ...transactions.depositTransfer import DepositTransfer
 from ...transactions.withdrawTransfer import WithdrawTransfer
+from ...transactions.startStake import StartStake
 
 
 class EtherscanApiReader(Reader):
     __apiUrl = 'https://api.etherscan.io/api'
+    __divisor = 1000000000000000000
 
     def __init__(self, config, cachePath):
+        for account in config['accounts']:
+            account['address'] = account['address'].lower()
+        for token in config['tokens']:
+            token['address'] = token['address'].lower()
         self.__config = config
         self.__tokenFunctionDecoder = TokenFunctionDecoder.create(config, cachePath)
+        self.__tokenTransactions = dict()
 
     def read(self, year):
-        for address in self.__config['addresses']:
-            with open('etherscan.txt', 'w') as self.file:
-                self.__fetchNormalTransactions(year, address)
-                self.__fetchInternalTransactions(year, address)
-                self.__fetchERC20Transactions(year, address)
-                # yield from self.__fetchERC721Transactions(year, address)
-        raise Exception('TODO')
+        self.__year = year
+        for account in self.__config['accounts']:
+            yield from self.__fetchNormalTransactions(year, account)
+            yield from self.__fetchERC20Transactions(year, account)
 
-    def __fetchNormalTransactions(self, year, address):
-        response = requests.get('{}?module=account&action=txlist&address={}&startblock=0&endblock=99999999&page=1&offset=1000&sort=asc&apikey={}'.format(EtherscanApiReader.__apiUrl, address, self.__config['apiKeyToken']))
+    def __fetchNormalTransactions(self, year, account):
+        response = requests.get('{}?module=account&action=txlist&address={}&startblock=0&endblock=99999999&page=1&offset=1000&sort=asc&apikey={}'.format(EtherscanApiReader.__apiUrl, account['address'], self.__config['apiKeyToken']))
         content = json.loads(response.content)
-        transactions = content['result']
-        self.file.write('Normal Transactions\n')
-        self.file.write('===================\n')
-        for transaction in transactions:
-            transaction['input'] = self.__decodeFunction(transaction)
-            self.file.write(json.dumps(transaction))
-            self.file.write('\n')
+        transactions = map(self.__transformTransaction, content['result'])
+        filteredYear = filter(self.__filterWrongYear, transactions)
+        for transaction in filteredYear:
+            amount = float(transaction['value']) / EtherscanApiReader.__divisor
+            if (transaction['function'] == 'xflobbyenter'
+                or transaction['function'] == 'xflobbyexit'
+                or transaction['function'] == 'stakestart'
+                or transaction['function'] == 'stakeend'):
+                self.__tokenTransactions[transaction['hash']] = transaction
+            elif transaction['from'] == account['address']:
+                yield DepositTransfer(account['id'], transaction['dateTime'], transaction['hash'], 'ETH', amount)
+            elif transaction['to'] == account['address']:
+                fee = float(transaction['gasUsed']) * float(transaction['gasPrice']) / EtherscanApiReader.__divisor
+                yield WithdrawTransfer(account['id'], transaction['dateTime'], transaction['hash'], 'ETH', amount, fee)
 
-    def __fetchInternalTransactions(self, year, address):
-        response = requests.get('{}?module=account&action=txlistinternal&address={}&startblock=0&endblock=99999999&page=1&offset=1000&sort=asc&apikey={}'.format(EtherscanApiReader.__apiUrl, address, self.__config['apiKeyToken']))
-        content = json.loads(response.content)
-        transactions = content['result']
-        self.file.write('Internal Transactions\n')
-        self.file.write('=====================\n')
-        for transaction in transactions:
-            transaction['input'] = self.__decodeFunction(transaction)
-            self.file.write(json.dumps(transaction))
-            self.file.write('\n')
-
-    def __fetchERC20Transactions(self, year, address):
+    def __fetchERC20Transactions(self, year, account):
         for token in self.__config['tokens']:
-            response = requests.get('{}?module=account&action=tokentx&contractaddress={}&address={}&page=1&offset=100&sort=asc&apikey={}'.format(EtherscanApiReader.__apiUrl, token['address'], address, self.__config['apiKeyToken']))
+            response = requests.get('{}?module=account&action=tokentx&address={}&contractaddress={}&page=1&offset=100&sort=asc&apikey={}'.format(EtherscanApiReader.__apiUrl, account['address'], token['address'], self.__config['apiKeyToken']))
             content = json.loads(response.content)
-            transactions = content['result']
-            self.file.write('ERC20 Transactions {}\n'.format(token['name']))
-            self.file.write('======================\n')
-            for transaction in transactions:
-                transaction['input'] = self.__decodeFunction(transaction)
-                self.file.write(json.dumps(transaction))
-                self.file.write('\n')
+            transactions = map(self.__transformTransaction, content['result'])
+            filteredYear = list(filter(self.__filterWrongYear, transactions))
+            for transaction in filteredYear:
+                if not transaction['hash'] in self.__tokenTransactions:
+                    continue
+                tokenTransaction = self.__tokenTransactions[transaction['hash']]
+                amount = float(transaction['value']) / float('1' + '0'*int(transaction['tokenDecimal']))
+                fee = float(tokenTransaction['gasUsed']) * float(tokenTransaction['gasPrice']) / EtherscanApiReader.__divisor
+                if tokenTransaction['function'] == 'xflobbyenter':
+                    pass
+                elif tokenTransaction['function'] == 'xflobbyexit':
+                    pass
+                elif tokenTransaction['function'] == 'stakestart':
+                    yield StartStake(account['id'], tokenTransaction['dateTime'], tokenTransaction['hash'], token['id'], amount, 'ETH', fee)
+                elif tokenTransaction['function'] == 'stakeend':
+                    pass
+                else:
+                    pass
 
-    # https://github.com/ethereum/web3.py/blob/v4.9.1/docs/contracts.rst#utils
-    def __decodeFunction(self, transaction):
-        if self.__tokenFunctionDecoder.isContractAddress(transaction['from']):
-            contractAddress = transaction['from']
-        elif self.__tokenFunctionDecoder.isContractAddress(transaction['to']):
-            contractAddress = transaction['to']
+    def __transformTransaction(self, transaction):
+        transaction['dateTime'] = datetime.datetime.fromtimestamp(int(transaction['timeStamp']))
+
+        if self.__isToken(transaction['from']):
+            transaction['function'] = self.__tokenFunctionDecoder.decode(transaction['from'], transaction['input']).lower()
+            transaction['from'] = self.__getTokenId(transaction['from'])
+        elif self.__isToken(transaction['to']):
+            transaction['function'] = self.__tokenFunctionDecoder.decode(transaction['to'], transaction['input']).lower()
+            transaction['to'] = self.__getTokenId(transaction['to'])
         else:
-            return transaction['input']
-        return self.__tokenFunctionDecoder.decode(contractAddress, transaction['input'])
+            transaction['function'] = ''
+
+        return transaction
+
+    def __filterWrongYear(self, transaction):
+        return transaction['dateTime'].year == self.__year
+
+    def __isToken(self, address):
+        return address in [token['address'] for token in self.__config['tokens']]
+
+    def __getTokenId(self, address):
+        return [token for token in self.__config['tokens'] if token['address'] == address][0]['id']
