@@ -33,8 +33,7 @@ class BananaAccounts:
             'CBP': '1111'
         },
         'USD': {
-            'CEX' : '1120',
-            'CBP' : '1121'
+            'CEX' : '1120'
         },
         'USDC': {
             'CBP' : '1121'
