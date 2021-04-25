@@ -52,10 +52,10 @@ class EtherscanApiReader(Reader):
                 or transaction['function'] == 'stakeend'):
                 self.__tokenTransactions[transaction['hash']] = transaction
             elif transaction['from'] == account['address']:
-                yield DepositTransfer(account['id'], transaction['dateTime'], transaction['hash'], 'ETH', amount)
-            elif transaction['to'] == account['address']:
                 fee = float(transaction['gasUsed']) * float(transaction['gasPrice']) / EtherscanApiReader.__divisor
                 yield WithdrawTransfer(account['id'], transaction['dateTime'], transaction['hash'], 'ETH', amount, fee)
+            elif transaction['to'] == account['address']:
+                yield DepositTransfer(account['id'], transaction['dateTime'], transaction['hash'], 'ETH', amount)
 
     def __fetchERC20Transactions(self, year, account):
         for token in self.__config['tokens']:
