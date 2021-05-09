@@ -1,24 +1,13 @@
-class Stake():
+from .transaction import Transaction
+
+
+class Stake(Transaction):
     def __init__(self, mergentId, dateTime, id, unitAmount, amount, unitFee, fee):
-        self.__mergentId = mergentId
-        self.__dateTime = dateTime
-        self.__id = id
+        super().__init__(mergentId, dateTime, id)
         self.__unitAmount = unitAmount
         self.__amount = amount
         self.__unitFee = unitFee
         self.__fee = fee
-
-    @property
-    def mergentId(self):
-        return self.__mergentId
-
-    @property
-    def dateTime(self):
-        return self.__dateTime
-
-    @property
-    def id(self):
-        return self.__id
 
     @property
     def unitAmount(self):
