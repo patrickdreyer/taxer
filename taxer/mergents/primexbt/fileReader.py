@@ -3,6 +3,7 @@ import datetime
 import itertools
 import re
 from  dateutil import parser
+import pytz
 
 from ..fileReader import FileReader
 from ...transactions.covesting import Covesting
@@ -13,7 +14,7 @@ from ...transactions.depositTransfer import DepositTransfer
 
 class PrimeXBTFileReader(FileReader):
     __fileNamePattern = r'.*primexbt.*\.csv'
-    __startEntryFee = datetime.datetime(2020, 12, 1)
+    __startEntryFee = pytz.utc.localize(datetime.datetime(2020, 12, 1))
     __entryFeePercentage = 0.01
 
     def __init__(self, path):
@@ -37,7 +38,7 @@ class PrimeXBTFileReader(FileReader):
 
     def __readCovesting(self, rows):
         for row in rows:
-            date = parser.parse(row[4])
+            date = pytz.utc.localize(parser.parse(row[4]))
             if date.year != self.__year:
                 continue
             symbol = row[1].split()[1]
@@ -62,7 +63,7 @@ class PrimeXBTFileReader(FileReader):
 
     def __readTransfers(self, rows):
         for row in rows:
-            date = parser.parse(row[0].replace('\n', 'T'))
+            date = pytz.utc.localize(parser.parse(row[0].replace('\n', 'T')))
             if date.year != self.__year:
                 continue
             amount = abs(float(row[3].split()[0]))
@@ -84,7 +85,7 @@ class PrimeXBTFileReader(FileReader):
 
     @staticmethod
     def __convertRow(row):
-        row[3] = parser.parse(row[3])
+        row[3] = pytz.utc.localize(parser.parse(row[3]))
         return row
 
     def __filterWrongYear(self, row):

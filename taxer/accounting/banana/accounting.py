@@ -1,6 +1,7 @@
 import logging
 import itertools
 import csv
+import os
 
 from .accounts import BananaAccounts
 from ..accounting import Accounting
@@ -22,6 +23,8 @@ from ...transactions.endStake import EndStake
 
 
 class BananaAccounting(Accounting):
+    __fileName = 'banana.csv'
+
     __log = logging.getLogger(__name__)
 
     def __init__(self, config, currencyConverters):
@@ -31,10 +34,11 @@ class BananaAccounting(Accounting):
         self.__minPrecision = 1 - precision
         self.__maxPrecision = 1 + precision
 
-    def write(self, transactions, filePath):
+    def write(self, transactions, outputPath):
+        outputFilePath = os.path.join(outputPath, BananaAccounting.__fileName)
         bookings = self.__transform(transactions)
         bookings = sorted(bookings, key=lambda b: b[0])
-        with open(filePath, 'w') as file:
+        with open(outputFilePath, 'w') as file:
             writer = csv.writer(file, dialect='unix')
             writer.writerow(['Datum', 'Beleg', 'Beschreibung', 'KtSoll', 'KtHaben', 'Betr.Währung', 'Währung', 'Wechselkurs', 'Betrag CHF', 'Anteile', 'KS1', 'Bemerkungen'])
             writer.writerows(booking[1] for booking in bookings)
