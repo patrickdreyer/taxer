@@ -1,6 +1,8 @@
 import argparse
 import json
 import logging
+import os
+import pickle
 import sys
 import time
 
@@ -21,7 +23,7 @@ class Application:
         self.__mergents = Mergents(self.__config, self.__args.input, self.__args.cache)
         self.__transformers = [Payments(self.__args.input)]
         self.__currencyConverters = CurrencyConverters().load(self.__args.cache)
-        self.__accounting = AccountingFactory(self.__config, self.__currencyConverters).create('Banana')
+        self.__accountings = AccountingFactory(self.__args, self.__config, self.__currencyConverters).create()
 
         self.__process()
 
@@ -48,6 +50,7 @@ class Application:
         parser.add_argument('--output', type=str, help='Path to write the output files to')
         parser.add_argument('--config', type=str, help='File path to configuration')
         parser.add_argument('--year', type=str, help='Fiscal year to report')
+        parser.add_argument('--transactions', type=str, help='File path to import transactions from or export transactions to')
         self.__args = parser.parse_args()
 
     def __readConfig(self):
@@ -55,10 +58,14 @@ class Application:
             self.__config = json.load(file)
 
     def __process(self):
-        transactions = self.__readTransactions()
-        transactions = sorted(transactions, key=lambda t: t.dateTime)
-        transactions = self.__transformTransactions(transactions)
-        self.__accounting.write(transactions, self.__args.output)
+        transactions = self.__deserializeTransactions()
+        if transactions == None:
+            transactions = self.__readTransactions()
+            transactions = sorted(transactions, key=lambda t: t.dateTime)
+            transactions = list(self.__transformTransactions(transactions))
+            self.__serializeTransactions(transactions)
+        for accounting in self.__accountings:
+            accounting.write(transactions)
 
     def __readTransactions(self):
         readers = self.__mergents.createReaders()
@@ -69,3 +76,19 @@ class Application:
         for transformer in self.__transformers:
             transactions = transformer.transform(transactions)
         return transactions
+
+    def __serializeTransactions(self, transactions):
+        if not self.__args.transactions:
+            return
+        Application.__log.info("Serialize transactions; filePath='%s'", self.__args.transactions)
+        with open(self.__args.transactions, 'wb') as file:
+            pickle.dump(transactions, file)
+
+    def __deserializeTransactions(self):
+        if not self.__args.transactions:
+            return None
+        if not os.path.isfile(self.__args.transactions):
+            return None
+        Application.__log.info("Deserialize transactions; filePath='%s'", self.__args.transactions)
+        with open(self.__args.transactions, 'rb') as file:
+            return pickle.load(file)

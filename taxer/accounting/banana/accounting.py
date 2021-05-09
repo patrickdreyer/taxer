@@ -27,15 +27,16 @@ class BananaAccounting(Accounting):
 
     __log = logging.getLogger(__name__)
 
-    def __init__(self, config, currencyConverters):
+    def __init__(self, output, config, currencyConverters):
+        self.__output = output
         self.__accounts = BananaAccounts()
         self.__currencyConverters = currencyConverters
         precision = float(config['transferPrecision'])
         self.__minPrecision = 1 - precision
         self.__maxPrecision = 1 + precision
 
-    def write(self, transactions, outputPath):
-        outputFilePath = os.path.join(outputPath, BananaAccounting.__fileName)
+    def write(self, transactions):
+        outputFilePath = os.path.join(self.__output, BananaAccounting.__fileName)
         bookings = self.__transform(transactions)
         bookings = sorted(bookings, key=lambda b: b[0])
         with open(outputFilePath, 'w') as file:

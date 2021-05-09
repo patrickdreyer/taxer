@@ -13,9 +13,10 @@
             "args": [
                 "--input", "testData",
                 "--cache", "cache",
-                "--output", "test.csv",
-                "--config", "config.json"
-                "--year", "2020"
+                "--output", "./",
+                "--config", "config.json",
+                "--year", "2020",
+                "--transactions", "./transactions.pkl"
             ]
         }
     ]

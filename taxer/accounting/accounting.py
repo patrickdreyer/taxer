@@ -1,3 +1,3 @@
 class Accounting:
-    def write(self, transactions, outputPath):
+    def write(self, transactions):
         pass
