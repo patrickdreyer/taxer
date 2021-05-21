@@ -1,6 +1,8 @@
 import argparse
 import json
 import logging
+import os
+import pickle
 import sys
 import time
 
@@ -13,20 +15,22 @@ class Application:
     __log = None
 
     def main(self):
-        self.initializeLogging()
+        self.__initializeLogging()
 
         Application.__log.info('BEGIN')
-        self.parseArguments()
-        config = self.__readConfig()
-        mergents = Mergents(config, self.__args.input, self.__args.cache)
-        payments = Payments(self.__args.input)
-        currencyConverters = CurrencyConverters().load(self.__args.cache)
-        accounting = AccountingFactory(config, currencyConverters).create('Banana')
-        self.process(mergents, payments, accounting, self.__args.output)
-        currencyConverters.store(self.__args.cache)
+        self.__parseArguments()
+        self.__readConfig()
+        self.__mergents = Mergents(self.__config, self.__args.input, self.__args.cache)
+        self.__transformers = [Payments(self.__args.input)]
+        self.__currencyConverters = CurrencyConverters().load(self.__args.cache)
+        self.__accountings = AccountingFactory(self.__args, self.__config, self.__currencyConverters).create()
+
+        self.__process()
+
+        self.__currencyConverters.store(self.__args.cache)
         Application.__log.info('END')
 
-    def initializeLogging(self):
+    def __initializeLogging(self):
         logging.basicConfig(level=logging.DEBUG,
             format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s', datefmt='%m-%d %H:%M',
             filename='taxer.log', filemode='w')
@@ -39,25 +43,52 @@ class Application:
         Application.__log = logging.getLogger(__name__)
         Application.__log.setLevel(logging.DEBUG)  
 
-    def parseArguments(self):
+    def __parseArguments(self):
         parser = argparse.ArgumentParser(description='Creates a CSV file ready to import into accounting from exchange reports')
         parser.add_argument('--input', type=str, help='Path to the directory containing the platform exports')
         parser.add_argument('--cache', type=str, default='cache', help='Path to the directory containing the cached data')
-        parser.add_argument('--output', type=str, help='File name to write the output to')
+        parser.add_argument('--output', type=str, help='Path to write the output files to')
         parser.add_argument('--config', type=str, help='File path to configuration')
         parser.add_argument('--year', type=str, help='Fiscal year to report')
+        parser.add_argument('--transactions', type=str, help='File path to import transactions from or export transactions to')
         self.__args = parser.parse_args()
 
     def __readConfig(self):
         with open(self.__args.config, 'r') as file:
-            return json.load(file)
+            self.__config = json.load(file)
 
-    def process(self, mergents, payments, accounting, output):
-        transactions = self.__readTransactions(mergents)
-        transactions = payments.transform(transactions)
-        accounting.write(transactions, output)
+    def __process(self):
+        transactions = self.__deserializeTransactions()
+        if transactions == None:
+            transactions = self.__readTransactions()
+            transactions = sorted(transactions, key=lambda t: t.dateTime)
+            transactions = list(self.__transformTransactions(transactions))
+            self.__serializeTransactions(transactions)
+        for accounting in self.__accountings:
+            accounting.write(transactions)
 
-    def __readTransactions(self, mergents):
-        readers = mergents.createReaders()
+    def __readTransactions(self):
+        readers = self.__mergents.createReaders()
         for reader in readers:
             yield from reader.read(int(self.__args.year))
+
+    def __transformTransactions(self, transactions):
+        for transformer in self.__transformers:
+            transactions = transformer.transform(transactions)
+        return transactions
+
+    def __serializeTransactions(self, transactions):
+        if not self.__args.transactions:
+            return
+        Application.__log.info("Serialize transactions; filePath='%s'", self.__args.transactions)
+        with open(self.__args.transactions, 'wb') as file:
+            pickle.dump(transactions, file)
+
+    def __deserializeTransactions(self):
+        if not self.__args.transactions:
+            return None
+        if not os.path.isfile(self.__args.transactions):
+            return None
+        Application.__log.info("Deserialize transactions; filePath='%s'", self.__args.transactions)
+        with open(self.__args.transactions, 'rb') as file:
+            return pickle.load(file)

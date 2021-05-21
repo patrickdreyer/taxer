@@ -2,7 +2,7 @@ import datetime
 import json
 import os
 import requests
-
+import pytz
 
 from .hexFileReader import HEXFileReader
 from .tokenFunctionDecoder import TokenFunctionDecoder
@@ -80,7 +80,7 @@ class EtherscanApiReader(Reader):
                     pass
 
     def __transformTransaction(self, transaction):
-        transaction['dateTime'] = datetime.datetime.fromtimestamp(int(transaction['timeStamp']))
+        transaction['dateTime'] = pytz.utc.localize(datetime.datetime.fromtimestamp(int(transaction['timeStamp'])))
 
         if self.__isToken(transaction['from']):
             transaction['function'] = self.__tokenFunctionDecoder.decode(transaction['from'], transaction['input']).lower()
