@@ -5,6 +5,7 @@ from  dateutil import parser
 import pytz
 
 from ..fileReader import FileReader
+from ...transactions.currency import Currency
 from ...transactions.buyTrade import BuyTrade
 from ...transactions.sellTrade import SellTrade
 from ...transactions.withdrawTransfer import WithdrawTransfer
@@ -33,12 +34,13 @@ class CexFileReader(FileReader):
             for transaction in typeGroup:
                 date = transaction['DateUTC']
                 id = self.__getId(transaction)
+                amount = Currency(transaction['Symbol'], transaction['Amount'])
                 if type == 'deposit':
-                    yield DepositTransfer('CEX', date, id, transaction['Symbol'], float(transaction['Amount']))
+                    yield DepositTransfer('CEX', date, id, amount)
                 elif type == 'withdraw':
-                    yield WithdrawTransfer('CEX', date, id, transaction['Symbol'], abs(float(transaction['Amount'])), 0)
+                    yield WithdrawTransfer('CEX', date, id, amount, Currency(transaction['Symbol'], 0))
                 elif type == 'costsNothing':
-                    yield Reimbursement("CEX", date, id, transaction['Symbol'], float(transaction['Amount']))
+                    yield Reimbursement("CEX", date, id, amount)
 
     @staticmethod
     def __readFile(filePath):

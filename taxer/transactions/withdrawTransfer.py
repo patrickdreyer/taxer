@@ -2,8 +2,8 @@ from .transfer import Transfer
 
 
 class WithdrawTransfer(Transfer):
-    def __init__(self, mergentId, dateTime, id, unit, amount, fee):
-        super().__init__(mergentId, dateTime, id, unit, amount)
+    def __init__(self, mergentId, dateTime, id, amount, fee):
+        super().__init__(mergentId, dateTime, id, amount)
         self.__fee = fee
 
     @property

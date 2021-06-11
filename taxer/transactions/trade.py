@@ -2,30 +2,20 @@ from .transaction import Transaction
 
 
 class Trade(Transaction):
-    def __init__(self, mergentId, dateTime, id, cryptoUnit, cryptoAmount, fiatUnit, fiatAmount, feeAmount):
+    def __init__(self, mergentId, dateTime, id, sell, buy, fee):
         super().__init__(mergentId, dateTime, id)
-        self.__cryptoUnit = cryptoUnit
-        self.__cryptoAmount = cryptoAmount
-        self.__fiatUnit = fiatUnit
-        self.__fiatAmount = fiatAmount
-        self.__feeAmount = feeAmount
+        self.__sell = sell
+        self.__buy = buy
+        self.__fee = fee
 
     @property
-    def cryptoUnit(self):
-        return self.__cryptoUnit
+    def sell(self):
+        return self.__sell
 
     @property
-    def cryptoAmount(self):
-        return self.__cryptoAmount
+    def buy(self):
+        return self.__buy
 
     @property
-    def fiatUnit(self):
-        return self.__fiatUnit
-
-    @property
-    def fiatAmount(self):
-        return self.__fiatAmount
-
-    @property
-    def feeAmount(self):
-        return self.__feeAmount
+    def fee(self):
+        return self.__fee

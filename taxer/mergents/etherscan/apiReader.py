@@ -7,6 +7,7 @@ import pytz
 from .hexFileReader import HEXFileReader
 from .tokenFunctionDecoder import TokenFunctionDecoder
 from ..reader import Reader
+from ...transactions.currency import Currency
 from ...transactions.depositTransfer import DepositTransfer
 from ...transactions.withdrawTransfer import WithdrawTransfer
 from ...transactions.enterLobby import EnterLobby
@@ -45,17 +46,15 @@ class EtherscanApiReader(Reader):
         for transaction in filteredYear:
             amount = float(transaction['value']) / EtherscanApiReader.__divisor
             if transaction['function'] == 'xflobbyenter':
-                fee = float(transaction['gasUsed']) * float(transaction['gasPrice']) / EtherscanApiReader.__divisor
-                yield EnterLobby(account['id'], transaction['dateTime'], transaction['hash'], 'ETH', amount, fee, transaction['to'])
+                yield EnterLobby(account['id'], transaction['dateTime'], transaction['hash'], Currency('ETH', amount), EtherscanApiReader.__fee(transaction), transaction['to'])
             elif (transaction['function'] == 'xflobbyexit'
                 or transaction['function'] == 'stakestart'
                 or transaction['function'] == 'stakeend'):
                 self.__tokenTransactions[transaction['hash']] = transaction
             elif transaction['from'] == account['address']:
-                fee = float(transaction['gasUsed']) * float(transaction['gasPrice']) / EtherscanApiReader.__divisor
-                yield WithdrawTransfer(account['id'], transaction['dateTime'], transaction['hash'], 'ETH', amount, fee)
+                yield WithdrawTransfer(account['id'], transaction['dateTime'], transaction['hash'], Currency('ETH', amount), EtherscanApiReader.__fee(transaction))
             elif transaction['to'] == account['address']:
-                yield DepositTransfer(account['id'], transaction['dateTime'], transaction['hash'], 'ETH', amount)
+                yield DepositTransfer(account['id'], transaction['dateTime'], transaction['hash'], Currency('ETH', amount))
 
     def __fetchERC20Transactions(self, year, account):
         for token in self.__config['tokens']:
@@ -67,15 +66,15 @@ class EtherscanApiReader(Reader):
                 if not transaction['hash'] in self.__tokenTransactions:
                     continue
                 tokenTransaction = self.__tokenTransactions[transaction['hash']]
-                fee = float(tokenTransaction['gasUsed']) * float(tokenTransaction['gasPrice']) / EtherscanApiReader.__divisor
-                amount = float(transaction['value']) / float('1' + '0'*int(transaction['tokenDecimal']))
+                fee = EtherscanApiReader.__fee(tokenTransaction)
+                amount = Currency(token['id'], float(transaction['value']) / float('1' + '0'*int(transaction['tokenDecimal'])))
                 if tokenTransaction['function'] == 'xflobbyexit':
-                    hexTransformation = [t for t in self.__hexTransformations if t['HEX'] == int(amount)][0]
-                    yield ExitLobby(account['id'], tokenTransaction['dateTime'], tokenTransaction['hash'], token['id'], amount, 'ETH', hexTransformation['ETH'], fee)
+                    hexTransformation = [t for t in self.__hexTransformations if t['HEX'] == int(amount.amount)][0]
+                    yield ExitLobby(account['id'], tokenTransaction['dateTime'], tokenTransaction['hash'], amount, Currency('ETH', hexTransformation['ETH']), fee)
                 elif tokenTransaction['function'] == 'stakestart':
-                    yield StartStake(account['id'], tokenTransaction['dateTime'], tokenTransaction['hash'], token['id'], amount, 'ETH', fee)
+                    yield StartStake(account['id'], tokenTransaction['dateTime'], tokenTransaction['hash'], amount, fee)
                 elif tokenTransaction['function'] == 'stakeend':
-                    yield EndStake(account['id'], tokenTransaction['dateTime'], tokenTransaction['hash'], token['id'], amount, 'ETH', fee)
+                    yield EndStake(account['id'], tokenTransaction['dateTime'], tokenTransaction['hash'], amount, fee)
                 else:
                     pass
 
@@ -104,3 +103,7 @@ class EtherscanApiReader(Reader):
 
     def __getTokenId(self, address):
         return [token for token in self.__config['tokens'] if token['address'] == address][0]['id']
+
+    @staticmethod
+    def __fee(transaction):
+        return Currency('ETH', float(transaction['gasUsed']) * float(transaction['gasPrice']) / EtherscanApiReader.__divisor)
