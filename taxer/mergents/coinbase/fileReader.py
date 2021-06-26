@@ -2,6 +2,7 @@ import csv
 from  dateutil import parser
 
 from ..fileReader import FileReader
+from ...transactions.currency import Currency
 from ...transactions.withdrawTransfer import WithdrawTransfer
 from ...transactions.depositTransfer import DepositTransfer
 
@@ -24,10 +25,11 @@ class CoinbaseFileReader(FileReader):
             date = parser.isoparse(row[0])
             if date.year != year:
                 continue
+            amount = Currency(row[2], row[3])
             if row[1] == 'Send':
-                yield WithdrawTransfer(CoinbaseFileReader.__id, date, '', row[2], float(row[3]), 0)
+                yield WithdrawTransfer(CoinbaseFileReader.__id, date, '', amount, Currency(row[2], 0))
             elif row[1] == 'Receive':
-                yield DepositTransfer(CoinbaseFileReader.__id, date, '', row[2], float(row[3]))
+                yield DepositTransfer(CoinbaseFileReader.__id, date, '', amount)
 
     @staticmethod
     def __readFile(filePath):

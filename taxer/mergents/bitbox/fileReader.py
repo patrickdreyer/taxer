@@ -2,6 +2,7 @@ import csv
 from  dateutil import parser
 
 from ..fileReader import FileReader
+from ...transactions.currency import Currency
 from ...transactions.buyTrade import BuyTrade
 from ...transactions.sellTrade import SellTrade
 from ...transactions.withdrawTransfer import WithdrawTransfer
@@ -11,7 +12,6 @@ from ...transactions.depositTransfer import DepositTransfer
 class BitBoxFileReader(FileReader):
     __id = 'S'
     __fileNamePattern = r'BitBox.*\.csv'
-    __satoshiToBTC = 0.00000001
 
     def __init__(self, path):
         super().__init__(path)
@@ -28,20 +28,14 @@ class BitBoxFileReader(FileReader):
                 continue
 
             id = self.__row['Transaction ID']
-            unit = self.__row['Unit']
-            amount = float(self.__row['Amount'])
-            if unit == 'satoshi':
-                unit = 'BTC'
-                amount = amount * BitBoxFileReader.__satoshiToBTC
+            c = Currency(self.__row['Unit'], self.__row['Amount'])
 
             if self.__row['Type'] == 'sent':
-                feeAmount = float(self.__row['Fee'])
-                if self.__row['Unit'] == 'satoshi':
-                    feeAmount = feeAmount * BitBoxFileReader.__satoshiToBTC
-                yield WithdrawTransfer(BitBoxFileReader.__id, date, id, unit, amount-feeAmount, feeAmount)
+                f = Currency(self.__row['Unit'], self.__row['Fee'])
+                yield WithdrawTransfer(BitBoxFileReader.__id, date, id, c, f)
 
             elif self.__row['Type'] == 'received':                        
-                yield DepositTransfer(BitBoxFileReader.__id, date, id, unit, amount)
+                yield DepositTransfer(BitBoxFileReader.__id, date, id, c)
 
     def __readFile(self, filePath):
         with open(filePath) as csvFile:

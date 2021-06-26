@@ -6,6 +6,7 @@ import json
 import requests
 
 from ..reader import Reader
+from ...transactions.currency import Currency
 from ...transactions.sellTrade import SellTrade
 from ...transactions.buyTrade import BuyTrade
 
@@ -20,16 +21,13 @@ class CexApiReader(Reader):
             if not 'd' in order['status']:
                 continue
             date = parser.isoparse(order['time'])
+            crypto = Currency(order['symbol1'], order['a:{}:cds'.format(order['symbol1'])])
+            fee = Currency(order['symbol2'], order['f:{}:cds'.format(order['symbol2'])])
+            fiat = Currency(order['symbol2'], order['a:{}:cds'.format(order['symbol2'])]) - fee
             if order['type'] == 'sell':
-                debitAmount = float(order['a:{}:cds'.format(order['symbol1'])])
-                feeAmount = float(order['f:{}:cds'.format(order['symbol2'])])
-                creditAmount = float(order['a:{}:cds'.format(order['symbol2'])]) - feeAmount
-                yield SellTrade('CEX', date, order['id'], order['symbol1'], debitAmount, order['symbol2'], creditAmount, feeAmount)
+                yield SellTrade('CEX', date, order['id'], crypto, fiat, fee)
             elif order['type'] == 'buy':
-                debitAmount = float(order['a:{}:cds'.format(order['symbol1'])])
-                feeAmount = float(order['f:{}:cds'.format(order['symbol2'])])
-                creditAmount = float(order['a:{}:cds'.format(order['symbol2'])]) - feeAmount
-                yield BuyTrade('CEX', date, order['id'], order['symbol1'], debitAmount, order['symbol2'], creditAmount, feeAmount)
+                yield BuyTrade('CEX', date, order['id'], crypto, fiat, fee)
 
     def __fetchArchivedOrders(self, year):
         for symbol in self.__config['symbols']:

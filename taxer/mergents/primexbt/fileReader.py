@@ -7,6 +7,7 @@ import pytz
 
 from ..fileReader import FileReader
 from ...transactions.covesting import Covesting
+from ...transactions.currency import Currency
 from ...transactions.marginTrade import MarginTrade
 from ...transactions.withdrawTransfer import WithdrawTransfer
 from ...transactions.depositTransfer import DepositTransfer
@@ -42,10 +43,10 @@ class PrimeXBTFileReader(FileReader):
             if date.year != self.__year:
                 continue
             symbol = row[1].split()[1]
-            entryFee = float(row[5].split()[0]) * PrimeXBTFileReader.__entryFeePercentage if date >= PrimeXBTFileReader.__startEntryFee else 0
-            profit = float(row[1].split()[0])
-            exitFee = float(row[7].split()[0])
-            yield Covesting('PRM', date, '', row[0], symbol, entryFee, profit, exitFee)
+            amount = Currency(symbol, row[1].split()[0])
+            entryFee = Currency(symbol, float(row[5].split()[0]) * PrimeXBTFileReader.__entryFeePercentage if date >= PrimeXBTFileReader.__startEntryFee else 0)
+            exitFee = Currency(symbol, row[7].split()[0])
+            yield Covesting('PRM', date, '', row[0], amount, entryFee, exitFee)
 
     def __readMargin(self, rows):
         positions = filter(PrimeXBTFileReader.__keepPositions, rows)
@@ -56,22 +57,22 @@ class PrimeXBTFileReader(FileReader):
         for positionId, positionGroup in groupedByPositionId:
             sortedPositionGroup = sorted(positionGroup, key=lambda r:r[3])
             symbol = sortedPositionGroup[0][6].split('/')[0]
-            entryFee = abs(float(sortedPositionGroup[0][9]))
-            exitFee = abs(float(sortedPositionGroup[1][9]))
-            amount = float(sortedPositionGroup[2][9])
-            yield MarginTrade('PRM', sortedPositionGroup[0][3], positionId, symbol, entryFee, amount, exitFee)
+            amount = Currency(symbol, sortedPositionGroup[2][9])
+            entryFee = Currency(symbol, sortedPositionGroup[0][9])
+            exitFee = Currency(symbol, sortedPositionGroup[1][9])
+            yield MarginTrade('PRM', sortedPositionGroup[0][3], positionId, amount, entryFee, exitFee)
 
     def __readTransfers(self, rows):
         for row in rows:
             date = pytz.utc.localize(parser.parse(row[0].replace('\n', 'T')))
             if date.year != self.__year:
                 continue
-            amount = abs(float(row[3].split()[0]))
             symbol = row[3].split()[1]
+            amount = Currency(symbol, row[3].split()[0])
             if row[2].find('Deposit') != -1:
-                yield DepositTransfer('PRM', date, row[1], symbol, amount)
+                yield DepositTransfer('PRM', date, row[1], amount)
             elif row[2].find('Withdrawal') != -1:
-                yield WithdrawTransfer('PRM', date, row[1], symbol, amount, 0)
+                yield WithdrawTransfer('PRM', date, row[1], amount, Currency(symbol, 0))
 
     @staticmethod
     def __readFile(filePath):

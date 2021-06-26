@@ -2,12 +2,11 @@ from .transaction import Transaction
 
 
 class Covesting(Transaction):
-    def __init__(self, mergentId, dateTime, id, trader, unit, entryFee, amount, exitFee):
+    def __init__(self, mergentId, dateTime, id, trader, amount, entryFee, exitFee):
         super().__init__(mergentId, dateTime, id)
         self.__trader = trader
-        self.__unit = unit
-        self.__entryFee = entryFee
         self.__amount = amount
+        self.__entryFee = entryFee
         self.__exitFee = exitFee
 
     @property
@@ -15,16 +14,12 @@ class Covesting(Transaction):
         return self.__trader
 
     @property
-    def unit(self):
-        return self.__unit
+    def amount(self):
+        return self.__amount
 
     @property
     def entryFee(self):
         return self.__entryFee
-
-    @property
-    def amount(self):
-        return self.__amount
 
     @property
     def exitFee(self):
