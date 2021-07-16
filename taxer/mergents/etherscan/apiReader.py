@@ -56,8 +56,9 @@ class EtherscanApiReader(Reader):
             elif transaction['from'] == account['address']:
                 yield WithdrawTransfer(account['id'], transaction['dateTime'], transaction['hash'], amount, fee)
             elif transaction['to'] == account['address']:
-                amount = amount - fee
                 yield DepositTransfer(account['id'], transaction['dateTime'], transaction['hash'], amount, fee)
+            else:
+                pass
 
     def __fetchERC20Transactions(self, year, account):
         for token in self.__config['tokens']:
