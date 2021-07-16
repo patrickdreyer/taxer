@@ -3,8 +3,6 @@ import json
 import logging
 import os
 import pickle
-import sys
-import time
 
 from .mergents.mergents import Mergents
 from .payments import Payments
@@ -21,7 +19,7 @@ class Application:
         self.__parseArguments()
         self.__readConfig()
         self.__mergents = Mergents(self.__config, self.__args.input, self.__args.cache)
-        self.__transformers = [Payments(self.__args.input)]
+        self.__transformers = [Payments(self.__config['payments'])]
         self.__currencyConverters = CurrencyConverters().load(self.__args.cache)
         self.__accountings = AccountingFactory(self.__args, self.__config, self.__currencyConverters).create()
 
