@@ -236,7 +236,7 @@ class BananaAccounting(Accounting):
         description = 'Bezahlung'
         w = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.amount, transaction)
         #                    date,    receipt,        description, deposit,                withdrawal, amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
-        yield     (date[0], [date[1], transaction.id, description, self.__accounts.equity, w.account,  w.amount, w.unit,   w.baseCurrency.exchangeRate, w.baseCurrency.amount, '',     w.costCenter, transaction.note])
+        yield     (date[0], [date[1], transaction.id, description, self.__accounts.equity, w.account,  w.amount, w.unit,   w.baseCurrency.exchangeRate, w.baseCurrency.amount, '',     w.costCenter.minus(), transaction.note])
         if transaction.fee.amount > 0:
             f = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.fee, transaction)
             yield (date[0], [date[1], '',             description, self.__accounts.fees,   w.account,  f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, '',     f.costCenter.minus()])
