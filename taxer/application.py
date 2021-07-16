@@ -62,9 +62,9 @@ class Application:
         if transactions == None:
             transactions = self.__readTransactions()
             transactions = sorted(transactions, key=lambda t: t.dateTime)
-            transactions = list(self.__transformTransactions(transactions))
             self.__serializeTransactions(transactions)
         for accounting in self.__accountings:
+            transactions = list(self.__transformTransactions(transactions))
             accounting.write(transactions)
 
     def __readTransactions(self):
