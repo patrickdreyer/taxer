@@ -9,6 +9,7 @@ from .tokenFunctionDecoder import TokenFunctionDecoder
 from ..reader import Reader
 from ...transactions.currency import Currency
 from ...transactions.depositTransfer import DepositTransfer
+from ...transactions.cancelFee import CancelFee
 from ...transactions.withdrawTransfer import WithdrawTransfer
 from ...transactions.enterLobby import EnterLobby
 from ...transactions.exitLobby import ExitLobby
@@ -53,10 +54,12 @@ class EtherscanApiReader(Reader):
                 or transaction['function'] == 'stakestart'
                 or transaction['function'] == 'stakeend'):
                 self.__tokenTransactions[transaction['hash']] = transaction
+            elif transaction['from'] == account['address'] and transaction['to'] == account['address']:
+                yield CancelFee(account['id'], transaction['dateTime'], transaction['hash'], fee)
             elif transaction['from'] == account['address']:
                 yield WithdrawTransfer(account['id'], transaction['dateTime'], transaction['hash'], amount, fee)
             elif transaction['to'] == account['address']:
-                yield DepositTransfer(account['id'], transaction['dateTime'], transaction['hash'], amount, fee)
+                yield DepositTransfer(account['id'], transaction['dateTime'], transaction['hash'], amount, Currency('ETH', 0))
             else:
                 pass
 

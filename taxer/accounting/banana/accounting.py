@@ -7,6 +7,7 @@ from .accounts import BananaAccounts
 from .bananaCurrency import BananaCurrency
 from ..accounting import Accounting
 from ..costCenter import CostCenter
+from ...transactions.cancelFee import CancelFee
 from ...transactions.trade import Trade
 from ...transactions.buyTrade import BuyTrade
 from ...transactions.sellTrade import SellTrade
@@ -53,6 +54,8 @@ class BananaAccounting(Accounting):
                 yield from self.__transformTrade(transaction)
             elif isinstance(transaction, MarginTrade):
                 yield from self.__transformMarginTrade(transaction)
+            elif isinstance(transaction, CancelFee):
+                yield from self.__transformCancelFee(transaction)
             elif isinstance(transaction, Reimbursement):
                 yield from self.__transformReimbursement(transaction)
             elif isinstance(transaction, Payment):
@@ -197,7 +200,7 @@ class BananaAccounting(Accounting):
         w = BananaCurrency(self.__accounts, self.__currencyConverters, withdrawal.amount, withdrawal)
         if withdrawal.fee.amount > 0 and deposit.fee.amount > 0:
             BananaAccounting.__log.debug("Double transfer fees; %s, %s - %s. %s", withdrawal.mergentId, withdrawal.fee, deposit.mergentId, deposit.fee)
-        # target                  date,     receipt,       description,  deposit,              withdrawal, amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
+        # target                  date,     receipt,       description, deposit,              withdrawal, amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
         yield         (dDate[0], [dDate[1], deposit.id,    description, d.account,            '',         d.amount, d.unit,   d.baseCurrency.exchangeRate, d.baseCurrency.amount, '',     d.costCenter])
         if deposit.fee.amount > 0:
             f = BananaCurrency(self.__accounts, self.__currencyConverters, deposit.fee, deposit)
@@ -214,6 +217,13 @@ class BananaAccounting(Accounting):
             yield     (wDate[0], [wDate[1], '',            description, self.__accounts.fees, f.account,  f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, '',     f.costCenter.minus()])
         self.__accountedTransferIds.add(deposit.id)
         self.__accountedTransferIds.add(withdrawal.id)
+
+    def __transformCancelFee(self, transaction):
+        BananaAccounting.__log.debug("Cancel fee; %s, %s", transaction.mergentId, transaction.amount)
+        date = BananaAccounting.__getDate(transaction)
+        c = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.amount, transaction)
+        #                date,    receipt,        description,     deposit,              withdrawal, amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
+        yield (date[0], [date[1], transaction.id, 'Abbruchgebühr', self.__accounts.fees, c.account,  c.amount, c.unit,   c.baseCurrency.exchangeRate, c.baseCurrency.amount, '',     c.costCenter.minus()])
 
     def __transformReimbursement(self, transaction):
         BananaAccounting.__log.debug("Reimbursement; %s, %s", transaction.mergentId, transaction.amount)
