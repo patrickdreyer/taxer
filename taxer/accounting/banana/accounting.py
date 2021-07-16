@@ -310,15 +310,18 @@ class BananaAccounting(Accounting):
         date = BananaAccounting.__getDate(transaction)
         description = '{} Stake; End'.format(transaction.amount.unit)
         u = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.amount, self.__accounts.staked, transaction.dateTime)
-        d = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.amount, transaction)
+        d = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.total, transaction)
+        i = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.interest, transaction)
         f = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.fee, transaction)
         BananaAccounting.__log.debug("Stake end; %s", transaction.amount)
-        # deposit        date,    receipt,        description, deposit,              withdrawal, amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
-        yield (date[0], [date[1], transaction.id, description, d.account,            '',         d.amount, d.unit,   d.baseCurrency.exchangeRate, d.baseCurrency.amount, '',     d.costCenter])
+        # deposit        date,    receipt,        description, deposit,              withdrawal,             amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
+        yield (date[0], [date[1], transaction.id, description, d.account,            '',                     d.amount, d.unit,   d.baseCurrency.exchangeRate, d.baseCurrency.amount, '',     d.costCenter])
         # unstake
-        yield (date[0], [date[1], transaction.id, description, '',                   u.account,  u.amount, u.unit,   u.baseCurrency.exchangeRate, u.baseCurrency.amount, '',     u.costCenter.minus()])
+        yield (date[0], [date[1], transaction.id, description, '',                   u.account,              u.amount, u.unit,   u.baseCurrency.exchangeRate, u.baseCurrency.amount, '',     u.costCenter.minus()])
+        # interest
+        yield (date[0], [date[1], transaction.id, description, '',                   self.__accounts.equity, i.amount, i.unit,   i.baseCurrency.exchangeRate, i.baseCurrency.amount, '',     ''])
         # fee
-        yield (date[0], [date[1], transaction.id, description, self.__accounts.fees, f.account,  f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, '',     f.costCenter.minus()])
+        yield (date[0], [date[1], transaction.id, description, self.__accounts.fees, f.account,              f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, '',     f.costCenter.minus()])
 
     @staticmethod
     def __getDate(transaction):

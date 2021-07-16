@@ -1,10 +1,8 @@
 import datetime
 import json
-import os
 import requests
 import pytz
 
-from .hexFileReader import HEXFileReader
 from .tokenFunctionDecoder import TokenFunctionDecoder
 from ..reader import Reader
 from ...transactions.currency import Currency
@@ -21,7 +19,7 @@ class EtherscanApiReader(Reader):
     __apiUrl = 'https://api.etherscan.io/api'
     __divisor = 1000000000000000000
 
-    def __init__(self, config, inputPath, cachePath):
+    def __init__(self, config, cachePath, hexReader):
         for account in config['accounts']:
             account['address'] = account['address'].lower()
         for token in config['tokens']:
@@ -29,11 +27,10 @@ class EtherscanApiReader(Reader):
         self.__config = config
         self.__tokenFunctionDecoder = TokenFunctionDecoder.create(config, cachePath)
         self.__tokenTransactions = dict()
-        self.__hexFileReader = HEXFileReader(inputPath)
+        self.__hexReader = hexReader
 
     def read(self, year):
         self.__year = year
-        self.__hexTransformations = list(self.__hexFileReader.read(self.__year))
         with requests.Session() as self.__session:
             for account in self.__config['accounts']:
                 yield from self.__fetchNormalTransactions(year, account)
@@ -76,13 +73,14 @@ class EtherscanApiReader(Reader):
                 fee = EtherscanApiReader.__fee(tokenTransaction)
                 amount = Currency(token['id'], float(transaction['value']) / float('1' + '0'*int(transaction['tokenDecimal'])))
                 if tokenTransaction['function'] == 'xflobbyexit':
-                    hexTransformation = [t for t in self.__hexTransformations if t['HEX'] == int(amount.amount)][0]
-                    lobby = Currency('ETH', hexTransformation['ETH'])
+                    lobby = self.__getETHForHEX(amount.amount)
                     yield ExitLobby(account['id'], tokenTransaction['dateTime'], tokenTransaction['hash'], lobby, amount, fee)
                 elif tokenTransaction['function'] == 'stakestart':
                     yield StartStake(account['id'], tokenTransaction['dateTime'], tokenTransaction['hash'], amount, fee)
                 elif tokenTransaction['function'] == 'stakeend':
-                    yield EndStake(account['id'], tokenTransaction['dateTime'], tokenTransaction['hash'], amount, fee)
+                    principal = self.__getHEXStakePrincipal(amount.amount)
+                    interest = amount - principal
+                    yield EndStake(account['id'], tokenTransaction['dateTime'], tokenTransaction['hash'], principal, interest, amount, fee)
                 else:
                     pass
 
@@ -111,6 +109,16 @@ class EtherscanApiReader(Reader):
 
     def __getTokenId(self, address):
         return [token for token in self.__config['tokens'] if token['address'] == address][0]['id']
+
+    def __getETHForHEX(self, hex):
+        hex = int(hex)
+        transformation = [t for t in self.__hexReader.transformed if t.hex == hex][0]
+        return Currency('ETH', transformation.eth)
+
+    def __getHEXStakePrincipal(self, total):
+        total = int(total)
+        stake = [s for s in self.__hexReader.history if s.total == total][0]
+        return Currency('HEX', stake.principal)
 
     @staticmethod
     def __fee(transaction):
