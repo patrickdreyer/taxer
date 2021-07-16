@@ -121,31 +121,29 @@ class BananaAccounting(Accounting):
         yield     (date[0], [date[1], transaction.id, 'Margin Trade - Ausstieg', self.__accounts.fees,   a.account,              x.amount, a.unit,   x.baseCurrency.exchangeRate, x.baseCurrency.amount, '',    x.costCenter.minus()])
 
     def __transformTransfers(self, transfers):
-        for transfer in transfers:
-            if transfer.id in self.__accountedTransferIds:
-                continue
-            elif isinstance(transfer, DepositTransfer):
-                earliestDateTime = transfer.dateTime - timedelta(days=1)
-                nonAccountedPastWithdraws = filter(lambda t: self.__nonAccounted(WithdrawTransfer, earliestDateTime, transfer.dateTime, t), transfers)
-                matches = [withdrawal for withdrawal in nonAccountedPastWithdraws if self.__matchingTransfers(withdrawal, transfer)]
-                if len(matches) == 0:
-                    yield from self.__transformSingleTransfer(transfer)
-                elif len(matches) == 1:
-                    yield from self.__transformDoubleTransfers(transfer, matches[0])
-                else:
-                    BananaAccounting.__log.error("Multiple matching transfers; deposit=%s, matches=[%s]", transfer, ','.join([match.__str__() for match in matches]))
-                    yield from self.__transformSingleTransfer(transfer)
-            elif isinstance(transfer, WithdrawTransfer):
-                latestDateTime = transfer.dateTime + timedelta(days=1)
-                nonAccountedFutureDeposits = filter(lambda t: self.__nonAccounted(DepositTransfer, transfer.dateTime, latestDateTime, t), transfers)
-                matches = [deposit for deposit in nonAccountedFutureDeposits if self.__matchingTransfers(deposit, transfer)]
-                if len(matches) == 0:
-                    yield from self.__transformSingleTransfer(transfer)
-                elif len(matches) == 1:
-                    yield from self.__transformDoubleTransfers(matches[0], transfer)
-                else:
-                    BananaAccounting.__log.error("Multiple matching transfers; deposit=%s, matches=[%s]", transfer, ','.join([match.__str__() for match in matches]))
-                    yield from self.__transformSingleTransfer(transfer)
+        # repeat in case of left-overs from multiple matchings
+        while len(self.__accountedTransferIds) < len(transfers):
+            for transfer in transfers:
+                if transfer.id in self.__accountedTransferIds:
+                    continue
+                elif isinstance(transfer, DepositTransfer):
+                    earliestDateTime = transfer.dateTime - timedelta(days=1)
+                    nonAccountedPastWithdraws = filter(lambda t: self.__nonAccounted(WithdrawTransfer, earliestDateTime, transfer.dateTime, t), transfers)
+                    matches = [withdrawal for withdrawal in nonAccountedPastWithdraws if self.__matchingTransfers(withdrawal, transfer)]
+                    if len(matches) == 0:
+                        yield from self.__transformSingleTransfer(transfer)
+                    elif len(matches) == 1:
+                        yield from self.__transformDoubleTransfers(transfer, matches[0])
+                    # we simply skip multiple matchings as they might be correctly matched with an earlier WithdrawTransfer
+                elif isinstance(transfer, WithdrawTransfer):
+                    latestDateTime = transfer.dateTime + timedelta(days=1)
+                    nonAccountedFutureDeposits = filter(lambda t: self.__nonAccounted(DepositTransfer, transfer.dateTime, latestDateTime, t), transfers)
+                    matches = [deposit for deposit in nonAccountedFutureDeposits if self.__matchingTransfers(deposit, transfer)]
+                    if len(matches) == 0:
+                        yield from self.__transformSingleTransfer(transfer)
+                    elif len(matches) == 1:
+                        yield from self.__transformDoubleTransfers(matches[0], transfer)
+                    # we simply skip multiple matchings as they might be correctly matched with a later DepositTransfer
 
     def __nonAccounted(self, type, earlierstDateTime, latestDateTime, transfer):
         return isinstance(transfer, type) \
@@ -192,14 +190,14 @@ class BananaAccounting(Accounting):
         self.__accountedTransferIds.add(transaction.id)
 
     def __transformDoubleTransfers(self, deposit, withdrawal):
-        BananaAccounting.__log.debug("Transfer; %s->%s, %s", withdrawal.mergentId, deposit.mergentId, deposit)
+        BananaAccounting.__log.debug("Transfer; %s->%s, %s", withdrawal.mergentId, deposit.mergentId, deposit.amount)
         dDate = BananaAccounting.__getDate(deposit)
         description = 'Transfer {} -> {}'.format(withdrawal.mergentId, deposit.mergentId)
         d = BananaCurrency(self.__accounts, self.__currencyConverters, deposit.amount, deposit)
         wDate = BananaAccounting.__getDate(withdrawal)
         w = BananaCurrency(self.__accounts, self.__currencyConverters, withdrawal.amount, withdrawal)
         if withdrawal.fee.amount > 0 and deposit.fee.amount > 0:
-            BananaAccounting.__log.debug("Double transfer fees; %s, %s - %s. %s", withdrawal.mergentId, withdrawal.fee, deposit.mergentId, deposit.fee)
+            BananaAccounting.__log.warn("Double transfer fees; %s, %s - %s. %s", withdrawal.mergentId, withdrawal.fee, deposit.mergentId, deposit.fee)
         # target                  date,     receipt,       description, deposit,              withdrawal, amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
         yield         (dDate[0], [dDate[1], deposit.id,    description, d.account,            '',         d.amount, d.unit,   d.baseCurrency.exchangeRate, d.baseCurrency.amount, '',     d.costCenter])
         if deposit.fee.amount > 0:
