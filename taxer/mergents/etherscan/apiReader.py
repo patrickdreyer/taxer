@@ -25,7 +25,7 @@ class EtherscanApiReader(Reader):
         for token in config['tokens']:
             token['address'] = token['address'].lower()
         self.__config = config
-        self.__tokenFunctionDecoder = TokenFunctionDecoder.create(config, cachePath)
+        self.__tokenFunctionDecoder = TokenFunctionDecoder.create(config, cachePath, EtherscanApiReader.__apiUrl)
         self.__tokenTransactions = dict()
         self.__hexReader = hexReader
 
@@ -86,7 +86,6 @@ class EtherscanApiReader(Reader):
 
     def __transformTransaction(self, transaction):
         transaction['dateTime'] = pytz.utc.localize(datetime.datetime.fromtimestamp(int(transaction['timeStamp'])))
-
         if self.__isToken(transaction['from']):
             transaction['function'] = self.__tokenFunctionDecoder.decode(transaction['from'], transaction['input']).lower()
             transaction['from'] = self.__getTokenId(transaction['from'])
@@ -95,7 +94,6 @@ class EtherscanApiReader(Reader):
             transaction['to'] = self.__getTokenId(transaction['to'])
         else:
             transaction['function'] = ''
-
         return transaction
 
     def __filterErrors(self, transaction):
