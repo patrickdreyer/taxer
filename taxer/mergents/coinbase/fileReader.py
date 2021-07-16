@@ -26,10 +26,11 @@ class CoinbaseFileReader(FileReader):
             if date.year != year:
                 continue
             amount = Currency(row[2], row[3])
+            f = Currency(row[2], 0)
             if row[1] == 'Send':
-                yield WithdrawTransfer(CoinbaseFileReader.__id, date, '', amount, Currency(row[2], 0))
+                yield WithdrawTransfer(CoinbaseFileReader.__id, date, '', amount, f)
             elif row[1] == 'Receive':
-                yield DepositTransfer(CoinbaseFileReader.__id, date, '', amount)
+                yield DepositTransfer(CoinbaseFileReader.__id, date, '', amount, f)
 
     @staticmethod
     def __readFile(filePath):

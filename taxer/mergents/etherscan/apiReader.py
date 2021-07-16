@@ -45,17 +45,19 @@ class EtherscanApiReader(Reader):
         filteredErrors = filter(self.__filterErrors, transactions)
         filteredYear = filter(self.__filterWrongYear, filteredErrors)
         for transaction in filteredYear:
-            amount = float(transaction['value']) / EtherscanApiReader.__divisor
+            amount = Currency('ETH', float(transaction['value']) / EtherscanApiReader.__divisor)
+            fee = EtherscanApiReader.__fee(transaction)
             if transaction['function'] == 'xflobbyenter':
-                yield EnterLobby(account['id'], transaction['dateTime'], transaction['hash'], Currency('ETH', amount), EtherscanApiReader.__fee(transaction), transaction['to'])
+                yield EnterLobby(account['id'], transaction['dateTime'], transaction['hash'], amount, fee, transaction['to'])
             elif (transaction['function'] == 'xflobbyexit'
                 or transaction['function'] == 'stakestart'
                 or transaction['function'] == 'stakeend'):
                 self.__tokenTransactions[transaction['hash']] = transaction
             elif transaction['from'] == account['address']:
-                yield WithdrawTransfer(account['id'], transaction['dateTime'], transaction['hash'], Currency('ETH', amount), EtherscanApiReader.__fee(transaction))
+                yield WithdrawTransfer(account['id'], transaction['dateTime'], transaction['hash'], amount, fee)
             elif transaction['to'] == account['address']:
-                yield DepositTransfer(account['id'], transaction['dateTime'], transaction['hash'], Currency('ETH', amount))
+                amount = amount - fee
+                yield DepositTransfer(account['id'], transaction['dateTime'], transaction['hash'], amount, fee)
 
     def __fetchERC20Transactions(self, year, account):
         for token in self.__config['tokens']:
@@ -71,7 +73,8 @@ class EtherscanApiReader(Reader):
                 amount = Currency(token['id'], float(transaction['value']) / float('1' + '0'*int(transaction['tokenDecimal'])))
                 if tokenTransaction['function'] == 'xflobbyexit':
                     hexTransformation = [t for t in self.__hexTransformations if t['HEX'] == int(amount.amount)][0]
-                    yield ExitLobby(account['id'], tokenTransaction['dateTime'], tokenTransaction['hash'], Currency('ETH', hexTransformation['ETH']), amount, fee)
+                    lobby = Currency('ETH', hexTransformation['ETH'])
+                    yield ExitLobby(account['id'], tokenTransaction['dateTime'], tokenTransaction['hash'], lobby, amount, fee)
                 elif tokenTransaction['function'] == 'stakestart':
                     yield StartStake(account['id'], tokenTransaction['dateTime'], tokenTransaction['hash'], amount, fee)
                 elif tokenTransaction['function'] == 'stakeend':

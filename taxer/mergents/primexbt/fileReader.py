@@ -69,10 +69,11 @@ class PrimeXBTFileReader(FileReader):
                 continue
             symbol = row[3].split()[1]
             amount = Currency(symbol, row[3].split()[0])
+            f = Currency(symbol, 0)
             if row[2].find('Deposit') != -1:
-                yield DepositTransfer('PRM', date, row[1], amount)
+                yield DepositTransfer('PRM', date, row[1], amount, f)
             elif row[2].find('Withdrawal') != -1:
-                yield WithdrawTransfer('PRM', date, row[1], amount, Currency(symbol, 0))
+                yield WithdrawTransfer('PRM', date, row[1], amount, f)
 
     @staticmethod
     def __readFile(filePath):

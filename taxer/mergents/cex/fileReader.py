@@ -36,7 +36,7 @@ class CexFileReader(FileReader):
                 id = self.__getId(transaction)
                 amount = Currency(transaction['Symbol'], transaction['Amount'])
                 if type == 'deposit':
-                    yield DepositTransfer('CEX', date, id, amount)
+                    yield DepositTransfer('CEX', date, id, amount, Currency(transaction['Symbol'], 0))
                 elif type == 'withdraw':
                     yield WithdrawTransfer('CEX', date, id, amount, Currency(transaction['Symbol'], 0))
                 elif type == 'costsNothing':

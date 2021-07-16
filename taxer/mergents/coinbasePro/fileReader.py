@@ -42,10 +42,11 @@ class CoinbaseProFileReader(FileReader):
                 if date.year != year:
                     continue
                 amount = Currency(row['amount/balance unit'], row['amount'])
+                f = Currency(row['amount/balance unit'], 0)
                 if row['type'] == 'withdrawal':
-                    yield WithdrawTransfer('CBP', date, row['transfer id'], amount, Currency(row['amount/balance unit'], 0))
+                    yield WithdrawTransfer('CBP', date, row['transfer id'], amount, f)
                 elif row['type'] == 'deposit':
-                    yield DepositTransfer('CBP', date, row['transfer id'], amount)
+                    yield DepositTransfer('CBP', date, row['transfer id'], amount, f)
 
     def __readFile(self, filePath):
         with open(filePath) as csvFile:
