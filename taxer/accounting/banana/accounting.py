@@ -8,6 +8,7 @@ from taxer.accounting import baseCurrency, costCenter
 from .accounts import BananaAccounts
 from .bananaCurrency import BananaCurrency
 from ..accounting import Accounting
+from ..costCenter import CostCenter
 from ...currencyConverters.currencyConverters import CurrencyConverters
 from ...transactions.currency import Currency
 from ...transactions.trade import Trade
@@ -235,26 +236,27 @@ class BananaAccounting(Accounting):
         description = '{} Lobby; Enter'.format(transaction.lobby)
         w = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.amount, transaction)
         f = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.fee, transaction)
-        l = BananaCurrency(self.__accounts, self.__currencyConverters, Currency(transaction.lobby, 0), transaction)
+        lAccount = self.__accounts.get(transaction.amount.unit, transaction.lobby)
+        lCostCenter = CostCenter(transaction.lobby, transaction.amount)
         BananaAccounting.__log.debug("Lobby enter; %s, %s", transaction.lobby, transaction.amount)
         # withdrawal     date,    receipt,        description, deposit,              withdrawal, amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
         yield (date[0], [date[1], transaction.id, description, '',                   w.account,  w.amount, w.unit,   w.baseCurrency.exchangeRate, w.baseCurrency.amount, '',     w.costCenter.minus()])
         # lobby
-        yield (date[0], [date[1], transaction.id, description, l.account,            '',         w.amount, w.unit,   w.baseCurrency.exchangeRate, w.baseCurrency.amount, '',     l.costCenter])
+        yield (date[0], [date[1], transaction.id, description, lAccount,             '',         w.amount, w.unit,   w.baseCurrency.exchangeRate, w.baseCurrency.amount, '',     lCostCenter])
         # fee
-        yield (date[0], [date[1], transaction.id, description, self.__accounts.fees, w.account,  f.amount, w.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, '',     w.costCenter.minus()])
+        yield (date[0], [date[1], transaction.id, description, self.__accounts.fees, w.account,  f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, '',     w.costCenter.minus()])
 
     def __transformExitLobby(self, transaction):
         date = BananaAccounting.__getDate(transaction)
         description = '{} Lobby; Exit'.format(transaction.lobby.unit)
-        l = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.lobby, transaction)
-        w = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.amount, transaction)
+        l = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.lobby, transaction.amount.unit, transaction.dateTime)
+        d = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.amount, transaction)
         f = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.fee, transaction)
         BananaAccounting.__log.debug("Lobby exit; %s", transaction.lobby)
         # lobby          date,    receipt,        description, deposit,              withdrawal, amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
-        yield (date[0], [date[1], transaction.id, description, '',                   w.account,  w.amount, w.unit,   w.baseCurrency.exchangeRate, w.baseCurrency.amount, '',     w.costCenter.minus()])
+        yield (date[0], [date[1], transaction.id, description, '',                   l.account,  l.amount, l.unit,   l.baseCurrency.exchangeRate, l.baseCurrency.amount, '',     l.costCenter.minus()])
         # deposit
-        yield (date[0], [date[1], transaction.id, description, l.account,            '',         l.amount, l.unit,   l.baseCurrency.exchangeRate, l.baseCurrency.amount, '',     l.costCenter])
+        yield (date[0], [date[1], transaction.id, description, d.account,            '',         d.amount, d.unit,   d.baseCurrency.exchangeRate, d.baseCurrency.amount, '',     d.costCenter])
         # fee
         yield (date[0], [date[1], transaction.id, description, self.__accounts.fees, f.account,  f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, '',     f.costCenter.minus()])
 
@@ -270,7 +272,7 @@ class BananaAccounting(Accounting):
         # stake
         yield (date[0], [date[1], transaction.id, description, s.account,            '',         s.amount, s.unit,   s.baseCurrency.exchangeRate, s.baseCurrency.amount, '',     s.costCenter])
         # fee
-        yield (date[0], [date[1], transaction.id, description, self.__accounts.fees, f.account,  f.amount, s.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, '',     f.costCenter.minus()])
+        yield (date[0], [date[1], transaction.id, description, self.__accounts.fees, f.account,  f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, '',     f.costCenter.minus()])
 
     def __transformEndStake(self, transaction):
         date = BananaAccounting.__getDate(transaction)

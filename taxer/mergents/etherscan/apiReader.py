@@ -33,12 +33,13 @@ class EtherscanApiReader(Reader):
     def read(self, year):
         self.__year = year
         self.__hexTransformations = list(self.__hexFileReader.read(self.__year))
-        for account in self.__config['accounts']:
-            yield from self.__fetchNormalTransactions(year, account)
-            yield from self.__fetchERC20Transactions(year, account)
+        with requests.Session() as self.__session:
+            for account in self.__config['accounts']:
+                yield from self.__fetchNormalTransactions(year, account)
+                yield from self.__fetchERC20Transactions(year, account)
 
     def __fetchNormalTransactions(self, year, account):
-        response = requests.get('{}?module=account&action=txlist&address={}&startblock=0&endblock=99999999&page=1&offset=1000&sort=asc&apikey={}'.format(EtherscanApiReader.__apiUrl, account['address'], self.__config['apiKeyToken']))
+        response = self.__session.get('{}?module=account&action=txlist&address={}&startblock=0&endblock=99999999&page=1&offset=1000&sort=asc&apikey={}'.format(EtherscanApiReader.__apiUrl, account['address'], self.__config['apiKeyToken']))
         content = json.loads(response.content)
         transactions = map(self.__transformTransaction, content['result'])
         filteredErrors = filter(self.__filterErrors, transactions)
@@ -58,7 +59,7 @@ class EtherscanApiReader(Reader):
 
     def __fetchERC20Transactions(self, year, account):
         for token in self.__config['tokens']:
-            response = requests.get('{}?module=account&action=tokentx&address={}&contractaddress={}&page=1&offset=100&sort=asc&apikey={}'.format(EtherscanApiReader.__apiUrl, account['address'], token['address'], self.__config['apiKeyToken']))
+            response = self.__session.get('{}?module=account&action=tokentx&address={}&contractaddress={}&page=1&offset=100&sort=asc&apikey={}'.format(EtherscanApiReader.__apiUrl, account['address'], token['address'], self.__config['apiKeyToken']))
             content = json.loads(response.content)
             transactions = map(self.__transformTransaction, content['result'])
             filteredYear = list(filter(self.__filterWrongYear, transactions))
@@ -70,7 +71,7 @@ class EtherscanApiReader(Reader):
                 amount = Currency(token['id'], float(transaction['value']) / float('1' + '0'*int(transaction['tokenDecimal'])))
                 if tokenTransaction['function'] == 'xflobbyexit':
                     hexTransformation = [t for t in self.__hexTransformations if t['HEX'] == int(amount.amount)][0]
-                    yield ExitLobby(account['id'], tokenTransaction['dateTime'], tokenTransaction['hash'], amount, Currency('ETH', hexTransformation['ETH']), fee)
+                    yield ExitLobby(account['id'], tokenTransaction['dateTime'], tokenTransaction['hash'], Currency('ETH', hexTransformation['ETH']), amount, fee)
                 elif tokenTransaction['function'] == 'stakestart':
                     yield StartStake(account['id'], tokenTransaction['dateTime'], tokenTransaction['hash'], amount, fee)
                 elif tokenTransaction['function'] == 'stakeend':
