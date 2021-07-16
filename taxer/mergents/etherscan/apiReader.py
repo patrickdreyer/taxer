@@ -20,10 +20,8 @@ class EtherscanApiReader(Reader):
     __divisor = 1000000000000000000
 
     def __init__(self, config, cachePath, hexReader):
-        for account in config['accounts']:
-            account['address'] = account['address'].lower()
-        for token in config['tokens']:
-            token['address'] = token['address'].lower()
+        config['accounts'] = {k.lower():v for k,v in config['accounts'].items()}
+        config['tokens'] = {k.lower():v for k,v in config['tokens'].items()}
         self.__config = config
         self.__tokenFunctionDecoder = TokenFunctionDecoder.create(config, cachePath, EtherscanApiReader.__apiUrl)
         self.__tokenTransactions = dict()
@@ -32,12 +30,12 @@ class EtherscanApiReader(Reader):
     def read(self, year):
         self.__year = year
         with requests.Session() as self.__session:
-            for account in self.__config['accounts']:
-                yield from self.__fetchNormalTransactions(year, account)
-                yield from self.__fetchERC20Transactions(year, account)
+            for address,id in self.__config['accounts'].items():
+                yield from self.__fetchNormalTransactions(year, address, id)
+                yield from self.__fetchERC20Transactions(year, address, id)
 
-    def __fetchNormalTransactions(self, year, account):
-        response = self.__session.get('{}?module=account&action=txlist&address={}&startblock=0&endblock=99999999&page=1&offset=1000&sort=asc&apikey={}'.format(EtherscanApiReader.__apiUrl, account['address'], self.__config['apiKeyToken']))
+    def __fetchNormalTransactions(self, year, address, id):
+        response = self.__session.get('{}?module=account&action=txlist&address={}&startblock=0&endblock=99999999&page=1&offset=1000&sort=asc&apikey={}'.format(EtherscanApiReader.__apiUrl, address, self.__config['apiKeyToken']))
         content = json.loads(response.content)
         transactions = map(self.__transformTransaction, content['result'])
         filteredErrors = filter(self.__filterErrors, transactions)
@@ -46,23 +44,23 @@ class EtherscanApiReader(Reader):
             amount = Currency('ETH', float(transaction['value']) / EtherscanApiReader.__divisor)
             fee = EtherscanApiReader.__fee(transaction)
             if transaction['function'] == 'xflobbyenter':
-                yield EnterLobby(account['id'], transaction['dateTime'], transaction['hash'], amount, fee, transaction['to'])
+                yield EnterLobby(id, transaction['dateTime'], transaction['hash'], amount, fee, transaction['to'])
             elif (transaction['function'] == 'xflobbyexit'
                 or transaction['function'] == 'stakestart'
                 or transaction['function'] == 'stakeend'):
                 self.__tokenTransactions[transaction['hash']] = transaction
-            elif transaction['from'] == account['address'] and transaction['to'] == account['address']:
-                yield CancelFee(account['id'], transaction['dateTime'], transaction['hash'], fee)
-            elif transaction['from'] == account['address']:
-                yield WithdrawTransfer(account['id'], transaction['dateTime'], transaction['hash'], amount, fee)
-            elif transaction['to'] == account['address']:
-                yield DepositTransfer(account['id'], transaction['dateTime'], transaction['hash'], amount, Currency('ETH', 0))
+            elif transaction['from'] == address and transaction['to'] == address:
+                yield CancelFee(id, transaction['dateTime'], transaction['hash'], fee)
+            elif transaction['from'] == address:
+                yield WithdrawTransfer(id, transaction['dateTime'], transaction['hash'], amount, fee)
+            elif transaction['to'] == address:
+                yield DepositTransfer(id, transaction['dateTime'], transaction['hash'], amount, Currency('ETH', 0))
             else:
                 pass
 
-    def __fetchERC20Transactions(self, year, account):
-        for token in self.__config['tokens']:
-            response = self.__session.get('{}?module=account&action=tokentx&address={}&contractaddress={}&page=1&offset=100&sort=asc&apikey={}'.format(EtherscanApiReader.__apiUrl, account['address'], token['address'], self.__config['apiKeyToken']))
+    def __fetchERC20Transactions(self, year, address, id):
+        for tokenAddress,tokenId in self.__config['tokens'].items():
+            response = self.__session.get('{}?module=account&action=tokentx&address={}&contractaddress={}&page=1&offset=100&sort=asc&apikey={}'.format(EtherscanApiReader.__apiUrl, address, tokenAddress, self.__config['apiKeyToken']))
             content = json.loads(response.content)
             transactions = map(self.__transformTransaction, content['result'])
             filteredYear = list(filter(self.__filterWrongYear, transactions))
@@ -71,16 +69,16 @@ class EtherscanApiReader(Reader):
                     continue
                 tokenTransaction = self.__tokenTransactions[transaction['hash']]
                 fee = EtherscanApiReader.__fee(tokenTransaction)
-                amount = Currency(token['id'], float(transaction['value']) / float('1' + '0'*int(transaction['tokenDecimal'])))
+                amount = Currency(tokenId, float(transaction['value']) / float('1' + '0'*int(transaction['tokenDecimal'])))
                 if tokenTransaction['function'] == 'xflobbyexit':
                     lobby = self.__getETHForHEX(amount.amount)
-                    yield ExitLobby(account['id'], tokenTransaction['dateTime'], tokenTransaction['hash'], lobby, amount, fee)
+                    yield ExitLobby(id, tokenTransaction['dateTime'], tokenTransaction['hash'], lobby, amount, fee)
                 elif tokenTransaction['function'] == 'stakestart':
-                    yield StartStake(account['id'], tokenTransaction['dateTime'], tokenTransaction['hash'], amount, fee)
+                    yield StartStake(id, tokenTransaction['dateTime'], tokenTransaction['hash'], amount, fee)
                 elif tokenTransaction['function'] == 'stakeend':
                     principal = self.__getHEXStakePrincipal(amount.amount)
                     interest = amount - principal
-                    yield EndStake(account['id'], tokenTransaction['dateTime'], tokenTransaction['hash'], principal, interest, amount, fee)
+                    yield EndStake(id, tokenTransaction['dateTime'], tokenTransaction['hash'], principal, interest, amount, fee)
                 else:
                     pass
 
@@ -103,10 +101,10 @@ class EtherscanApiReader(Reader):
         return transaction['dateTime'].year == self.__year
 
     def __isToken(self, address):
-        return address in [token['address'] for token in self.__config['tokens']]
+        return address in [token for token in self.__config['tokens']]
 
     def __getTokenId(self, address):
-        return [token for token in self.__config['tokens'] if token['address'] == address][0]['id']
+        return [v for k,v in self.__config['tokens'].items() if k == address][0]
 
     def __getETHForHEX(self, hex):
         hex = int(hex)

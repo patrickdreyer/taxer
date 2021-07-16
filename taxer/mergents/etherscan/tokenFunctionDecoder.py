@@ -26,10 +26,10 @@ class TokenFunctionDecoder():
     def __createTokenContracts(tokens, apiKeyToken, cachePath, apiUrl):
         ret = {}
         w3 = web3.Web3()
-        for token in tokens:
-            abi = TokenFunctionDecoder.__fetchContractAbi(token['address'], apiKeyToken, cachePath, apiUrl)
-            contract = w3.eth.contract(address=w3.toChecksumAddress(token['address']), abi=abi)
-            ret[token['address']] = contract
+        for address in tokens.keys():
+            abi = TokenFunctionDecoder.__fetchContractAbi(address, apiKeyToken, cachePath, apiUrl)
+            contract = w3.eth.contract(address=w3.toChecksumAddress(address), abi=abi)
+            ret[address] = contract
         return ret
 
     @staticmethod
