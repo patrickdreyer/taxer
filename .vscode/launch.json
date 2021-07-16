@@ -11,10 +11,10 @@
             "program": "main.py",
             "console": "integratedTerminal",
             "args": [
-                "--input", "testData",
-                "--cache", "cache",
-                "--output", "./",
-                "--config", "config.json",
+                "--input", "~/Dropbox/4-Buchhaltung/2020/Kryptos/reports",
+                "--cache", "~/Dropbox/4-Buchhaltung/2020/Kryptos/cache",
+                "--output", "~/Dropbox/4-Buchhaltung/2020/Kryptos/",
+                "--config", "~/Dropbox/4-Buchhaltung/2020/Kryptos/taxer.json",
                 "--year", "2020",
                 "--transactions", "./transactions.pkl"
             ]
