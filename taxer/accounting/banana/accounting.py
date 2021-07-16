@@ -96,7 +96,7 @@ class BananaAccounting(Accounting):
                 # fiat
                 yield (date[0], [date[1], transaction.id, description, b.account,                self.__accounts.transfer, b.amount, b.unit,   b.baseCurrency.exchangeRate, b.baseCurrency.amount,  '',     b.costCenter])
                 # fee
-                yield (date[0], [date[1], transaction.id, description, self.__accounts.fees,     s.account,                f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount , '',     f.costCenter.minus()])
+                yield (date[0], [date[1], transaction.id, description, self.__accounts.fees,     self.__accounts.transfer, f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount , '',     ''])
 
     def __transformMarginTrade(self, transaction):
         date = BananaAccounting.__getDate(transaction)

@@ -29,13 +29,13 @@ class CoinbaseProFileReader(FileReader):
                 if date.year != year:
                     continue
                 crypto = Currency(row['size unit'], row['size'])
-                fiatTotal = Currency(row['price/fee/total unit'], row['total'])
+                fiat = Currency(row['price/fee/total unit'], row['total'])
                 fee = Currency(row['price/fee/total unit'], row['fee'])
-                fiatAmount = fiatTotal - fee
                 if row['side'] == 'BUY':
-                    yield BuyTrade('CBP', date, row['trade id'], crypto, fiatAmount, fee)
+                    fiat = fiat - fee
+                    yield BuyTrade('CBP', date, row['trade id'], crypto, fiat, fee)
                 elif row['side'] == 'SELL':
-                    yield SellTrade('CBP', date, row['trade id'], crypto, fiatAmount, fee)
+                    yield SellTrade('CBP', date, row['trade id'], crypto, fiat, fee)
             # accounts
             elif 'type' in row:
                 date = parser.isoparse(row['time'])
