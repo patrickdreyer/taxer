@@ -5,6 +5,7 @@ import os
 import pickle
 
 from .mergents.mergents import Mergents
+from .ignore import Ignore
 from .payments import Payments
 from .currencyConverters.currencyConverters import CurrencyConverters
 from .accounting.factory import AccountingFactory
@@ -19,7 +20,7 @@ class Application:
         self.__parseArguments()
         self.__readConfig()
         self.__mergents = Mergents(self.__config, self.__args.input, self.__args.cache)
-        self.__transformers = [Payments(self.__config['payments'])]
+        self.__transformers = [Ignore(self.__config['ignore']), Payments(self.__config['payments'])]
         self.__currencyConverters = CurrencyConverters().load(self.__args.cache)
         self.__accountings = AccountingFactory(self.__args, self.__config, self.__currencyConverters).create()
 
