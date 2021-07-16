@@ -2,8 +2,8 @@ from .transaction import Transaction
 
 
 class Transfer(Transaction):
-    def __init__(self, mergentId, dateTime, id, amount, fee):
-        super().__init__(mergentId, dateTime, id)
+    def __init__(self, mergentId, dateTime, id, amount, fee, note=''):
+        super().__init__(mergentId, dateTime, id, note)
         self.__amount = amount
         self.__fee = fee
 

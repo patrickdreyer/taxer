@@ -57,8 +57,6 @@ class BananaAccounting(Accounting):
                 yield from self.__transformTrade(transaction)
             elif isinstance(transaction, MarginTrade):
                 yield from self.__transformMarginTrade(transaction)
-            elif issubclass(type(transaction), Transfer):
-                transfers.append(transaction)
             elif isinstance(transaction, Reimbursement):
                 yield from self.__transformReimbursement(transaction)
             elif isinstance(transaction, Payment):
@@ -73,6 +71,8 @@ class BananaAccounting(Accounting):
                 yield from self.__transformStartStake(transaction)
             elif isinstance(transaction, EndStake):
                 yield from self.__transformEndStake(transaction)
+            elif issubclass(type(transaction), Transfer):
+                transfers.append(transaction)
             else:
                 BananaAccounting.__log.error("Unknown transaction; class='%s'", type(transaction).__name__)
                 raise ValueError("Unknown transaction; type='{}'".format(type(transaction)))
@@ -216,9 +216,13 @@ class BananaAccounting(Accounting):
     def __transformPayment(self, transaction):
         BananaAccounting.__log.debug("Payment; %s, %s, %s", transaction.mergentId, transaction.amount, transaction.note)
         date = BananaAccounting.__getDate(transaction)
-        c = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.amount, transaction)
-        #                date,    receipt,        description, deposit,   withdrawal,             amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
-        yield (date[0], [date[1], transaction.id, 'Bezahlung', c.account, self.__accounts.equity, c.amount, c.unit,   c.baseCurrency.exchangeRate, c.baseCurrency.amount, '',     c.costCenter, transaction.note])
+        description = 'Bezahlung'
+        w = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.amount, transaction)
+        #                    date,    receipt,        description, deposit,                withdrawal, amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
+        yield     (date[0], [date[1], transaction.id, description, self.__accounts.equity, w.account,  w.amount, w.unit,   w.baseCurrency.exchangeRate, w.baseCurrency.amount, '',     w.costCenter, transaction.note])
+        if transaction.fee.amount > 0:
+            f = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.fee, transaction)
+            yield (date[0], [date[1], '',             description, self.__accounts.fees,   w.account,  f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, '',     f.costCenter.minus()])
 
     def __transformCovesting(self, transaction):
         date = BananaAccounting.__getDate(transaction)
