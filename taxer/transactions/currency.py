@@ -3,7 +3,7 @@ class Currency:
 
     def __init__(self, unit, amount):
         self.__unit = unit
-        self.__amountRaw = float(amount)
+        self.__amountRaw = 0.0 if amount == '' else float(amount)
         self.__amount = abs(self.__amountRaw)
         if self.__unit == 'satoshi':
             self.__unit = 'BTC'
