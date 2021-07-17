@@ -203,11 +203,6 @@ class BananaAccounting(Accounting):
         if deposit.fee.amount > 0:
             f = BananaCurrency(self.__accounts, self.__currencyConverters, deposit.fee, deposit)
             yield     (wDate[0], [wDate[1], '',            description, self.__accounts.fees, '',         f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, '',     f.costCenter.minus()])
-        if deposit.fee.amount == 0 and withdrawal.fee.amount == 0:
-            fee = withdrawal.amount - deposit.amount
-            if fee.amount > 0:
-                f = BananaCurrency(self.__accounts, self.__currencyConverters, fee, deposit)
-                yield (wDate[0], [wDate[1], '',            description, self.__accounts.fees, '',         f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, '',     f.costCenter.minus()])
         # source
         yield         (wDate[0], [wDate[1], withdrawal.id, description, '',                   w.account,  w.amount, w.unit,   w.baseCurrency.exchangeRate, w.baseCurrency.amount, '',     w.costCenter.minus()])
         if withdrawal.fee.amount > 0:
