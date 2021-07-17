@@ -9,7 +9,7 @@ class BananaCurrency(Currency):
         if dateTime == None:
             self.__init__(accounts, currencyConverters, currency, mergentId.mergentId, mergentId.dateTime)
         else:
-            super().__init__(currency.unit, currency.amountRaw)
+            super().__init__(BananaCurrency.__mapUnit(currency.unit), currency.amountRaw)
             self.__account = accounts.get(currency.unit, mergentId)
             self.__baseCurrency = BaseCurrency(currencyConverters, currency, dateTime)
             self.__costCenter = CostCenter(mergentId, currency)
@@ -29,3 +29,7 @@ class BananaCurrency(Currency):
     @property
     def isFiat(self):
         return CurrencyConverters.isFiat(self.unit)
+
+    @staticmethod
+    def __mapUnit(value):
+        return 'USD' if value.startswith('USD') else value
