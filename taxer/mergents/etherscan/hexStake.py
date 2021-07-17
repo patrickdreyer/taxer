@@ -1,3 +1,6 @@
+from decimal import Decimal
+
+
 class HEXStake:
     def __init__(self, principal, interest, total):
         self.__principal = HEXStake.__clean(principal)
@@ -19,4 +22,4 @@ class HEXStake:
     @staticmethod
     def __clean(values):
         value = ''.join(values)
-        return float(str.replace(value, ',', ''))
+        return Decimal(str.replace(value, ',', ''))

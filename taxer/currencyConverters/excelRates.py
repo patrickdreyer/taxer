@@ -2,6 +2,7 @@ import os
 import re
 import csv
 import dateutil
+from decimal import Decimal
 
 from .currencyConverter import CurrencyConverter
 
@@ -41,5 +42,5 @@ class ExcelRates(CurrencyConverter):
             reader = csv.DictReader(csvFile, delimiter=',')
             for row in reader:
                 d = dateutil.parser.parse(row['Date'], self.__parserInfo).strftime('%Y%m%d')
-                unitRates[d] = float(row['CHF'])
+                unitRates[d] = Decimal(row['CHF'])
         self.__rates[unit] = unitRates

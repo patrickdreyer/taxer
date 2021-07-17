@@ -1,5 +1,6 @@
 import logging
 from datetime import timedelta
+from decimal import Decimal
 import csv
 import os
 
@@ -33,7 +34,7 @@ class BananaAccounting(Accounting):
         self.__output = output
         self.__accounts = BananaAccounts()
         self.__currencyConverters = currencyConverters
-        precision = float(config['transferPrecision'])
+        precision = Decimal(config['transferPrecision'])
         self.__minPrecision = 1 - precision
         self.__maxPrecision = 1 + precision
 

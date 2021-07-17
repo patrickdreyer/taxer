@@ -1,3 +1,6 @@
+from decimal import Decimal
+
+
 class HEXTransformation:
     def __init__(self, hex, eth):
         self.__hex = HEXTransformation.__clean(hex)
@@ -14,4 +17,4 @@ class HEXTransformation:
     @staticmethod
     def __clean(values):
         value = ''.join(values)
-        return float(str.replace(value, ',', ''))
+        return Decimal(str.replace(value, ',', ''))

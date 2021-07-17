@@ -1,5 +1,6 @@
 import datetime
 from  dateutil import parser
+from decimal import Decimal
 import hashlib
 import hmac
 import json
@@ -60,9 +61,9 @@ class CexApiReader(Reader):
     def __getAmount(id, order):
         maker = '{}:{}'.format(id, order['symbol2'])
         taker = 't{}:{}'.format(id, order['symbol2'])
-        ret = 0.0
+        ret = Decimal()
         if maker in order:
-            ret = ret + float(order[maker])
+            ret = ret + Decimal(order[maker])
         if taker in order:
-            ret = ret + float(order[taker])
+            ret = ret + Decimal(order[taker])
         return ret

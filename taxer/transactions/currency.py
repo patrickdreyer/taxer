@@ -1,9 +1,12 @@
+from decimal import Decimal
+
+
 class Currency:
-    __satoshiToBTC = 0.00000001
+    __satoshiToBTC = Decimal(0.00000001)
 
     def __init__(self, unit, amount):
         self.__unit = unit
-        self.__amountRaw = 0.0 if amount == '' else float(amount)
+        self.__amountRaw = Decimal() if amount == '' else Decimal(amount)
         self.__amount = abs(self.__amountRaw)
         if self.__unit == 'satoshi':
             self.__unit = 'BTC'

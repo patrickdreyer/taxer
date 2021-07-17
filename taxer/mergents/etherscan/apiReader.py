@@ -1,4 +1,5 @@
 import datetime
+from decimal import Decimal
 import json
 import requests
 import pytz
@@ -41,7 +42,7 @@ class EtherscanApiReader(Reader):
         filteredErrors = filter(self.__filterErrors, transactions)
         filteredYear = filter(self.__filterWrongYear, filteredErrors)
         for transaction in filteredYear:
-            amount = Currency('ETH', float(transaction['value']) / EtherscanApiReader.__divisor)
+            amount = Currency('ETH', Decimal(transaction['value']) / EtherscanApiReader.__divisor)
             fee = EtherscanApiReader.__fee(transaction)
             if transaction['function'] == 'xflobbyenter':
                 yield EnterLobby(id, transaction['dateTime'], transaction['hash'], amount, fee, transaction['to'])
@@ -69,7 +70,7 @@ class EtherscanApiReader(Reader):
                     continue
                 tokenTransaction = self.__tokenTransactions[transaction['hash']]
                 fee = EtherscanApiReader.__fee(tokenTransaction)
-                amount = Currency(tokenId, float(transaction['value']) / float('1' + '0'*int(transaction['tokenDecimal'])))
+                amount = Currency(tokenId, Decimal(transaction['value']) / Decimal('1' + '0'*int(transaction['tokenDecimal'])))
                 if tokenTransaction['function'] == 'xflobbyexit':
                     lobby = self.__getETHForHEX(amount.amount)
                     yield ExitLobby(id, tokenTransaction['dateTime'], tokenTransaction['hash'], lobby, amount, fee)
@@ -118,4 +119,4 @@ class EtherscanApiReader(Reader):
 
     @staticmethod
     def __fee(transaction):
-        return Currency('ETH', float(transaction['gasUsed']) * float(transaction['gasPrice']) / EtherscanApiReader.__divisor)
+        return Currency('ETH', Decimal(transaction['gasUsed']) * Decimal(transaction['gasPrice']) / EtherscanApiReader.__divisor)

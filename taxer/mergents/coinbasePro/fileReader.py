@@ -32,6 +32,7 @@ class CoinbaseProFileReader(FileReader):
                 fiat = Currency(row['price/fee/total unit'], row['total'])
                 fee = Currency(row['price/fee/total unit'], row['fee'])
                 if row['side'] == 'BUY':
+                    test = fiat.amount - fee.amount
                     fiat = fiat - fee
                     yield BuyTrade('CBP', date, row['trade id'], crypto, fiat, fee)
                 elif row['side'] == 'SELL':
