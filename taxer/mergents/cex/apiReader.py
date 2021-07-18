@@ -7,9 +7,9 @@ import json
 import requests
 
 from ..reader import Reader
+from ...transactions.buyTrade import BuyTrade
 from ...transactions.currency import Currency
 from ...transactions.sellTrade import SellTrade
-from ...transactions.buyTrade import BuyTrade
 
 
 class CexApiReader(Reader):

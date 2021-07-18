@@ -1,13 +1,12 @@
 import csv
-from logging import currentframe
 from  dateutil import parser
 
 from ..fileReader import FileReader
-from ...transactions.currency import Currency
 from ...transactions.buyTrade import BuyTrade
+from ...transactions.currency import Currency
+from ...transactions.depositTransfer import DepositTransfer
 from ...transactions.sellTrade import SellTrade
 from ...transactions.withdrawTransfer import WithdrawTransfer
-from ...transactions.depositTransfer import DepositTransfer
 
 
 class CoinbaseProFileReader(FileReader):

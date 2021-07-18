@@ -1,9 +1,7 @@
-import logging
-from collections import OrderedDict
-import os
 import csv
 from decimal import Decimal
-
+import logging
+import os
 from pycoingecko import CoinGeckoAPI
 
 from .currencyConverter import CurrencyConverter

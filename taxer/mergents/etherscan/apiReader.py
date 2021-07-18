@@ -6,14 +6,14 @@ import pytz
 
 from .tokenFunctionDecoder import TokenFunctionDecoder
 from ..reader import Reader
+from ...transactions.cancelFee import CancelFee
 from ...transactions.currency import Currency
 from ...transactions.depositTransfer import DepositTransfer
-from ...transactions.cancelFee import CancelFee
-from ...transactions.withdrawTransfer import WithdrawTransfer
+from ...transactions.endStake import EndStake
 from ...transactions.enterLobby import EnterLobby
 from ...transactions.exitLobby import ExitLobby
 from ...transactions.startStake import StartStake
-from ...transactions.endStake import EndStake
+from ...transactions.withdrawTransfer import WithdrawTransfer
 
 
 class EtherscanApiReader(Reader):
@@ -46,9 +46,7 @@ class EtherscanApiReader(Reader):
             fee = EtherscanApiReader.__fee(transaction)
             if transaction['function'] == 'xflobbyenter':
                 yield EnterLobby(id, transaction['dateTime'], transaction['hash'], amount, fee, transaction['to'])
-            elif (transaction['function'] == 'xflobbyexit'
-                or transaction['function'] == 'stakestart'
-                or transaction['function'] == 'stakeend'):
+            elif transaction['function'] != '':
                 self.__tokenTransactions[transaction['hash']] = transaction
             elif transaction['from'] == address and transaction['to'] == address:
                 yield CancelFee(id, transaction['dateTime'], transaction['hash'], fee)

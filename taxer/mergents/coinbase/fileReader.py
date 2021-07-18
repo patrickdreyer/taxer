@@ -3,8 +3,8 @@ from  dateutil import parser
 
 from ..fileReader import FileReader
 from ...transactions.currency import Currency
-from ...transactions.withdrawTransfer import WithdrawTransfer
 from ...transactions.depositTransfer import DepositTransfer
+from ...transactions.withdrawTransfer import WithdrawTransfer
 
 
 class CoinbaseFileReader(FileReader):

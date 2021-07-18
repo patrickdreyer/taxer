@@ -1,5 +1,6 @@
 import logging
 
+
 class Ignore:
     __log = logging.getLogger(__name__)
 

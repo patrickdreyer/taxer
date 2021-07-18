@@ -1,6 +1,3 @@
-import os
-import re
-
 from .bitbox.mergent import BitBoxMergent
 from .cex.mergent import CexMergent
 from .coinbasePro.mergent import CoinbaseProMergent

@@ -4,11 +4,11 @@ import logging
 import os
 import pickle
 
-from .mergents.mergents import Mergents
-from .ignore import Ignore
-from .payments import Payments
-from .currencyConverters.currencyConverters import CurrencyConverters
 from .accounting.factory import AccountingFactory
+from .currencyConverters.currencyConverters import CurrencyConverters
+from .ignore import Ignore
+from .mergents.mergents import Mergents
+from .payments import Payments
 
 class Application:
     __log = None

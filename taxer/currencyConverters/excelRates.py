@@ -1,13 +1,14 @@
+import csv
+from dateutil import parser
+from dateutil.parser import parserinfo
+from decimal import Decimal
 import os
 import re
-import csv
-import dateutil
-from decimal import Decimal
 
 from .currencyConverter import CurrencyConverter
 
 
-class ParserInfoDE(dateutil.parser.parserinfo):
+class ParserInfoDE(parserinfo):
     MONTHS = ['Jan', 'Feb', 'Mrz', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez']
 
 
@@ -41,6 +42,6 @@ class ExcelRates(CurrencyConverter):
         with open(filePath) as csvFile:
             reader = csv.DictReader(csvFile, delimiter=',')
             for row in reader:
-                d = dateutil.parser.parse(row['Date'], self.__parserInfo).strftime('%Y%m%d')
+                d = parser.parse(row['Date'], ExcelRates.__parserInfo).strftime('%Y%m%d')
                 unitRates[d] = Decimal(row['CHF'])
-        self.__rates[unit] = unitRates
+        ExcelRates.__rates[unit] = unitRates

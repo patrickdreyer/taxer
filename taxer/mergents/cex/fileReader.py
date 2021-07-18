@@ -1,13 +1,11 @@
 import csv
-import itertools
-import re
 from  dateutil import parser
+import itertools
 import pytz
+import re
 
 from ..fileReader import FileReader
 from ...transactions.currency import Currency
-from ...transactions.buyTrade import BuyTrade
-from ...transactions.sellTrade import SellTrade
 from ...transactions.withdrawTransfer import WithdrawTransfer
 from ...transactions.depositTransfer import DepositTransfer
 from ...transactions.reimbursement import Reimbursement
