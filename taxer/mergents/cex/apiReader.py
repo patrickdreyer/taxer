@@ -1,14 +1,15 @@
 import datetime
 from  dateutil import parser
+from decimal import Decimal
 import hashlib
 import hmac
 import json
 import requests
 
 from ..reader import Reader
+from ...transactions.buyTrade import BuyTrade
 from ...transactions.currency import Currency
 from ...transactions.sellTrade import SellTrade
-from ...transactions.buyTrade import BuyTrade
 
 
 class CexApiReader(Reader):
@@ -21,10 +22,12 @@ class CexApiReader(Reader):
             if not 'd' in order['status']:
                 continue
             date = parser.isoparse(order['time'])
-            crypto = Currency(order['symbol1'], order['a:{}:cds'.format(order['symbol1'])])
-            fee = Currency(order['symbol2'], order['f:{}:cds'.format(order['symbol2'])])
-            fiat = Currency(order['symbol2'], order['a:{}:cds'.format(order['symbol2'])]) - fee
+            fee = Currency(order['symbol2'], CexApiReader.__getAmount('fa', order))
+            fiat = Currency(order['symbol2'], CexApiReader.__getAmount('ta', order))
+            remains = Currency(order['symbol1'], order['remains'])
+            crypto = Currency(order['symbol1'], order['a:{}:cds'.format(order['symbol1'])]) - remains
             if order['type'] == 'sell':
+                fiat = fiat - fee
                 yield SellTrade('CEX', date, order['id'], crypto, fiat, fee)
             elif order['type'] == 'buy':
                 yield BuyTrade('CEX', date, order['id'], crypto, fiat, fee)
@@ -53,3 +56,14 @@ class CexApiReader(Reader):
             "signature": signature,
             "nonce": timestamp,
         }
+
+    @staticmethod
+    def __getAmount(id, order):
+        maker = '{}:{}'.format(id, order['symbol2'])
+        taker = 't{}:{}'.format(id, order['symbol2'])
+        ret = Decimal()
+        if maker in order:
+            ret = ret + Decimal(order[maker])
+        if taker in order:
+            ret = ret + Decimal(order[taker])
+        return ret

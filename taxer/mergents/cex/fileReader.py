@@ -1,13 +1,11 @@
 import csv
-import itertools
-import re
 from  dateutil import parser
+import itertools
 import pytz
+import re
 
 from ..fileReader import FileReader
 from ...transactions.currency import Currency
-from ...transactions.buyTrade import BuyTrade
-from ...transactions.sellTrade import SellTrade
 from ...transactions.withdrawTransfer import WithdrawTransfer
 from ...transactions.depositTransfer import DepositTransfer
 from ...transactions.reimbursement import Reimbursement
@@ -36,9 +34,15 @@ class CexFileReader(FileReader):
                 id = self.__getId(transaction)
                 amount = Currency(transaction['Symbol'], transaction['Amount'])
                 if type == 'deposit':
-                    yield DepositTransfer('CEX', date, id, amount)
+                    fee = Currency(transaction['FeeSymbol'], transaction['FeeAmount'])
+                    if fee.amount > 0:
+                        amount = amount - fee
+                    yield DepositTransfer('CEX', date, id, amount, fee)
                 elif type == 'withdraw':
-                    yield WithdrawTransfer('CEX', date, id, amount, Currency(transaction['Symbol'], 0))
+                    fee = Currency(transaction['FeeSymbol'], transaction['FeeAmount'])
+                    if fee.amount > 0:
+                        amount = amount - fee
+                    yield WithdrawTransfer('CEX', date, id, amount, fee)
                 elif type == 'costsNothing':
                     yield Reimbursement("CEX", date, id, amount)
 
@@ -68,4 +72,4 @@ class CexFileReader(FileReader):
     @staticmethod
     def __getId(row):
         id = re.sub(r'[^#]+#(\d+)$', r'\1', row['Comment'], 1)
-        return id if id != row['Comment'] else None
+        return id if id != row['Comment'] else '{}{}{}{}'.format(row['DateUTC'], row['Amount'], row['Symbol'], row['Type'])

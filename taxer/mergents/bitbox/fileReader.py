@@ -3,10 +3,8 @@ from  dateutil import parser
 
 from ..fileReader import FileReader
 from ...transactions.currency import Currency
-from ...transactions.buyTrade import BuyTrade
-from ...transactions.sellTrade import SellTrade
-from ...transactions.withdrawTransfer import WithdrawTransfer
 from ...transactions.depositTransfer import DepositTransfer
+from ...transactions.withdrawTransfer import WithdrawTransfer
 
 
 class BitBoxFileReader(FileReader):
@@ -34,8 +32,8 @@ class BitBoxFileReader(FileReader):
                 f = Currency(self.__row['Unit'], self.__row['Fee'])
                 yield WithdrawTransfer(BitBoxFileReader.__id, date, id, c, f)
 
-            elif self.__row['Type'] == 'received':                        
-                yield DepositTransfer(BitBoxFileReader.__id, date, id, c)
+            elif self.__row['Type'] == 'received':
+                yield DepositTransfer(BitBoxFileReader.__id, date, id, c, Currency(self.__row['Unit'], 0))
 
     def __readFile(self, filePath):
         with open(filePath) as csvFile:

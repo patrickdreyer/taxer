@@ -3,8 +3,8 @@ from  dateutil import parser
 
 from ..fileReader import FileReader
 from ...transactions.currency import Currency
-from ...transactions.withdrawTransfer import WithdrawTransfer
 from ...transactions.depositTransfer import DepositTransfer
+from ...transactions.withdrawTransfer import WithdrawTransfer
 
 
 class CoinbaseFileReader(FileReader):
@@ -26,10 +26,11 @@ class CoinbaseFileReader(FileReader):
             if date.year != year:
                 continue
             amount = Currency(row[2], row[3])
+            f = Currency(row[2], 0)
             if row[1] == 'Send':
-                yield WithdrawTransfer(CoinbaseFileReader.__id, date, '', amount, Currency(row[2], 0))
+                yield WithdrawTransfer(CoinbaseFileReader.__id, date, '', amount, f)
             elif row[1] == 'Receive':
-                yield DepositTransfer(CoinbaseFileReader.__id, date, '', amount)
+                yield DepositTransfer(CoinbaseFileReader.__id, date, '', amount, f)
 
     @staticmethod
     def __readFile(filePath):

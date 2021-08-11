@@ -3,13 +3,12 @@ import json
 import logging
 import os
 import pickle
-import sys
-import time
 
+from .accounting.factory import AccountingFactory
+from .currencyConverters.currencyConverters import CurrencyConverters
+from .ignore import Ignore
 from .mergents.mergents import Mergents
 from .payments import Payments
-from .currencyConverters.currencyConverters import CurrencyConverters
-from .accounting.factory import AccountingFactory
 
 class Application:
     __log = None
@@ -21,7 +20,7 @@ class Application:
         self.__parseArguments()
         self.__readConfig()
         self.__mergents = Mergents(self.__config, self.__args.input, self.__args.cache)
-        self.__transformers = [Payments(self.__args.input)]
+        self.__transformers = [Ignore(self.__config['ignore']), Payments(self.__config['payments'])]
         self.__currencyConverters = CurrencyConverters().load(self.__args.cache)
         self.__accountings = AccountingFactory(self.__args, self.__config, self.__currencyConverters).create()
 
@@ -62,9 +61,9 @@ class Application:
         if transactions == None:
             transactions = self.__readTransactions()
             transactions = sorted(transactions, key=lambda t: t.dateTime)
-            transactions = list(self.__transformTransactions(transactions))
             self.__serializeTransactions(transactions)
         for accounting in self.__accountings:
+            transactions = list(self.__transformTransactions(transactions))
             accounting.write(transactions)
 
     def __readTransactions(self):

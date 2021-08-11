@@ -18,6 +18,7 @@ class BananaAccounts:
             'MM' : '1015'
         },
         'HEX': {
+            'ETH': '1016',
             'MM' : '1020',
             'SK' : '1021'
         },

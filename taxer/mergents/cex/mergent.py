@@ -1,8 +1,6 @@
-import csv
-
 from ..mergent import Mergent
-from .fileReader import CexFileReader
 from .apiReader import CexApiReader
+from .fileReader import CexFileReader
 
 
 class CexMergent(Mergent):

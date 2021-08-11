@@ -1,29 +1,28 @@
-from abc import abstractmethod
-import logging
-import itertools
 import csv
+from datetime import timedelta
+from decimal import Decimal
+import logging
 import os
-from taxer.accounting import baseCurrency, costCenter
 
-from .accounts import BananaAccounts
-from .bananaCurrency import BananaCurrency
-from ..accounting import Accounting
-from ...currencyConverters.currencyConverters import CurrencyConverters
-from ...transactions.currency import Currency
-from ...transactions.trade import Trade
 from ...transactions.buyTrade import BuyTrade
-from ...transactions.sellTrade import SellTrade
-from ...transactions.marginTrade import MarginTrade
-from ...transactions.transfer import Transfer
-from ...transactions.depositTransfer import DepositTransfer
-from ...transactions.withdrawTransfer import WithdrawTransfer
-from ...transactions.reimbursement import Reimbursement
-from ...transactions.payment import Payment
+from ...transactions.cancelFee import CancelFee
 from ...transactions.covesting import Covesting
+from ...transactions.depositTransfer import DepositTransfer
+from ...transactions.endStake import EndStake
 from ...transactions.enterLobby import EnterLobby
 from ...transactions.exitLobby import ExitLobby
+from ...transactions.marginTrade import MarginTrade
+from ...transactions.payment import Payment
+from ...transactions.reimbursement import Reimbursement
+from ...transactions.sellTrade import SellTrade
 from ...transactions.startStake import StartStake
-from ...transactions.endStake import EndStake
+from ...transactions.trade import Trade
+from ...transactions.transfer import Transfer
+from ...transactions.withdrawTransfer import WithdrawTransfer
+from ..accounting import Accounting
+from ..costCenter import CostCenter
+from .accounts import BananaAccounts
+from .bananaCurrency import BananaCurrency
 
 
 class BananaAccounting(Accounting):
@@ -35,7 +34,7 @@ class BananaAccounting(Accounting):
         self.__output = output
         self.__accounts = BananaAccounts()
         self.__currencyConverters = currencyConverters
-        precision = float(config['transferPrecision'])
+        precision = Decimal(config['transferPrecision'])
         self.__minPrecision = 1 - precision
         self.__maxPrecision = 1 + precision
 
@@ -49,15 +48,15 @@ class BananaAccounting(Accounting):
             writer.writerows(booking[1] for booking in bookings)
 
     def __transform(self, transactions):
+        self.__accountedTransferIds = set()
         transfers = list()
-        self.__transactions = sorted(transactions, key=lambda t: t.dateTime.timestamp())
-        for transaction in self.__transactions:
+        for transaction in transactions:
             if issubclass(type(transaction), Trade):
                 yield from self.__transformTrade(transaction)
             elif isinstance(transaction, MarginTrade):
                 yield from self.__transformMarginTrade(transaction)
-            elif issubclass(type(transaction), Transfer):
-                transfers.append(transaction)
+            elif isinstance(transaction, CancelFee):
+                yield from self.__transformCancelFee(transaction)
             elif isinstance(transaction, Reimbursement):
                 yield from self.__transformReimbursement(transaction)
             elif isinstance(transaction, Payment):
@@ -72,6 +71,8 @@ class BananaAccounting(Accounting):
                 yield from self.__transformStartStake(transaction)
             elif isinstance(transaction, EndStake):
                 yield from self.__transformEndStake(transaction)
+            elif issubclass(type(transaction), Transfer):
+                transfers.append(transaction)
             else:
                 BananaAccounting.__log.error("Unknown transaction; class='%s'", type(transaction).__name__)
                 raise ValueError("Unknown transaction; type='{}'".format(type(transaction)))
@@ -99,7 +100,7 @@ class BananaAccounting(Accounting):
                 # fiat
                 yield (date[0], [date[1], transaction.id, description, b.account,                self.__accounts.transfer, b.amount, b.unit,   b.baseCurrency.exchangeRate, b.baseCurrency.amount,  '',     b.costCenter])
                 # fee
-                yield (date[0], [date[1], transaction.id, description, self.__accounts.fees,     s.account,                f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount , '',     f.costCenter.minus()])
+                yield (date[0], [date[1], transaction.id, description, self.__accounts.fees,     self.__accounts.transfer, f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount , '',     ''])
 
     def __transformMarginTrade(self, transaction):
         date = BananaAccounting.__getDate(transaction)
@@ -121,32 +122,41 @@ class BananaAccounting(Accounting):
         yield     (date[0], [date[1], transaction.id, 'Margin Trade - Ausstieg', self.__accounts.fees,   a.account,              x.amount, a.unit,   x.baseCurrency.exchangeRate, x.baseCurrency.amount, '',    x.costCenter.minus()])
 
     def __transformTransfers(self, transfers):
-        sortedByDate = sorted(transfers, key=lambda t:t.dateTime.date())
-        groupedByDate = itertools.groupby(sortedByDate, key=lambda t:t.dateTime.date())
-        for _, dateGroup in groupedByDate:
-            dateGroup = list(dateGroup)
-            deposits = [transfer for transfer in dateGroup if isinstance(transfer, DepositTransfer)]
-            withdrawals = [transfer for transfer in dateGroup if isinstance(transfer, WithdrawTransfer)]
-            for deposit in deposits:
-                matches = [withdrawal for withdrawal in withdrawals if self.__matchingTransfers(withdrawal, deposit)]
-                if len(matches) == 0:
-                    yield from self.__transformSingleTransfer(deposit)
-                elif len(matches) == 1:
-                    withdrawals.remove(matches[0])
-                    yield from self.__transformDoubleTransfers(deposit, matches[0])
-                else:
-                    BananaAccounting.__log.error("Multiple matching transfers; deposit=%s, matches=[%s]", deposit, ','.join([match.__str__() for match in matches]))
-                    yield from self.__transformSingleTransfer(deposit)
-            for w in withdrawals:
-                yield from self.__transformSingleTransfer(w)
+        # repeat in case of left-overs from multiple matchings
+        while len(self.__accountedTransferIds) < len(transfers):
+            for transfer in transfers:
+                if transfer.id in self.__accountedTransferIds:
+                    continue
+                elif isinstance(transfer, DepositTransfer):
+                    earliestDateTime = transfer.dateTime - timedelta(days=1)
+                    nonAccountedPastWithdraws = filter(lambda t: self.__nonAccounted(WithdrawTransfer, earliestDateTime, transfer.dateTime, t), transfers)
+                    matches = [withdrawal for withdrawal in nonAccountedPastWithdraws if self.__matchingTransfers(withdrawal, transfer)]
+                    if len(matches) == 0:
+                        yield from self.__transformSingleTransfer(transfer)
+                    elif len(matches) == 1:
+                        yield from self.__transformDoubleTransfers(transfer, matches[0])
+                    # we simply skip multiple matchings as they might be correctly matched with an earlier WithdrawTransfer
+                elif isinstance(transfer, WithdrawTransfer):
+                    latestDateTime = transfer.dateTime + timedelta(days=1)
+                    nonAccountedFutureDeposits = filter(lambda t: self.__nonAccounted(DepositTransfer, transfer.dateTime, latestDateTime, t), transfers)
+                    matches = [deposit for deposit in nonAccountedFutureDeposits if self.__matchingTransfers(deposit, transfer)]
+                    if len(matches) == 0:
+                        yield from self.__transformSingleTransfer(transfer)
+                    elif len(matches) == 1:
+                        yield from self.__transformDoubleTransfers(matches[0], transfer)
+                    # we simply skip multiple matchings as they might be correctly matched with a later DepositTransfer
+
+    def __nonAccounted(self, type, earlierstDateTime, latestDateTime, transfer):
+        return isinstance(transfer, type) \
+            and not transfer.id in self.__accountedTransferIds \
+                and earlierstDateTime <= transfer.dateTime and transfer.dateTime <= latestDateTime
 
     def __matchingTransfers(self, withdrawal, deposit):
         if withdrawal.mergentId == deposit.mergentId:
             return False
-        if withdrawal.dateTime.date() != deposit.dateTime.date():
-            return False
-        min = deposit.amount.amount * self.__minPrecision
-        max = deposit.amount.amount * self.__maxPrecision
+        depositTotal = deposit.amount + deposit.fee
+        min = depositTotal.amount * self.__minPrecision
+        max = depositTotal.amount * self.__maxPrecision
         if withdrawal.amount.amount <= min:
             return False
         if max <= withdrawal.amount.amount:
@@ -163,7 +173,7 @@ class BananaAccounting(Accounting):
                 yield (date[0], [date[1], transaction.id, 'Einzahlung', c.account, self.__accounts.equity, c.amount, c.unit,   c.baseCurrency.exchangeRate, c.baseCurrency.amount, '',     c.costCenter])
             else:
                 BananaAccounting.__log.warn("Transfer; ???->%s, %s", transaction.mergentId, transaction.amount)
-                description = 'Transfer von UNBEKANNT'
+                description = 'Transfer ? -> {}'.format(transaction.mergentId)
                 #                date,    receipt,        description, debit,     credit, amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
                 yield (date[0], [date[1], transaction.id, description, c.account, '',     c.amount, c.unit,   c.baseCurrency.exchangeRate, c.baseCurrency.amount, '',     c.costCenter])
         elif isinstance(transaction, WithdrawTransfer):
@@ -172,29 +182,42 @@ class BananaAccounting(Accounting):
                 description = 'Auszahlung'
             else:
                 BananaAccounting.__log.warn("Transfer; %s->???, %s", transaction.mergentId, c)
-                description = 'Transfer nach UNBEKANNT'
+                description = 'Transfer {} -> ?'.format(transaction.mergentId)
             #                    date,    receipt,        description, debit,                  credit,    amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
             yield     (date[0], [date[1], transaction.id, description, self.__accounts.equity, c.account, c.amount, c.unit,   c.baseCurrency.exchangeRate, c.baseCurrency.amount, '',     c.costCenter.minus()])
             if transaction.fee.amount > 0:
                 f = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.fee, transaction)
                 yield (date[0], [date[1], '',             description, self.__accounts.fees,   c.account, f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, '',     c.costCenter.minus()])
+        self.__accountedTransferIds.add(transaction.id)
 
     def __transformDoubleTransfers(self, deposit, withdrawal):
-        BananaAccounting.__log.debug("Transfer; %s->%s, %s", withdrawal.mergentId, deposit.mergentId, deposit)
+        BananaAccounting.__log.debug("Transfer; %s->%s, %s", withdrawal.mergentId, deposit.mergentId, deposit.amount)
         dDate = BananaAccounting.__getDate(deposit)
-        dDescription = 'Transfer von {0}'.format(withdrawal.mergentId)
+        description = 'Transfer {} -> {}'.format(withdrawal.mergentId, deposit.mergentId)
         d = BananaCurrency(self.__accounts, self.__currencyConverters, deposit.amount, deposit)
         wDate = BananaAccounting.__getDate(withdrawal)
-        wDescription = 'Transfer nach {0}'.format(deposit.mergentId)
         w = BananaCurrency(self.__accounts, self.__currencyConverters, withdrawal.amount, withdrawal)
-        fee = withdrawal.fee.amount if withdrawal.fee.amount > 0 else w.amount - d.amount
-        baseCurrencyFee = round(fee * w.baseCurrency.exchangeRate, 2)
-        # target              date,     receipt,       description,  deposit,              withdrawal, amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
-        yield     (dDate[0], [dDate[1], deposit.id,    dDescription, d.account,            '',         d.amount, d.unit,   d.baseCurrency.exchangeRate, d.baseCurrency.amount, '',     d.costCenter])
+        if withdrawal.fee.amount > 0 and deposit.fee.amount > 0:
+            BananaAccounting.__log.warn("Double transfer fees; %s, %s - %s. %s", withdrawal.mergentId, withdrawal.fee, deposit.mergentId, deposit.fee)
+        # target                  date,     receipt,       description, deposit,              withdrawal, amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
+        yield         (dDate[0], [dDate[1], deposit.id,    description, d.account,            '',         d.amount, d.unit,   d.baseCurrency.exchangeRate, d.baseCurrency.amount, '',     d.costCenter])
+        if deposit.fee.amount > 0:
+            f = BananaCurrency(self.__accounts, self.__currencyConverters, deposit.fee, deposit)
+            yield     (wDate[0], [wDate[1], '',            description, self.__accounts.fees, '',         f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, '',     f.costCenter.minus()])
         # source
-        yield     (wDate[0], [wDate[1], withdrawal.id, wDescription, '',                   w.account,  w.amount, w.unit,   w.baseCurrency.exchangeRate, w.baseCurrency.amount, '',     w.costCenter.minus()])
-        if fee > 0:
-            yield (wDate[0], [wDate[1], '',            wDescription, self.__accounts.fees, w.account,  fee,      w.unit,   w.baseCurrency.exchangeRate, baseCurrencyFee,       '',     w.costCenter.minus()])
+        yield         (wDate[0], [wDate[1], withdrawal.id, description, '',                   w.account,  w.amount, w.unit,   w.baseCurrency.exchangeRate, w.baseCurrency.amount, '',     w.costCenter.minus()])
+        if withdrawal.fee.amount > 0:
+            f = BananaCurrency(self.__accounts, self.__currencyConverters, withdrawal.fee, withdrawal)
+            yield     (wDate[0], [wDate[1], '',            description, self.__accounts.fees, f.account,  f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, '',     f.costCenter.minus()])
+        self.__accountedTransferIds.add(deposit.id)
+        self.__accountedTransferIds.add(withdrawal.id)
+
+    def __transformCancelFee(self, transaction):
+        BananaAccounting.__log.debug("Cancel fee; %s, %s", transaction.mergentId, transaction.amount)
+        date = BananaAccounting.__getDate(transaction)
+        c = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.amount, transaction)
+        #                date,    receipt,        description,     deposit,              withdrawal, amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
+        yield (date[0], [date[1], transaction.id, 'Abbruchgebühr', self.__accounts.fees, c.account,  c.amount, c.unit,   c.baseCurrency.exchangeRate, c.baseCurrency.amount, '',     c.costCenter.minus()])
 
     def __transformReimbursement(self, transaction):
         BananaAccounting.__log.debug("Reimbursement; %s, %s", transaction.mergentId, transaction.amount)
@@ -206,9 +229,13 @@ class BananaAccounting(Accounting):
     def __transformPayment(self, transaction):
         BananaAccounting.__log.debug("Payment; %s, %s, %s", transaction.mergentId, transaction.amount, transaction.note)
         date = BananaAccounting.__getDate(transaction)
-        c = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.amount, transaction)
-        #                date,    receipt,        description, deposit,   withdrawal,             amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
-        yield (date[0], [date[1], transaction.id, 'Bezahlung', c.account, self.__accounts.equity, c.amount, c.unit,   c.baseCurrency.exchangeRate, c.baseCurrency.amount, '',     c.costCenter, transaction.note])
+        description = 'Bezahlung'
+        w = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.amount, transaction)
+        #                    date,    receipt,        description, deposit,                withdrawal, amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
+        yield     (date[0], [date[1], transaction.id, description, self.__accounts.equity, w.account,  w.amount, w.unit,   w.baseCurrency.exchangeRate, w.baseCurrency.amount, '',     w.costCenter.minus(), transaction.note])
+        if transaction.fee.amount > 0:
+            f = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.fee, transaction)
+            yield (date[0], [date[1], '',             description, self.__accounts.fees,   w.account,  f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, '',     f.costCenter.minus()])
 
     def __transformCovesting(self, transaction):
         date = BananaAccounting.__getDate(transaction)
@@ -235,26 +262,27 @@ class BananaAccounting(Accounting):
         description = '{} Lobby; Enter'.format(transaction.lobby)
         w = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.amount, transaction)
         f = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.fee, transaction)
-        l = BananaCurrency(self.__accounts, self.__currencyConverters, Currency(transaction.lobby, 0), transaction)
+        lAccount = self.__accounts.get(transaction.amount.unit, transaction.lobby)
+        lCostCenter = CostCenter(transaction.lobby, transaction.amount)
         BananaAccounting.__log.debug("Lobby enter; %s, %s", transaction.lobby, transaction.amount)
         # withdrawal     date,    receipt,        description, deposit,              withdrawal, amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
         yield (date[0], [date[1], transaction.id, description, '',                   w.account,  w.amount, w.unit,   w.baseCurrency.exchangeRate, w.baseCurrency.amount, '',     w.costCenter.minus()])
         # lobby
-        yield (date[0], [date[1], transaction.id, description, l.account,            '',         w.amount, w.unit,   w.baseCurrency.exchangeRate, w.baseCurrency.amount, '',     l.costCenter])
+        yield (date[0], [date[1], transaction.id, description, lAccount,             '',         w.amount, w.unit,   w.baseCurrency.exchangeRate, w.baseCurrency.amount, '',     lCostCenter])
         # fee
-        yield (date[0], [date[1], transaction.id, description, self.__accounts.fees, w.account,  f.amount, w.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, '',     w.costCenter.minus()])
+        yield (date[0], [date[1], transaction.id, description, self.__accounts.fees, w.account,  f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, '',     w.costCenter.minus()])
 
     def __transformExitLobby(self, transaction):
         date = BananaAccounting.__getDate(transaction)
         description = '{} Lobby; Exit'.format(transaction.lobby.unit)
-        l = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.lobby, transaction)
-        w = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.amount, transaction)
+        l = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.lobby, transaction.amount.unit, transaction.dateTime)
+        d = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.amount, transaction)
         f = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.fee, transaction)
         BananaAccounting.__log.debug("Lobby exit; %s", transaction.lobby)
         # lobby          date,    receipt,        description, deposit,              withdrawal, amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
-        yield (date[0], [date[1], transaction.id, description, '',                   w.account,  w.amount, w.unit,   w.baseCurrency.exchangeRate, w.baseCurrency.amount, '',     w.costCenter.minus()])
+        yield (date[0], [date[1], transaction.id, description, '',                   l.account,  l.amount, l.unit,   l.baseCurrency.exchangeRate, l.baseCurrency.amount, '',     l.costCenter.minus()])
         # deposit
-        yield (date[0], [date[1], transaction.id, description, l.account,            '',         l.amount, l.unit,   l.baseCurrency.exchangeRate, l.baseCurrency.amount, '',     l.costCenter])
+        yield (date[0], [date[1], transaction.id, description, d.account,            '',         d.amount, d.unit,   d.baseCurrency.exchangeRate, d.baseCurrency.amount, '',     d.costCenter])
         # fee
         yield (date[0], [date[1], transaction.id, description, self.__accounts.fees, f.account,  f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, '',     f.costCenter.minus()])
 
@@ -270,21 +298,24 @@ class BananaAccounting(Accounting):
         # stake
         yield (date[0], [date[1], transaction.id, description, s.account,            '',         s.amount, s.unit,   s.baseCurrency.exchangeRate, s.baseCurrency.amount, '',     s.costCenter])
         # fee
-        yield (date[0], [date[1], transaction.id, description, self.__accounts.fees, f.account,  f.amount, s.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, '',     f.costCenter.minus()])
+        yield (date[0], [date[1], transaction.id, description, self.__accounts.fees, f.account,  f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, '',     f.costCenter.minus()])
 
     def __transformEndStake(self, transaction):
         date = BananaAccounting.__getDate(transaction)
         description = '{} Stake; End'.format(transaction.amount.unit)
         u = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.amount, self.__accounts.staked, transaction.dateTime)
-        d = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.amount, transaction)
+        d = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.total, transaction)
+        i = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.interest, transaction)
         f = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.fee, transaction)
         BananaAccounting.__log.debug("Stake end; %s", transaction.amount)
-        # deposit        date,    receipt,        description, deposit,              withdrawal, amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
-        yield (date[0], [date[1], transaction.id, description, d.account,            '',         d.amount, d.unit,   d.baseCurrency.exchangeRate, d.baseCurrency.amount, '',     d.costCenter])
+        # deposit        date,    receipt,        description, deposit,              withdrawal,             amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
+        yield (date[0], [date[1], transaction.id, description, d.account,            '',                     d.amount, d.unit,   d.baseCurrency.exchangeRate, d.baseCurrency.amount, '',     d.costCenter])
         # unstake
-        yield (date[0], [date[1], transaction.id, description, '',                   u.account,  u.amount, u.unit,   u.baseCurrency.exchangeRate, u.baseCurrency.amount, '',     u.costCenter.minus()])
+        yield (date[0], [date[1], transaction.id, description, '',                   u.account,              u.amount, u.unit,   u.baseCurrency.exchangeRate, u.baseCurrency.amount, '',     u.costCenter.minus()])
+        # interest
+        yield (date[0], [date[1], transaction.id, description, '',                   self.__accounts.equity, i.amount, i.unit,   i.baseCurrency.exchangeRate, i.baseCurrency.amount, '',     ''])
         # fee
-        yield (date[0], [date[1], transaction.id, description, self.__accounts.fees, f.account,  f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, '',     f.costCenter.minus()])
+        yield (date[0], [date[1], transaction.id, description, self.__accounts.fees, f.account,              f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, '',     f.costCenter.minus()])
 
     @staticmethod
     def __getDate(transaction):

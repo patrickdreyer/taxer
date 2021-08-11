@@ -1,5 +1,3 @@
-import csv
-
 from ..mergent import Mergent
 from .fileReader import CoinbaseFileReader
 

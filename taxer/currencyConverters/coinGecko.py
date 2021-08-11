@@ -1,8 +1,7 @@
-import logging
-from collections import OrderedDict
-import os
 import csv
-
+from decimal import Decimal
+import logging
+import os
 from pycoingecko import CoinGeckoAPI
 
 from .currencyConverter import CurrencyConverter
@@ -67,7 +66,7 @@ class CoinGeckoCurrencyConverter(CurrencyConverter):
         CoinGeckoCurrencyConverter.__log.info("Load rates cache; filePath='%s'", filePath)
         with open(filePath) as file:
             reader = csv.DictReader(file, dialect='unix')
-            CoinGeckoCurrencyConverter.__rates = {row['key']:float(row['rate']) for row in reader}
+            CoinGeckoCurrencyConverter.__rates = {row['key']:Decimal(row['rate']) for row in reader}
 
     @staticmethod
     def __storeRates(cachePath):

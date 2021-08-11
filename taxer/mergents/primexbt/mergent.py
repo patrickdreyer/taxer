@@ -1,9 +1,11 @@
-import csv
-
 from ..mergent import Mergent
-from .fileReader import PrimeXBTFileReader
+from .covestingFileReader import PrimeXBTCovestingFileReader
+from .marginFileReader import PrimeXBTMarginFileReader
+from .transferFileReader import PrimeXBTTransferFileReader
 
 
 class PrimeXBTMergent(Mergent):
     def createReaders(self, config, inputPath, cachePath):
-        yield PrimeXBTFileReader(inputPath)
+        yield PrimeXBTCovestingFileReader(inputPath)
+        yield PrimeXBTMarginFileReader(inputPath)
+        yield PrimeXBTTransferFileReader(inputPath)
