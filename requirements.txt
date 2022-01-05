@@ -1,4 +1,5 @@
 lxml==4.7.1
+odfpy==1.4.1
 pycoingecko==2.2.0
 pytest==6.2.5
 python-dateutil==2.8.2
