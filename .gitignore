@@ -8,6 +8,12 @@ transactions.pkl
 .vscode/**
 !.vscode/*.json
 
+# virtualenvwrapper
+get_env_details
+initialize
+post*
+pre*
+
 
 ###############################################################################
 # https://github.com/github/gitignore/blob/main/Python.gitignore
