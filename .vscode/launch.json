@@ -8,7 +8,7 @@
             "name": "Python: Main",
             "type": "python",
             "request": "launch",
-            "program": "main.py",
+            "program": "src/cli.py",
             "console": "integratedTerminal",
             "args": [
                 "--input", "~/Dropbox/4-Buchhaltung/2020/Kryptos/reports",
