@@ -32,9 +32,9 @@ class BananaAccounting(Accounting):
 
     def __init__(self, output, config, currencyConverters):
         self.__output = output
-        self.__accounts = BananaAccounts()
+        self.__accounts = BananaAccounts(config['banana']['accounts'])
         self.__currencyConverters = currencyConverters
-        precision = Decimal(config['transferPrecision'])
+        precision = Decimal(config['banana']['transferPrecision'])
         self.__minPrecision = 1 - precision
         self.__maxPrecision = 1 + precision
 
