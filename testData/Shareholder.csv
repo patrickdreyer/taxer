@@ -1,0 +1,12 @@
+Shareholder,DateTime,Mergent,Currency,Amount
+Patrick Dreyer,01-01-2020,CBP,EUR,1000.00
+Patrick Dreyer,01-01-2020,CBP,USDC,0.00
+Patrick Dreyer,01-01-2020,CBP,BTC,0.00
+Patrick Dreyer,01-01-2020,CBP,ETH,0.00
+Patrick Dreyer,01-01-2020,CBP,XRP,0.00
+Patrick Dreyer,01-01-2020,CEX,BTC,0.00
+Patrick Dreyer,01-01-2020,CEX,USD,0.00
+Patrick Dreyer,01-01-2020,MM,ETH,0.00
+Patrick Dreyer,01-01-2020,S,BTC,0.00
+Patrick Dreyer,01-01-2020,PRM,BTC,0.00
+Emilie Vollmer,28-12-2020,CBP,EUR,580.00
