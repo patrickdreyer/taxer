@@ -1,0 +1,311 @@
+@startuml classes
+title Classes
+center footer patrickdreyer/taxer
+
+'left to right direction
+
+class Application {
+    +main()
+}
+
+class Payments {
+    +__init__(entries)
+    +transform(transactions)
+}
+
+package CurrencyConverters {
+    class CurrencyConverters {
+        -{static}__fiat
+        -{static}__converters
+        -{static}__providers
+        +load(path)
+        +store(path)
+        +exchangeRate(unit, date)
+        +{static}isFiat(unit)
+    }
+
+    interface CurrencyConverter {
+        +load(cachePath)
+        +store(cachePath)
+        +exchangeRate(unit, date)
+    }
+
+    CoinGeckoCurrencyConverter --|> CurrencyConverter
+    ExcelRates --|> CurrencyConverter
+}
+
+package "transactions" {
+    class Currency {
+        -{static} _satoshiToBTC
+        +unit
+        +amount
+        +amountRaw
+        +__init__(unit, amount)
+        +__str__()
+    }
+
+    abstract class Transaction {
+        +mergentId
+        +dateTime
+        +id
+        +note
+        +__str__()
+    }
+
+    class CancelFee {
+        +amount
+    }
+    CancelFee --|> Transaction
+
+    class Covesting {
+        +trader
+        +amount
+        +entryFee
+        +exitFee
+    }
+    Covesting --|> Transaction
+
+    class MarginTrade {
+        +amount
+        +entryFee
+        +exitFee
+    }
+    MarginTrade --|> Transaction
+
+    Payment --|> Transaction
+
+    class Reimbursement {
+        +amount
+    }
+    Reimbursement --|> Transaction
+
+    together {
+        abstract class Trade {
+            +sell
+            +buy
+            +fee
+        }
+        Transaction <|-- Trade
+
+        Trade <|-- BuyTrade
+        Trade <|-- SellTrade
+    }
+
+    together {
+        abstract class Transfer {
+            +amount
+            +fee
+            +__str__()
+        }
+        Transaction <|-- Transfer
+
+        Transfer <|-- DepositTransfer
+        Transfer <|-- WithdrawTransfer
+    }
+
+    together {
+        abstract class Stake {
+            +amount
+            +fee
+        }
+        Transaction <|-- Stake
+
+        Stake <|-- StartStake
+
+        class EndStake {
+            +interest
+            +total
+        }
+        Stake <|-- EndStake
+    }
+
+    together {
+        abstract class Lobby
+        Transaction <|-- Lobby
+
+        class EnterLobby {
+            +amount
+            +fee
+            +lobby
+        }
+        Lobby <|-- EnterLobby
+
+        class ExitLobby {
+            +amount
+            +fee
+            +lobby
+        }
+        Lobby <|-- ExitLobby
+    }
+}
+
+package "accounting" {
+    interface Accounting {
+        +Write(transactions)
+    }
+
+    abstract class BaseCurrency {
+        +exchangeRate
+        +amount
+        +__init__(currencyConverters, currency, dateTime)
+    }
+
+    class CostCenter {
+        +minus
+        +__init__(mergentId, currency)
+        +__str__()
+    }
+
+    class Factory {
+        +__init__(args, config, currencyConverters)
+        +create()
+    }
+
+    package banana {
+        class BananaAccounting {
+            +__init__(output, config, currencyConverters)
+            #write(transactions)
+        }
+        BananaAccounting --|> Accounting
+
+        class BananaAccounts {
+            +transfer
+            +equity
+            +fees
+            +staked
+            +__init__(config)
+            +get(unit, mergentId)
+        }
+
+        class BananaCurrency {
+            +account
+            +baseCurrency
+            +costCenter
+            +isFiat
+            +__init__(accounts, currencyConverters, currency, mergentId, dateTime = None)
+        }
+        BananaCurrency --|> Currency
+    }
+}
+
+package mergents {
+    interface Reader {
+        +read(year)
+    }
+
+    abstract class FileReader {
+        +{abstract}filePattern
+        +__init__(path)
+        +read(year)
+        +{abstract}readFile(filePath, year)
+    }
+    FileReader --|> Reader
+
+    interface Mergent {
+        +createReaders(config, inputPath, cachePath)
+    }
+
+    class Mergents {
+        +__init__(config, inputPath, cachePath)
+        +createReaders()
+    }
+
+    package bitbox {
+        class BitBoxMergent {
+            +createReaders(config, inputPath, cachePath)
+        }
+        BitBoxMergent --|> Mergent
+
+        class BitBoxFileReader {
+            +filePattern
+            +__init__(path)
+            +readFile(filePath, year)
+        }
+        BitBoxFileReader --|> FileReader
+    }
+
+    package cex {
+        class CexMergent {
+            +createReaders(config, inputPath, cachePath)
+        }
+        CexMergent --|> Mergent
+
+        class CexApiReader {
+            +__init__(config)
+            +read(year)
+        }
+        CexApiReader --|> Reader
+
+        class CexFileReader {
+            +filePattern
+            +__init__(path)
+            +readFile(filePath, year)
+        }
+        CexFileReader --|> FileReader
+    }
+
+    package coinbasePro {
+        class CoinbaseProMergent {
+            +createReaders(config, inputPath, cachePath)
+        }
+        CoinbaseProMergent --|> Mergent
+
+        class CoinbaseProFileReader {
+            +filePattern
+            +__init__(path)
+            +readFile(filePath, year)
+        }
+        CoinbaseProFileReader --|> FileReader
+    }
+
+    package etherscan {
+        class EtherscanMergent {
+            +createReaders(config, inputPath, cachePath)
+        }
+        EtherscanMergent --|> Mergent
+
+        class EtherscanApiReader {
+            +__init__(config, cachePath, hexReader)
+            +read(year)
+        }
+        EtherscanApiReader --|> Reader
+
+        class HEXReader {
+            +active
+            +history
+            +transformed
+            +__init__(inputPath)
+            +read(year)
+        }
+        HEXReader --|> Reader
+
+        class HEXStake
+
+        class HEXStakeFileReader {
+            +filePattern
+            +active
+            +history
+            +__init__(path)
+            +readFile(filePath, year)
+        }
+        HEXStakeFileReader --|> FileReader
+
+        class HEXTransformation
+
+        class HEXTransformationFileReader {
+            +filePattern
+            +transformed
+            +__init__(path)
+            +readFile(filePath, year)
+        }
+        HEXTransformationFileReader --|> FileReader
+
+        class TokenFunctionDecoder {
+            +{static}create(config, cachePath, apiUrl)
+            +__init__(tokenContracts)
+            +decode(contractAddress, input)
+        }
+    }
+}
+
+@enduml
