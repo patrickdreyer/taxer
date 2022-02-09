@@ -1,0 +1,42 @@
+@startuml activityCex
+title CEX Mergent
+center footer patrickdreyer/taxer
+
+start
+partition readFile {
+    :Read file<
+    :Convert date/
+    :Store&skip canceled transactions/
+    :Skip wrong year/
+    :Sort by type/
+    :Group by type/
+    while (forEach type group)
+        while (forEach transaction)
+        endwhile
+            switch (type)
+                case (deposit)
+                    :Deposit transfer>
+                case (withdraw)
+                    :Withdraw transfer>
+                case (costsNothing)
+                    :Reimbursement>
+            endswitch
+    endwhile
+}
+partition readAPI {
+    :Fetch archived orders<
+    while (forEach order)
+        if (order status contains) is (d) then
+            switch (type)
+                case (sell)
+                    :Sell trade>
+                case (buy)
+                    :Buy trade>
+            endswitch
+        else (otherwise)
+        endif
+    endwhile
+}
+end
+
+@enduml

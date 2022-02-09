@@ -1,0 +1,37 @@
+@startuml activityCoinbasePro
+title CoinbasePro Mergent
+center footer patrickdreyer/taxer
+
+start
+:Read file<
+while (forEach row)
+    switch (row)
+        case (contains product)
+            if (matching year) is (yes) then
+                switch (side)
+                    case (BUY)
+                        :Buy trade>
+                    case (SELL)
+                        :Sell trade>
+                endswitch
+            else (no)
+                :ignore;
+                detach
+            endif
+        case (contains type)
+            if (matching year) is (yes) then
+                switch (type)
+                    case (deposit)
+                        :Deposit transfer>
+                    case (withdrawal)
+                        :Withdrawal transfer>
+                endswitch
+            else (no)
+                :ignore;
+                detach
+            endif
+    endswitch
+endwhile
+end
+
+@enduml

@@ -1,0 +1,45 @@
+@startuml activityApplication
+title Application
+center footer patrickdreyer/taxer
+
+start
+partition Setup {
+    :Parse arguments;
+    :Read configuration<
+    :Create mergents
+    * BitBox
+    * Cex
+    * CoinbasePro
+    * Etherscan
+    * PrimeXBT;
+    :Create transformers
+    * Ignore
+    * Payments;
+    :Load exchange rates<
+    :Create accounting
+    * Banana;
+}
+partition Processing {
+    if (transaction caching enabled?) is (<color:red>no) then
+        partition ReadTransactions {
+            :Create readers;
+            while (forEach reader)
+                :Read from reader;
+            endwhile
+        }
+        :Sort transactions;
+        #orange:Serialize transactions to cache>
+    else (<color:green>yes)
+        #orange:Deserialize transactions from cache<
+    endif
+    while (forEach accounting)
+        :Transform Transactions|
+        :Write to accounting;
+    endwhile
+}
+partition TearDown {
+    :Cache exchange rates>
+}
+end
+
+@enduml
