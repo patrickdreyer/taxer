@@ -1,0 +1,143 @@
+@startuml objects
+title Objects
+center footer patrickdreyer/taxer
+
+left to right direction
+
+object Application
+
+together {
+    object Mergents
+    Application *--> Mergents
+
+    object BuyTrade
+    object CancelFee
+    object Covesting
+    object DepositTransfer
+    object EndStake
+    object EnterLobby
+    object ExitLobby
+    object MarginTrade
+    object Reimbursement
+    object SellTrade
+    object StartStake
+    object WithdrawTransfer
+
+    together {
+        object BitBoxMergent
+        Mergents *--> BitBoxMergent
+
+        object BitBoxFileReader
+        BitBoxMergent ..> BitBoxFileReader : <<creates>
+        BitBoxFileReader ..> WithdrawTransfer : <<creates>>
+        BitBoxFileReader ..> DepositTransfer : <<creates>>
+    }
+    together {
+        object CexMergent
+        Mergents *--> CexMergent
+
+        object CexApiReader
+        CexMergent ..> CexApiReader : <<creates>
+        CexApiReader ..> BuyTrade : <<creates>>
+        CexApiReader ..> SellTrade : <<creates>>
+
+        object CexFileReader
+        CexMergent ..> CexFileReader : <<creates>
+        CexFileReader ..> DepositTransfer : <<creates>>
+        CexFileReader ..> WithdrawTransfer : <<creates>>
+        CexFileReader ..> Reimbursement : <<creates>>
+    }
+    together {
+        object CoinbaseProMergent
+        Mergents *--> CoinbaseProMergent
+
+        object CoinbaseProFileReader
+        CoinbaseProMergent ..> CoinbaseProFileReader : <<creates>
+        CoinbaseProFileReader ..> BuyTrade : <<creates>>
+        CoinbaseProFileReader ..> DepositTransfer : <<creates>>
+        CoinbaseProFileReader ..> SellTrade : <<creates>>
+        CoinbaseProFileReader ..> WithdrawTransfer : <<creates>>
+    }
+    together {
+        object EtherscanMergent
+        Mergents *--> EtherscanMergent
+
+        object EtherscanApiReader
+        EtherscanMergent ..> EtherscanApiReader : <<creates>
+        object TokenFunctionDecoder
+        EtherscanApiReader *--> TokenFunctionDecoder
+        EtherscanApiReader ..> CancelFee : <<creates>>
+        EtherscanApiReader ..> DepositTransfer : <<creates>>
+        EtherscanApiReader ..> EndStake : <<creates>>
+        EtherscanApiReader ..> EnterLobby : <<creates>>
+        EtherscanApiReader ..> ExitLobby : <<creates>>
+        EtherscanApiReader ..> StartStake : <<creates>>
+        EtherscanApiReader ..> WithdrawTransfer : <<creates>>
+
+        object HEXReader
+        EtherscanMergent ..> HEXReader : <<creates>
+
+        object HEXStakeFileReader
+        HEXReader *--> HEXStakeFileReader
+        object HEXStake
+        HEXStakeFileReader ..> HEXStake : <<creates>>
+        EtherscanApiReader ..> HEXStake : <<uses>>
+
+        object HEXTransformationFileReader
+        HEXReader *--> HEXTransformationFileReader
+        object HEXTransformation
+        HEXTransformationFileReader ..> HEXTransformation : <<creates>>
+        EtherscanApiReader ..> HEXTransformation : <<uses>>
+    }
+    together {
+        object PrimeXBT
+        Mergents *--> PrimeXBT
+
+        object PrimeXBTCovestingFileReader
+        PrimeXBT --> PrimeXBTCovestingFileReader
+        PrimeXBTCovestingFileReader ..> Covesting : <<creates>>
+
+        object PrimeXBTMarginFileReader
+        PrimeXBT --> PrimeXBTMarginFileReader
+        PrimeXBTMarginFileReader ..> MarginTrade : <<creates>>
+
+        object PrimeXBTTransferFileReader
+        PrimeXBT --> PrimeXBTTransferFileReader
+        PrimeXBTTransferFileReader ..> DepositTransfer : <<creates>>
+        PrimeXBTTransferFileReader ..> WithdrawTransfer : <<creates>>
+    }
+}
+
+together {
+    object Ignore
+    Application *--> Ignore
+
+    object Payments
+    Application *--> Payments
+}
+
+together {
+    object CurrencyConverters
+    Application *--> CurrencyConverters : <<uses>>
+
+    object CoinGeckoCurrencyConverter
+    CurrencyConverters *--> CoinGeckoCurrencyConverter
+
+    object ExcelRates
+    CurrencyConverters *--> ExcelRates
+}
+
+together {
+    object AccountingFactory
+    Application *--> AccountingFactory : <<uses>>
+
+    object BananaAccounting
+    Application *-- BananaAccounting
+    AccountingFactory ..> BananaAccounting : <<creates>>
+
+    object BananaAccounts
+    BananaAccounting *-- BananaAccounts
+}
+
+
+@enduml

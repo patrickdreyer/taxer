@@ -1,0 +1,22 @@
+@startuml activityBitBox
+title BitBox Mergent
+center footer patrickdreyer/taxer
+
+start
+:Read file<
+while (forEach row)
+    if (matching year) is (yes) then
+        switch (type)
+            case (sent)
+                :Withdraw transfer>
+            case (received)
+                :Deposit transfer>
+        endswitch
+    else (no)
+        :ignore;
+        detach
+    endif
+endwhile
+end
+
+@enduml
