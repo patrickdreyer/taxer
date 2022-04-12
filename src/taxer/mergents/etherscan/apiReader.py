@@ -1,6 +1,8 @@
 import datetime
 from decimal import Decimal
 import json
+import os
+import pickle
 import requests
 import pytz
 
@@ -17,27 +19,33 @@ from ...transactions.withdrawTransfer import WithdrawTransfer
 
 
 class EtherscanApiReader(Reader):
+    __transactionsNormalFileName = 'mergentEthersanNormalTransactions.json'
+    __transactionsErc20FileName = 'mergentEthersanErc20Transactions.json'
     __apiUrl = 'https://api.etherscan.io/api'
     __divisor = 1000000000000000000
 
-    def __init__(self, config, cachePath, hexReader):
+    def __init__(self, config, cachePath, transactionsPath, hexReader):
         config['accounts'] = {k.lower():v for k,v in config['accounts'].items()}
         config['tokens'] = {k.lower():v for k,v in config['tokens'].items()}
         self.__config = config
         self.__tokenFunctionDecoder = TokenFunctionDecoder.create(config, cachePath, EtherscanApiReader.__apiUrl)
         self.__tokenTransactions = dict()
+        self.__transactionsPath = transactionsPath
         self.__hexReader = hexReader
 
     def read(self, year):
         self.__year = year
         with requests.Session() as self.__session:
             for address,id in self.__config['accounts'].items():
-                yield from self.__fetchNormalTransactions(year, address, id)
-                yield from self.__fetchERC20Transactions(year, address, id)
+                yield from self.__fetchNormalTransactions(address, id)
+                yield from self.__fetchERC20Transactions(address, id)
 
-    def __fetchNormalTransactions(self, year, address, id):
+    def __fetchNormalTransactions(self, address, id):
         response = self.__session.get('{}?module=account&action=txlist&address={}&startblock=0&endblock=99999999&page=1&offset=1000&sort=asc&apikey={}'.format(EtherscanApiReader.__apiUrl, address, self.__config['apiKeyToken']))
         content = json.loads(response.content)
+        if self.__transactionsPath and os.path.isdir(self.__transactionsPath):
+            with open(os.path.join(self.__args.transactions, EtherscanApiReader.__transactionsNormalFileName), 'wb') as file:
+                pickle.dump(content, file)
         transactions = map(self.__transformTransaction, content['result'])
         filteredErrors = filter(self.__filterErrors, transactions)
         filteredYear = filter(self.__filterWrongYear, filteredErrors)
@@ -57,10 +65,13 @@ class EtherscanApiReader(Reader):
             else:
                 pass
 
-    def __fetchERC20Transactions(self, year, address, id):
+    def __fetchERC20Transactions(self, address, id):
         for tokenAddress,tokenId in self.__config['tokens'].items():
             response = self.__session.get('{}?module=account&action=tokentx&address={}&contractaddress={}&page=1&offset=100&sort=asc&apikey={}'.format(EtherscanApiReader.__apiUrl, address, tokenAddress, self.__config['apiKeyToken']))
             content = json.loads(response.content)
+            if self.__transactionsPath and os.path.isdir(self.__transactionsPath):
+                with open(os.path.join(self.__args.transactions, EtherscanApiReader.__transactionsErc20FileName), 'wb') as file:
+                    pickle.dump(content, file)
             transactions = map(self.__transformTransaction, content['result'])
             filteredYear = list(filter(self.__filterWrongYear, transactions))
             for transaction in filteredYear:

@@ -11,6 +11,7 @@ from .mergents.mergents import Mergents
 from .payments import Payments
 
 class Application:
+    __transactionsFileName = 'transactions.json'
     __log = None
 
     def main(self):
@@ -19,7 +20,7 @@ class Application:
         Application.__log.info('BEGIN')
         self.__parseArguments()
         self.__readConfig()
-        self.__mergents = Mergents(self.__config, self.__args.input, self.__args.cache)
+        self.__mergents = Mergents(self.__config, self.__args.input, self.__args.cache, self.__args.transactions)
         self.__transformers = [Ignore(self.__config['ignore']), Payments(self.__config['payments'])]
         self.__currencyConverters = CurrencyConverters().load(self.__args.cache)
         self.__accountings = AccountingFactory(self.__args, self.__config, self.__currencyConverters).create()
@@ -80,14 +81,14 @@ class Application:
         if not self.__args.transactions:
             return
         Application.__log.info("Serialize transactions; filePath='%s'", self.__args.transactions)
-        with open(self.__args.transactions, 'wb') as file:
+        with open(os.path.join(self.__args.transactions, Application.__transactionsFileName), 'wb') as file:
             pickle.dump(transactions, file)
 
     def __deserializeTransactions(self):
         if not self.__args.transactions:
             return None
-        if not os.path.isfile(self.__args.transactions):
+        if not os.path.isdir(self.__args.transactions):
             return None
         Application.__log.info("Deserialize transactions; filePath='%s'", self.__args.transactions)
-        with open(self.__args.transactions, 'rb') as file:
+        with open(os.path.join(self.__args.transactions, Application.__transactionsFileName), 'rb') as file:
             return pickle.load(file)

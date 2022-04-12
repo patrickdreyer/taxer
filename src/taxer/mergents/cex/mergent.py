@@ -4,6 +4,6 @@ from .fileReader import CexFileReader
 
 
 class CexMergent(Mergent):
-    def createReaders(self, config, inputPath, cachePath):
+    def createReaders(self, config, inputPath, cachePath, transactionsPath):
         yield CexFileReader(inputPath)
         yield CexApiReader(config['cex'])

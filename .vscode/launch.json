@@ -16,7 +16,7 @@
                 "--output", "~/Dropbox/4-Buchhaltung/2020/Kryptos/",
                 "--config", "~/Dropbox/4-Buchhaltung/2020/Kryptos/taxer.json",
                 "--year", "2020",
-                "--transactions", "./transactions.pkl"
+                "--transactions", "./transactions"
             ]
         }
     ]
