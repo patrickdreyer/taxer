@@ -3,5 +3,5 @@ from .fileReader import BitBoxFileReader
 
 
 class BitBoxMergent(Mergent):
-    def createReaders(self, config, inputPath, cachePath, transactionsPath):
+    def createReaders(self, config, inputPath, cachePath):
         yield BitBoxFileReader(inputPath)

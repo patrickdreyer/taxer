@@ -20,7 +20,7 @@ class Application:
         Application.__log.info('BEGIN')
         self.__parseArguments()
         self.__readConfig()
-        self.__mergents = Mergents(self.__config, self.__args.input, self.__args.cache, self.__args.transactions)
+        self.__mergents = Mergents(self.__config, self.__args.input, self.__args.cache)
         self.__transformers = [Ignore(self.__config['ignore']), Payments(self.__config['payments'])]
         self.__currencyConverters = CurrencyConverters().load(self.__args.cache)
         self.__accountings = AccountingFactory(self.__args, self.__config, self.__currencyConverters).create()
@@ -60,7 +60,7 @@ class Application:
     def __process(self):
         transactions = self.__deserializeTransactions()
         if transactions == None:
-            transactions = self.__readTransactions()
+            transactions = (t for t in self.__readTransactions() if t != None)
             transactions = sorted(transactions, key=lambda t: t.dateTime)
             self.__serializeTransactions(transactions)
         for accounting in self.__accountings:
@@ -87,8 +87,9 @@ class Application:
     def __deserializeTransactions(self):
         if not self.__args.transactions:
             return None
-        if not os.path.isdir(self.__args.transactions):
+        filePath = os.path.join(self.__args.transactions, Application.__transactionsFileName)
+        if not os.path.isfile(filePath):
             return None
-        Application.__log.info("Deserialize transactions; filePath='%s'", self.__args.transactions)
-        with open(os.path.join(self.__args.transactions, Application.__transactionsFileName), 'rb') as file:
+        Application.__log.info("Deserialize transactions; filePath='%s'", filePath)
+        with open(filePath, 'rb') as file:
             return pickle.load(file)

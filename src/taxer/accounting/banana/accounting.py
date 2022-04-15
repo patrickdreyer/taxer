@@ -278,7 +278,7 @@ class BananaAccounting(Accounting):
         l = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.lobby, transaction.amount.unit, transaction.dateTime)
         d = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.amount, transaction)
         f = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.fee, transaction)
-        BananaAccounting.__log.debug("Lobby exit; %s", transaction.lobby)
+        BananaAccounting.__log.debug("Lobby exit; %s -> %s", transaction.lobby, transaction.amount)
         # lobby          date,    receipt,        description, deposit,              withdrawal, amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
         yield (date[0], [date[1], transaction.id, description, '',                   l.account,  l.amount, l.unit,   l.baseCurrency.exchangeRate, l.baseCurrency.amount, '',     l.costCenter.minus()])
         # deposit

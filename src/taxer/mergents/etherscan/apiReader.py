@@ -1,131 +1,57 @@
 import datetime
-from decimal import Decimal
-import json
-import os
-import pickle
-import requests
 import pytz
 
-from .tokenFunctionDecoder import TokenFunctionDecoder
+from .ether import Ether
 from ..reader import Reader
 from ...transactions.cancelFee import CancelFee
 from ...transactions.currency import Currency
 from ...transactions.depositTransfer import DepositTransfer
-from ...transactions.endStake import EndStake
-from ...transactions.enterLobby import EnterLobby
-from ...transactions.exitLobby import ExitLobby
-from ...transactions.startStake import StartStake
 from ...transactions.withdrawTransfer import WithdrawTransfer
 
 
 class EtherscanApiReader(Reader):
-    __transactionsNormalFileName = 'mergentEthersanNormalTransactions.json'
-    __transactionsErc20FileName = 'mergentEthersanErc20Transactions.json'
-    __apiUrl = 'https://api.etherscan.io/api'
-    __divisor = 1000000000000000000
-
-    def __init__(self, config, cachePath, transactionsPath, hexReader):
+    def __init__(self, config, etherscanApi, tokens):
         config['accounts'] = {k.lower():v for k,v in config['accounts'].items()}
-        config['tokens'] = {k.lower():v for k,v in config['tokens'].items()}
         self.__config = config
-        self.__tokenFunctionDecoder = TokenFunctionDecoder.create(config, cachePath, EtherscanApiReader.__apiUrl)
-        self.__tokenTransactions = dict()
-        self.__transactionsPath = transactionsPath
-        self.__hexReader = hexReader
+        self.__etherscanApi = etherscanApi
+        self.__tokens = {t.address:t for t in tokens}
 
     def read(self, year):
-        self.__year = year
-        with requests.Session() as self.__session:
-            for address,id in self.__config['accounts'].items():
-                yield from self.__fetchNormalTransactions(address, id)
-                yield from self.__fetchERC20Transactions(address, id)
-
-    def __fetchNormalTransactions(self, address, id):
-        response = self.__session.get('{}?module=account&action=txlist&address={}&startblock=0&endblock=99999999&page=1&offset=1000&sort=asc&apikey={}'.format(EtherscanApiReader.__apiUrl, address, self.__config['apiKeyToken']))
-        content = json.loads(response.content)
-        if self.__transactionsPath and os.path.isdir(self.__transactionsPath):
-            with open(os.path.join(self.__args.transactions, EtherscanApiReader.__transactionsNormalFileName), 'wb') as file:
-                pickle.dump(content, file)
-        transactions = map(self.__transformTransaction, content['result'])
-        filteredErrors = filter(self.__filterErrors, transactions)
-        filteredYear = filter(self.__filterWrongYear, filteredErrors)
-        for transaction in filteredYear:
-            amount = Currency('ETH', Decimal(transaction['value']) / EtherscanApiReader.__divisor)
-            fee = EtherscanApiReader.__fee(transaction)
-            if transaction['function'] == 'xflobbyenter':
-                yield EnterLobby(id, transaction['dateTime'], transaction['hash'], amount, fee, transaction['to'])
-            elif transaction['function'] != '':
-                self.__tokenTransactions[transaction['hash']] = transaction
-            elif transaction['from'] == address and transaction['to'] == address:
-                yield CancelFee(id, transaction['dateTime'], transaction['hash'], fee)
-            elif transaction['from'] == address:
-                yield WithdrawTransfer(id, transaction['dateTime'], transaction['hash'], amount, fee)
-            elif transaction['to'] == address:
-                yield DepositTransfer(id, transaction['dateTime'], transaction['hash'], amount, Currency('ETH', 0))
-            else:
-                pass
-
-    def __fetchERC20Transactions(self, address, id):
-        for tokenAddress,tokenId in self.__config['tokens'].items():
-            response = self.__session.get('{}?module=account&action=tokentx&address={}&contractaddress={}&page=1&offset=100&sort=asc&apikey={}'.format(EtherscanApiReader.__apiUrl, address, tokenAddress, self.__config['apiKeyToken']))
-            content = json.loads(response.content)
-            if self.__transactionsPath and os.path.isdir(self.__transactionsPath):
-                with open(os.path.join(self.__args.transactions, EtherscanApiReader.__transactionsErc20FileName), 'wb') as file:
-                    pickle.dump(content, file)
-            transactions = map(self.__transformTransaction, content['result'])
-            filteredYear = list(filter(self.__filterWrongYear, transactions))
-            for transaction in filteredYear:
-                if not transaction['hash'] in self.__tokenTransactions:
-                    continue
-                tokenTransaction = self.__tokenTransactions[transaction['hash']]
-                fee = EtherscanApiReader.__fee(tokenTransaction)
-                amount = Currency(tokenId, Decimal(transaction['value']) / Decimal('1' + '0'*int(transaction['tokenDecimal'])))
-                if tokenTransaction['function'] == 'xflobbyexit':
-                    lobby = self.__getETHForHEX(amount.amount)
-                    yield ExitLobby(id, tokenTransaction['dateTime'], tokenTransaction['hash'], lobby, amount, fee)
-                elif tokenTransaction['function'] == 'stakestart':
-                    yield StartStake(id, tokenTransaction['dateTime'], tokenTransaction['hash'], amount, fee)
-                elif tokenTransaction['function'] == 'stakeend':
-                    principal = self.__getHEXStakePrincipal(amount.amount)
-                    interest = amount - principal
-                    yield EndStake(id, tokenTransaction['dateTime'], tokenTransaction['hash'], principal, interest, amount, fee)
-                else:
-                    pass
+        for address,id in self.__config['accounts'].items():
+            erc20Transactions = list(self.__etherscanApi.getErc20Transactions(address))
+            transactions = self.__etherscanApi.getNormalTransactions(address)
+            transactions = (self.__transformTransaction(t) for t in iter(transactions))
+            transactions = (t for t in transactions if t['isError'] == '0')
+            for transaction in transactions:
+                if transaction['token'] != None:
+                    erc20Transaction = EtherscanApiReader.__getErc20Transaction(erc20Transactions, transaction['hash'])
+                    yield from transaction['token'].processTransaction(id, year, transaction, erc20Transaction)
+                elif transaction['from'] == address and transaction['to'] == address:
+                    if transaction['dateTime'].year == year:
+                        yield CancelFee(id, transaction['dateTime'], transaction['hash'], Ether.fee(transaction))
+                elif transaction['from'] == address:
+                    if transaction['dateTime'].year == year:
+                        yield WithdrawTransfer(id, transaction['dateTime'], transaction['hash'], Ether.amount(transaction), Ether.fee(transaction))
+                elif transaction['to'] == address:
+                    if transaction['dateTime'].year == year:
+                        yield DepositTransfer(id, transaction['dateTime'], transaction['hash'], Ether.amount(transaction), Currency('ETH', 0))
 
     def __transformTransaction(self, transaction):
         transaction['dateTime'] = pytz.utc.localize(datetime.datetime.fromtimestamp(int(transaction['timeStamp'])))
-        if self.__isToken(transaction['from']):
-            transaction['function'] = self.__tokenFunctionDecoder.decode(transaction['from'], transaction['input']).lower()
-            transaction['from'] = self.__getTokenId(transaction['from'])
-        elif self.__isToken(transaction['to']):
-            transaction['function'] = self.__tokenFunctionDecoder.decode(transaction['to'], transaction['input']).lower()
-            transaction['to'] = self.__getTokenId(transaction['to'])
-        else:
-            transaction['function'] = ''
+        transaction['token'] = self.__getTokenByTransaction(transaction)
         return transaction
 
-    def __filterErrors(self, transaction):
-        return transaction['isError'] == '0'
+    def __getTokenByTransaction(self, transaction):
+        token = self.__getTokenByAddress(transaction['from'])
+        if token: return token
+        token = self.__getTokenByAddress(transaction['to'])
+        if token: return token
+        return None
 
-    def __filterWrongYear(self, transaction):
-        return transaction['dateTime'].year == self.__year
-
-    def __isToken(self, address):
-        return address in [token for token in self.__config['tokens']]
-
-    def __getTokenId(self, address):
-        return [v for k,v in self.__config['tokens'].items() if k == address][0]
-
-    def __getETHForHEX(self, hex):
-        hex = int(hex)
-        transformation = [t for t in self.__hexReader.transformed if t.hex == hex][0]
-        return Currency('ETH', transformation.eth)
-
-    def __getHEXStakePrincipal(self, total):
-        total = int(total)
-        stake = [s for s in self.__hexReader.history if s.total == total][0]
-        return Currency('HEX', stake.principal)
+    def __getTokenByAddress(self, address):
+        return self.__tokens[address] if address in self.__tokens else None
 
     @staticmethod
-    def __fee(transaction):
-        return Currency('ETH', Decimal(transaction['gasUsed']) * Decimal(transaction['gasPrice']) / EtherscanApiReader.__divisor)
+    def __getErc20Transaction(transactions, hash):
+        transaction = [t for t in transactions if t['hash'] == hash]
+        return transaction[0] if len(transaction) > 0 else None
