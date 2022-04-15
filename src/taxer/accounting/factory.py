@@ -10,6 +10,6 @@ class AccountingFactory:
 
     def create(self):
         return [
-            BananaAccounting(self.__args.output, self.__config, self.__currencyConverters)
+            BananaAccounting(self.__args.output, self.__config['accounting']['banana'], self.__currencyConverters)
             # ShareholdingAccounting(self.__args.input, self.__args.output, self.__args.year, self.__config, self.__currencyConverters)
         ]
