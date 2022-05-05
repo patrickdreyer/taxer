@@ -1,11 +1,21 @@
-from taxer.mergents.etherscan.hexReader import HEXReader
+import requests
 
-from ..mergent import Mergent
+from taxer.mergents.etherscan.tokens.axnToken import AxnToken
+from taxer.mergents.etherscan.tokens.hedronToken import HedronToken
+
+from .etherscanApi import EtherscanApi
 from .apiReader import EtherscanApiReader
+from .tokens.axnToken import AxnToken
+from .tokens.axn2Token import Axn2Token
+from .tokens.hexToken import HexToken
+from .tokens.hedronToken import HedronToken
+from .tokens.fswpToken import FswpToken
+from ..mergent import Mergent
 
 
 class EtherscanMergent(Mergent):
     def createReaders(self, config, inputPath, cachePath):
-        hexReader = HEXReader(inputPath)
-        yield hexReader
-        yield EtherscanApiReader(config['etherscan'], cachePath, hexReader)
+        with requests.Session() as session:
+            etherscanApi = EtherscanApi(config['etherscan'], cachePath, session)
+            tokens = [HexToken.create(etherscanApi), HedronToken.create(etherscanApi), AxnToken.create(), Axn2Token.create(), FswpToken.create()]
+            yield EtherscanApiReader(config['etherscan'], etherscanApi, tokens)

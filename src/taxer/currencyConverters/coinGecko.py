@@ -23,7 +23,7 @@ class CoinGeckoCurrencyConverter(CurrencyConverter):
         cacheKey = '{0}{1}'.format(unit, date.strftime('%Y%m%d'))
         if not cacheKey in CoinGeckoCurrencyConverter.__rates:
             CoinGeckoCurrencyConverter.__fetchExchangeRate(unit, date, cacheKey)
-        return CoinGeckoCurrencyConverter.__rates[cacheKey]
+        return Decimal(CoinGeckoCurrencyConverter.__rates[cacheKey])
 
     def load(self, cachePath):
         CoinGeckoCurrencyConverter.__loadIds(cachePath)

@@ -28,7 +28,7 @@ class ExcelRates(CurrencyConverter):
     def exchangeRate(self, unit, date):
         rates = self.__rates[unit]
         rate = rates[date.strftime('%Y%m%d')]
-        return rate
+        return Decimal(rate)
 
     def __getFileMatches(self, cachePath):
         for dirPath, _, fileNames in os.walk(cachePath):

@@ -14,4 +14,4 @@ class Mergents:
 
     def createReaders(self):
         for mergent in self.__mergents:
-            yield from mergent.createReaders(self.__config, self.__inputPath, self.__cachePath)
+            yield from mergent.createReaders(self.__config['mergents'], self.__inputPath, self.__cachePath)

@@ -13,6 +13,7 @@ class CurrencyConverters:
         'BTC' : __converters['CG'],
         'ETH' : __converters['CG'],
         'HEX' : __converters['CG'],
+        'HDRN': __converters['CG'],
         'XRM' : __converters['CG'],
         'XRP' : __converters['CG'],
         'EUR' : __converters['ER'],

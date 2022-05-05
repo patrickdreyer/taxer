@@ -8,7 +8,7 @@
             "name": "Python: Main",
             "type": "python",
             "request": "launch",
-            "program": "src/cli.py",
+            "program": "src/__main__.py",
             "console": "integratedTerminal",
             "args": [
                 "--input", "~/Dropbox/4-Buchhaltung/2020/Kryptos/reports",
@@ -16,7 +16,7 @@
                 "--output", "~/Dropbox/4-Buchhaltung/2020/Kryptos/",
                 "--config", "~/Dropbox/4-Buchhaltung/2020/Kryptos/taxer.json",
                 "--year", "2020",
-                "--transactions", "./transactions.pkl"
+                "--transactions", "~/Dropbox/4-Buchhaltung/2020/Kryptos/transactions"
             ]
         }
     ]

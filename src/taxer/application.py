@@ -11,6 +11,7 @@ from .mergents.mergents import Mergents
 from .payments import Payments
 
 class Application:
+    __transactionsFileName = 'transactions.json'
     __log = None
 
     def main(self):
@@ -59,7 +60,7 @@ class Application:
     def __process(self):
         transactions = self.__deserializeTransactions()
         if transactions == None:
-            transactions = self.__readTransactions()
+            transactions = (t for t in self.__readTransactions() if t != None)
             transactions = sorted(transactions, key=lambda t: t.dateTime)
             self.__serializeTransactions(transactions)
         for accounting in self.__accountings:
@@ -80,14 +81,15 @@ class Application:
         if not self.__args.transactions:
             return
         Application.__log.info("Serialize transactions; filePath='%s'", self.__args.transactions)
-        with open(self.__args.transactions, 'wb') as file:
+        with open(os.path.join(self.__args.transactions, Application.__transactionsFileName), 'wb') as file:
             pickle.dump(transactions, file)
 
     def __deserializeTransactions(self):
         if not self.__args.transactions:
             return None
-        if not os.path.isfile(self.__args.transactions):
+        filePath = os.path.join(self.__args.transactions, Application.__transactionsFileName)
+        if not os.path.isfile(filePath):
             return None
-        Application.__log.info("Deserialize transactions; filePath='%s'", self.__args.transactions)
-        with open(self.__args.transactions, 'rb') as file:
+        Application.__log.info("Deserialize transactions; filePath='%s'", filePath)
+        with open(filePath, 'rb') as file:
             return pickle.load(file)
