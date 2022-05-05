@@ -29,6 +29,9 @@ class BananaAccounts:
             'MM' : '1050',
             'SK' : '1051'
         },
+        'HDRN': {
+            'MM' : '1060'
+        },
         'EUR': {
             'CB' : '1110',
             'CBP': '1111'
