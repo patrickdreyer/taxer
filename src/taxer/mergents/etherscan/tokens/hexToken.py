@@ -11,22 +11,18 @@ from ....transactions.startStake import StartStake
 
 
 class HexToken(Token):
+    __id = 'HEX'
     __address = '0x2b591e99afe9f32eaa6214f7b7629768c40eeb39'
     __firstLobbyDate = datetime(2019, 12, 3).date()
     __stakeStartTopic = '0x14872dc760f33532684e68e1b6d5fd3f71ba7b07dee76bdb2b084f28b74233ef'
 
-    id = 'HEX'
-
     __lobby = {}
     __stakes = {}
+
     @staticmethod
     def create(etherscanApi):
         contract = Ether.getContract(etherscanApi, HexToken.__address)
         return HexToken(etherscanApi, contract)
-
-    # @staticmethod
-    # def getDaysServed(stake):
-    #     return (datetime.now().date() - stake['days']).days
 
     @property
     def address(self): return HexToken.__address
@@ -42,7 +38,7 @@ class HexToken(Token):
             day = (transaction['dateTime'].date() - HexToken.__firstLobbyDate).days
             self.__lobby[day] = transaction
             if transaction['dateTime'].year == year:
-                yield EnterLobby(id, transaction['dateTime'], transaction['hash'], Ether.amount(transaction), Ether.fee(transaction), HexToken.id)
+                yield EnterLobby(id, transaction['dateTime'], transaction['hash'], Ether.amount(transaction), Ether.fee(transaction), HexToken.__id)
 
         elif name == 'xflobbyexit':
             if transaction['dateTime'].year == year:
@@ -76,4 +72,4 @@ class HexToken(Token):
 
     @staticmethod
     def __amount(transaction):
-        return Currency(HexToken.id, Decimal(transaction['value']) / Decimal('1' + '0'*int(transaction['tokenDecimal'])))
+        return Currency(HexToken.__id, Decimal(transaction['value']) / Decimal('1' + '0'*int(transaction['tokenDecimal'])))
