@@ -9,14 +9,13 @@ from ...transactions.withdrawTransfer import WithdrawTransfer
 
 
 class PrimeXBTTransferFileReader(FileReader):
-    __fileNamePattern = r'.*primexbt.*transfer.*\.csv'
-
-    def __init__(self, path):
+    def __init__(self, config, path):
         super().__init__(path)
+        self.__config = config
 
     @property
     def filePattern(self):
-        return PrimeXBTTransferFileReader.__fileNamePattern
+        return self.__config['fileNamePatterns']['transfer']
 
     def readFile(self, filePath, year):
         self.__year = year
@@ -29,9 +28,9 @@ class PrimeXBTTransferFileReader(FileReader):
             amount = Currency(symbol, row['Amount '].split()[0])
             f = Currency(symbol, 0)
             if row['From '].find('Blockchain') != -1:
-                yield DepositTransfer('PRM', date, row['ID '], amount, f)
+                yield DepositTransfer(self.__config['id'], date, row['ID '], amount, f)
             elif row['To '].find('Blockchain') != -1:
-                yield WithdrawTransfer('PRM', date, row['ID '], amount, f)
+                yield WithdrawTransfer(self.__config['id'], date, row['ID '], amount, f)
 
     @staticmethod
     def __readFile(filePath):

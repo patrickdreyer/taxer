@@ -10,16 +10,16 @@ from ...transactions.currency import Currency
 
 
 class PrimeXBTCovestingFileReader(FileReader):
-    __fileNamePattern = r'.*primexbt.*covesting.*\.csv'
     __startEntryFee = pytz.utc.localize(datetime.datetime(2020, 12, 1))
     __entryFeePercentage = Decimal(0.01)
 
-    def __init__(self, path):
+    def __init__(self, config, path):
         super().__init__(path)
+        self.__config = config
 
     @property
     def filePattern(self):
-        return PrimeXBTCovestingFileReader.__fileNamePattern
+        return self.__config['fileNamePatterns']['covesting']
 
     def readFile(self, filePath, year):
         self.__year = year
@@ -32,7 +32,7 @@ class PrimeXBTCovestingFileReader(FileReader):
             amount = Currency(symbol, row['Total profit'].split()[0])
             entryFee = Currency(symbol, Decimal(row['Initial equity'].split()[0]) * PrimeXBTCovestingFileReader.__entryFeePercentage if date >= PrimeXBTCovestingFileReader.__startEntryFee else 0)
             exitFee = Currency(symbol, row['Commission'].split()[0])
-            yield Covesting('PRM', date, '', row['Name'], amount, entryFee, exitFee)
+            yield Covesting(self.__config['id'], date, '', row['Name'], amount, entryFee, exitFee)
 
     @staticmethod
     def __readFile(filePath):
