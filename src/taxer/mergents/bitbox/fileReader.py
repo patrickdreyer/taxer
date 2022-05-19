@@ -30,10 +30,10 @@ class BitBoxFileReader(FileReader):
 
             if self.__row['Type'] == 'sent':
                 f = Currency(self.__row['Unit'], self.__row['Fee'])
-                yield WithdrawTransfer(BitBoxFileReader.__id, date, id, c, f)
+                yield WithdrawTransfer(BitBoxFileReader.__id, date, id, c, f, self.__row['Note'])
 
             elif self.__row['Type'] == 'received':
-                yield DepositTransfer(BitBoxFileReader.__id, date, id, c, Currency(self.__row['Unit'], 0))
+                yield DepositTransfer(BitBoxFileReader.__id, date, id, c, Currency(self.__row['Unit'], 0), self.__row['Note'])
 
     def __readFile(self, filePath):
         with open(filePath) as csvFile:
