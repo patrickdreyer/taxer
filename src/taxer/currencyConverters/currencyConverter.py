@@ -1,5 +1,5 @@
 class CurrencyConverter:
-    def load(self, cachePath): pass
-    def store(self, cachePath): pass
+    def load(self): pass
+    def store(self): pass
 
     def exchangeRate(self, unit, date): pass

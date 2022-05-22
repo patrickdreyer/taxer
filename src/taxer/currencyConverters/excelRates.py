@@ -17,12 +17,15 @@ class ExcelRates(CurrencyConverter):
     __parserInfo = ParserInfoDE()
     __rates = dict()
 
-    def load(self, cachePath):
-        fileMatches = self.__getFileMatches(cachePath)
+    def __init__(self, config, cachePath):
+        self.__cachePath = cachePath
+
+    def load(self):
+        fileMatches = self.__getFileMatches(self.__cachePath)
         for unit, filePath in fileMatches:
             self.__load(unit, filePath)
 
-    def store(self, cachePath):
+    def store(self):
         pass
 
     def exchangeRate(self, unit, date):
