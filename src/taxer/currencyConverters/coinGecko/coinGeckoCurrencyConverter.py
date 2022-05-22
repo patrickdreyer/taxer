@@ -2,9 +2,9 @@ import csv
 from decimal import Decimal
 import logging
 import os
-from pycoingecko import CoinGeckoAPI
 
-from .currencyConverter import CurrencyConverter
+from .coinGeckoApi import CoinGeckoApi
+from ..currencyConverter import CurrencyConverter
 
 
 class CoinGeckoCurrencyConverter(CurrencyConverter):
@@ -13,25 +13,29 @@ class CoinGeckoCurrencyConverter(CurrencyConverter):
 
     __log = logging.getLogger(__name__)
 
-    __api = CoinGeckoAPI()
     __ids = dict()
     __idsDirty = False
     __rates = dict()
     __ratesDirty = False
 
+    def __init__(self, config, cachePath):
+        self.__config = config['coinGecko']
+        self.__cachePath = cachePath
+        self.__api = CoinGeckoApi(self.__config)
+
     def exchangeRate(self, unit, date):
         cacheKey = '{0}{1}'.format(unit, date.strftime('%Y%m%d'))
         if not cacheKey in CoinGeckoCurrencyConverter.__rates:
-            CoinGeckoCurrencyConverter.__fetchExchangeRate(unit, date, cacheKey)
+            self.__fetchExchangeRate(unit, date, cacheKey)
         return Decimal(CoinGeckoCurrencyConverter.__rates[cacheKey])
 
-    def load(self, cachePath):
-        CoinGeckoCurrencyConverter.__loadIds(cachePath)
-        CoinGeckoCurrencyConverter.__loadRates(cachePath)
+    def load(self):
+        CoinGeckoCurrencyConverter.__loadIds(self.__cachePath)
+        CoinGeckoCurrencyConverter.__loadRates(self.__cachePath)
 
-    def store(self, cachePath):
-        CoinGeckoCurrencyConverter.__storeIds(cachePath)
-        CoinGeckoCurrencyConverter.__storeRates(cachePath)
+    def store(self):
+        CoinGeckoCurrencyConverter.__storeIds(self.__cachePath)
+        CoinGeckoCurrencyConverter.__storeRates(self.__cachePath)
 
     @staticmethod
     def __loadIds(cachePath):
@@ -81,20 +85,18 @@ class CoinGeckoCurrencyConverter(CurrencyConverter):
             for key, rate in CoinGeckoCurrencyConverter.__rates.items():
                 writer.writerow([key, rate])
 
-    @staticmethod
-    def __fetchExchangeRate(unit, date, cacheKey):
+    def __fetchExchangeRate(self, unit, date, cacheKey):
         CoinGeckoCurrencyConverter.__log.info("Fetch exchange rate; unit='%s', date='%s'", unit, date)
-        id = CoinGeckoCurrencyConverter.__mapUnit2Id(unit)
-        response = CoinGeckoCurrencyConverter.__api.get_coin_history_by_id(id, date.strftime('%d-%m-%Y'))
-        ret = response['market_data']['current_price']['chf']
+        id = self.__mapUnit2Id(unit)
+        marketData = self.__api.getCoinMarketDataById(id, date)
+        ret = marketData['current_price']['chf']
         CoinGeckoCurrencyConverter.__rates[cacheKey] = ret
         CoinGeckoCurrencyConverter.__ratesDirty = True
 
-    @staticmethod
-    def __mapUnit2Id(unit):
+    def __mapUnit2Id(self, unit):
         if not unit in CoinGeckoCurrencyConverter.__ids:
             CoinGeckoCurrencyConverter.__log.info('Fetch unit to id map')
-            coins = CoinGeckoCurrencyConverter.__api.get_coins_list()
+            coins = self.__api.getCoinList()
             for coin in coins:
                 symbol = coin['symbol']
                 id = coin['id']
