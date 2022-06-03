@@ -14,8 +14,12 @@ from ..mergent import Mergent
 
 
 class EtherscanMergent(Mergent):
-    def createReaders(self, config, inputPath, cachePath):
+    def __init__(self, config, inputPath, cachePath):
+        self.__config = config
+        self.__cachePath = cachePath
+
+    def createReaders(self):
         with requests.Session() as session:
-            etherscanApi = EtherscanApi(config['etherscan'], cachePath, session)
+            etherscanApi = EtherscanApi(self.__config, self.__cachePath, session)
             tokens = [HexToken.create(etherscanApi), HedronToken.create(etherscanApi), AxnToken.create(), Axn2Token.create(), FswpToken.create()]
-            yield EtherscanApiReader(config['etherscan'], etherscanApi, tokens)
+            yield EtherscanApiReader(self.__config, etherscanApi, tokens)

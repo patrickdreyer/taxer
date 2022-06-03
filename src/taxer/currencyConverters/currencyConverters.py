@@ -9,7 +9,7 @@ class CurrencyConverters:
         self.__cachePath = cachePath
 
     def create(self):
-        self.__converters = CurrencyConverters.__createConverters(self.__config, self.__cachePath)
+        self.__converters = self.__createConverters()
         return self
 
     def load(self):
@@ -33,17 +33,16 @@ class CurrencyConverters:
         isFiat = unit in CurrencyConverters.__fiat
         return isFiat
 
-    @staticmethod
-    def __createConverters(config, cachePath):
+    def __createConverters(self):
         ret = {}
-        for configKey in config.keys():
-            converterConfig = config[configKey]
+        for configKey in self.__config.keys():
+            converterConfig = self.__config[configKey]
             if ('disable' in converterConfig and converterConfig['disable']):
                 continue
             className = configKey[0].upper() + configKey[1:]
             fullName = '.{}.{}CurrencyConverter.{}CurrencyConverter'.format(configKey, configKey, className)
             converterClass = CurrencyConverters.__importConverter(fullName)
-            ret[converterConfig['id']] = converterClass(config, cachePath)
+            ret[converterConfig['id']] = converterClass(self.__config, self.__cachePath)
         return ret
 
     @staticmethod

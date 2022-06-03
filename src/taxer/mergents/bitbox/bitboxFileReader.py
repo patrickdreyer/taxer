@@ -7,7 +7,7 @@ from ...transactions.depositTransfer import DepositTransfer
 from ...transactions.withdrawTransfer import WithdrawTransfer
 
 
-class BitBoxFileReader(FileReader):
+class BitboxFileReader(FileReader):
     def __init__(self, config, path):
         super().__init__(path)
         self.__config = config

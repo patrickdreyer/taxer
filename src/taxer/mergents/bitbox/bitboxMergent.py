@@ -1,7 +1,11 @@
 from ..mergent import Mergent
-from .bitboxFileReader import BitBoxFileReader
+from .bitboxFileReader import BitboxFileReader
 
 
-class BitBoxMergent(Mergent):
-    def createReaders(self, config, inputPath, cachePath):
-        yield BitBoxFileReader(config['bitbox'], inputPath)
+class BitboxMergent(Mergent):
+    def __init__(self, config, inputPath, cachePath):
+        self.__config = config
+        self.__inputPath = inputPath
+
+    def createReaders(self):
+        yield BitboxFileReader(self.__config, self.__inputPath)

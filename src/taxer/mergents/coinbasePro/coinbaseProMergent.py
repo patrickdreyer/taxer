@@ -3,5 +3,9 @@ from .coinbaseProFileReader import CoinbaseProFileReader
 
 
 class CoinbaseProMergent(Mergent):
-    def createReaders(self, config, inputPath, cachePath):
-        yield CoinbaseProFileReader(config['coinbasepro'], inputPath)
+    def __init__(self, config, inputPath, cachePath):
+        self.__config = config
+        self.__inputPath = inputPath
+
+    def createReaders(self):
+        yield CoinbaseProFileReader(self.__config, self.__inputPath)
