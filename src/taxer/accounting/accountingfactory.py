@@ -2,21 +2,17 @@ from importlib import import_module
 
 
 class AccountingFactory:
-    def __init__(self, args, config, currencyConverters):
-        self.__args = args
-        self.__config = config['accounting']
-        self.__currencyConverters = currencyConverters
-
-    def create(self):
+    @staticmethod
+    def create(args, config, currencyConverters):
         ret = []
-        for configKey in self.__config.keys():
-            accountingConfig = self.__config[configKey]
+        for configKey in config['accounting'].keys():
+            accountingConfig = config['accounting'][configKey]
             if ('disable' in accountingConfig and accountingConfig['disable']):
                 continue
             className = configKey[0].upper() + configKey[1:]
             fullName = '.{}.{}Accounting.{}Accounting'.format(configKey, configKey, className)
             clss = AccountingFactory.__importMergent(fullName)
-            instance = clss(self.__args.output, accountingConfig, self.__currencyConverters)
+            instance = clss(args.output, accountingConfig, currencyConverters)
             ret.append(instance)
         return ret
 

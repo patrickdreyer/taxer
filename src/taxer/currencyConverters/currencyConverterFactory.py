@@ -1,16 +1,18 @@
 from importlib import import_module
 
 
-class CurrencyConverters:
+class CurrencyConverterFactory:
     __fiat = ['EUR', 'USD']
+
+    @staticmethod
+    def create(config, cachePath):
+        ret = CurrencyConverterFactory(config, cachePath)
+        ret.__createConverters()
+        return ret
 
     def __init__(self, config, cachePath):
         self.__config = config['currencyConverters']
         self.__cachePath = cachePath
-
-    def create(self):
-        self.__converters = self.__createConverters()
-        return self
 
     def load(self):
         for converter in self.__converters.values():
@@ -30,20 +32,19 @@ class CurrencyConverters:
 
     @staticmethod
     def isFiat(unit):
-        isFiat = unit in CurrencyConverters.__fiat
+        isFiat = unit in CurrencyConverterFactory.__fiat
         return isFiat
 
     def __createConverters(self):
-        ret = {}
+        self.__converters = {}
         for configKey in self.__config.keys():
             converterConfig = self.__config[configKey]
             if ('disable' in converterConfig and converterConfig['disable']):
                 continue
             className = configKey[0].upper() + configKey[1:]
             fullName = '.{}.{}CurrencyConverter.{}CurrencyConverter'.format(configKey, configKey, className)
-            converterClass = CurrencyConverters.__importConverter(fullName)
-            ret[converterConfig['id']] = converterClass(self.__config, self.__cachePath)
-        return ret
+            converterClass = CurrencyConverterFactory.__importConverter(fullName)
+            self.__converters[converterConfig['id']] = converterClass(self.__config, self.__cachePath)
 
     @staticmethod
     def __importConverter(path):
