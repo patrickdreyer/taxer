@@ -6,9 +6,8 @@ import pickle
 
 from .accounting.accountingfactory import AccountingFactory
 from .currencyConverters.currencyConverterFactory import CurrencyConverterFactory
-from .ignore import Ignore
 from .mergents.mergentFactory import MergentFactory
-from .payments import Payments
+from .transformers.transformerFactory import TransformerFactory
 
 class Application:
     __transactionsFileName = 'transactions.json'
@@ -21,7 +20,7 @@ class Application:
         self.__parseArguments()
         self.__readConfig()
         self.__mergents = MergentFactory.create(self.__config, self.__args.input, self.__args.cache)
-        self.__transformers = [Ignore(self.__config['ignore']), Payments(self.__config['payments'])]
+        self.__transformers = TransformerFactory.create(self.__config)
         self.__currencyConverters = CurrencyConverterFactory.create(self.__config, self.__args.cache).load()
         self.__accountings = AccountingFactory.create(self.__args, self.__config, self.__currencyConverters)
 
