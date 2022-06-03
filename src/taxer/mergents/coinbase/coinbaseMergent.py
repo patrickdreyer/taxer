@@ -1,5 +1,5 @@
 from ..mergent import Mergent
-from .fileReader import CoinbaseFileReader
+from .coinbaseFileReader import CoinbaseFileReader
 
 
 class CoinbaseMergent(Mergent):

@@ -1,7 +1,7 @@
 from ..mergent import Mergent
-from .covestingFileReader import PrimeXBTCovestingFileReader
-from .marginFileReader import PrimeXBTMarginFileReader
-from .transferFileReader import PrimeXBTTransferFileReader
+from .primexbtCovestingFileReader import PrimeXBTCovestingFileReader
+from .primexbtMarginFileReader import PrimeXBTMarginFileReader
+from .primexbtTransferFileReader import PrimeXBTTransferFileReader
 
 
 class PrimeXBTMergent(Mergent):

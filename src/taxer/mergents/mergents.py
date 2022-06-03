@@ -1,8 +1,8 @@
-from .bitbox.mergent import BitBoxMergent
-from .cex.mergent import CexMergent
-from .coinbasePro.mergent import CoinbaseProMergent
-from .etherscan.mergent import EtherscanMergent
-from .primexbt.mergent import PrimeXBTMergent
+from .bitbox.bitboxMergent import BitBoxMergent
+from .cex.cexMergent import CexMergent
+from .coinbasePro.coinbaseProMergent import CoinbaseProMergent
+from .etherscan.etherscanMergent import EtherscanMergent
+from .primexbt.primexbtMergent import PrimeXBTMergent
 
 
 class Mergents:

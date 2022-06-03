@@ -4,7 +4,7 @@ from taxer.mergents.etherscan.tokens.axnToken import AxnToken
 from taxer.mergents.etherscan.tokens.hedronToken import HedronToken
 
 from .etherscanApi import EtherscanApi
-from .apiReader import EtherscanApiReader
+from .etherscanApiReader import EtherscanApiReader
 from .tokens.axnToken import AxnToken
 from .tokens.axn2Token import Axn2Token
 from .tokens.hexToken import HexToken

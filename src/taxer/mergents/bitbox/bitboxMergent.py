@@ -1,5 +1,5 @@
 from ..mergent import Mergent
-from .fileReader import BitBoxFileReader
+from .bitboxFileReader import BitBoxFileReader
 
 
 class BitBoxMergent(Mergent):

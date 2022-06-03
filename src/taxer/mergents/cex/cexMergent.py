@@ -1,6 +1,6 @@
 from ..mergent import Mergent
-from .apiReader import CexApiReader
-from .fileReader import CexFileReader
+from .cexApiReader import CexApiReader
+from .cexFileReader import CexFileReader
 
 
 class CexMergent(Mergent):
