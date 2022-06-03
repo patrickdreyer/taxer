@@ -1,5 +1,4 @@
-from .coinGecko.coinGeckoCurrencyConverter import CoinGeckoCurrencyConverter
-from .excelRates import ExcelRates
+from importlib import import_module
 
 
 class CurrencyConverters:
@@ -7,21 +6,18 @@ class CurrencyConverters:
 
     def __init__(self, config, cachePath):
         self.__config = config['currencyConverters']
-        self.__converters = {
-            'CG': CoinGeckoCurrencyConverter(self.__config, cachePath),
-            'ER': ExcelRates(self.__config, cachePath)
-        }
+        self.__converters = CurrencyConverters.__createConverters(self.__config, cachePath)
         self.__providers = {
-            'AXN' : self.__converters['CG'],
-            'BTC' : self.__converters['CG'],
-            'ETH' : self.__converters['CG'],
-            'HEX' : self.__converters['CG'],
-            'HDRN': self.__converters['CG'],
-            'XRM' : self.__converters['CG'],
-            'XRP' : self.__converters['CG'],
+            'AXN' : self.__converters['CCC'],
+            'BTC' : self.__converters['CCC'],
+            'ETH' : self.__converters['CCC'],
+            'HEX' : self.__converters['CCC'],
+            'HDRN': self.__converters['CCC'],
+            'XRM' : self.__converters['CCC'],
+            'XRP' : self.__converters['CCC'],
             'EUR' : self.__converters['ER'],
             'USD' : self.__converters['ER'],
-            'USDC': self.__converters['CG']
+            'USDC': self.__converters['CCC']
         }
 
     def load(self):
@@ -42,3 +38,22 @@ class CurrencyConverters:
     def isFiat(unit):
         isFiat = unit in CurrencyConverters.__fiat
         return isFiat
+
+    @staticmethod
+    def __createConverters(config, cachePath):
+        ret = {}
+        for configKey in config.keys():
+            converterConfig = config[configKey]
+            if (not 'active' in converterConfig or not converterConfig['active']):
+                continue
+            className = configKey[0].upper() + configKey[1:]
+            fullName = '.{}.{}CurrencyConverter.{}CurrencyConverter'.format(configKey, configKey, className)
+            converterClass = CurrencyConverters.__importConverter(fullName)
+            ret[converterConfig['id']] = converterClass(config, cachePath)
+        return ret
+
+    @staticmethod
+    def __importConverter(path):
+        modulePath, _, className = path.rpartition('.')
+        mod = import_module(modulePath, __package__)
+        return getattr(mod, className)

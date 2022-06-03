@@ -8,8 +8,8 @@ from ..currencyConverter import CurrencyConverter
 
 
 class CoinGeckoCurrencyConverter(CurrencyConverter):
-    __idsFileName = 'CoinGecko-Ids.csv'
-    __ratesFileName = 'CoinGecko-Rates.csv'
+    __idsFileName = 'CoinGeckoCurrency-Ids.csv'
+    __ratesFileName = 'CoinGeckoCurrency-Rates.csv'
 
     __log = logging.getLogger(__name__)
 

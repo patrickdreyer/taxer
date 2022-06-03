@@ -5,7 +5,7 @@ from decimal import Decimal
 import os
 import re
 
-from .currencyConverter import CurrencyConverter
+from ..currencyConverter import CurrencyConverter
 
 
 class ParserInfoDE(parserinfo):
@@ -13,7 +13,7 @@ class ParserInfoDE(parserinfo):
 
 
 # https://excelrates.com/historical-exchange-rates/FROM-TO
-class ExcelRates(CurrencyConverter):
+class ExcelRatesCurrencyConverter(CurrencyConverter):
     __parserInfo = ParserInfoDE()
     __rates = dict()
 
@@ -45,6 +45,6 @@ class ExcelRates(CurrencyConverter):
         with open(filePath) as csvFile:
             reader = csv.DictReader(csvFile, delimiter=',')
             for row in reader:
-                d = parser.parse(row['Date'], ExcelRates.__parserInfo).strftime('%Y%m%d')
+                d = parser.parse(row['Date'], ExcelRatesCurrencyConverter.__parserInfo).strftime('%Y%m%d')
                 unitRates[d] = Decimal(row['CHF'])
-        ExcelRates.__rates[unit] = unitRates
+        ExcelRatesCurrencyConverter.__rates[unit] = unitRates
