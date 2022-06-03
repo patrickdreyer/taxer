@@ -44,7 +44,7 @@ class CurrencyConverters:
         ret = {}
         for configKey in config.keys():
             converterConfig = config[configKey]
-            if (not 'active' in converterConfig or not converterConfig['active']):
+            if ('disable' in converterConfig and converterConfig['disable']):
                 continue
             className = configKey[0].upper() + configKey[1:]
             fullName = '.{}.{}CurrencyConverter.{}CurrencyConverter'.format(configKey, configKey, className)
