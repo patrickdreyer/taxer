@@ -1,11 +1,5 @@
 from importlib import import_module
 
-from .bitbox.bitboxMergent import BitboxMergent
-from .cex.cexMergent import CexMergent
-from .coinbasePro.coinbaseProMergent import CoinbaseProMergent
-from .etherscan.etherscanMergent import EtherscanMergent
-from .primeXBT.primeXBTMergent import PrimeXBTMergent
-
 
 class Mergents:
     def __init__(self, config, inputPath, cachePath):
