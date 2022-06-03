@@ -22,7 +22,7 @@ class Application:
         self.__readConfig()
         self.__mergents = Mergents(self.__config, self.__args.input, self.__args.cache)
         self.__transformers = [Ignore(self.__config['ignore']), Payments(self.__config['payments'])]
-        self.__currencyConverters = CurrencyConverters(self.__config, self.__args.cache).load()
+        self.__currencyConverters = CurrencyConverters(self.__config, self.__args.cache).create().load()
         self.__accountings = AccountingFactory(self.__args, self.__config, self.__currencyConverters).create()
 
         self.__process()

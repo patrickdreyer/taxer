@@ -6,7 +6,11 @@ class CurrencyConverters:
 
     def __init__(self, config, cachePath):
         self.__config = config['currencyConverters']
-        self.__converters = CurrencyConverters.__createConverters(self.__config, cachePath)
+        self.__cachePath = cachePath
+
+    def create(self):
+        self.__converters = CurrencyConverters.__createConverters(self.__config, self.__cachePath)
+        return self
 
     def load(self):
         for converter in self.__converters.values():
