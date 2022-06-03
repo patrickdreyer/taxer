@@ -14,6 +14,7 @@ class ParserInfoDE(parserinfo):
 
 # https://excelrates.com/historical-exchange-rates/FROM-TO
 class ExcelRatesCurrencyConverter(CurrencyConverter):
+    __symbols = [ 'EUR', 'USD' ]
     __parserInfo = ParserInfoDE()
     __rates = dict()
 
@@ -27,6 +28,10 @@ class ExcelRatesCurrencyConverter(CurrencyConverter):
 
     def store(self):
         pass
+
+    @property
+    def symbols(self):
+        return self.__symbols
 
     def exchangeRate(self, unit, date):
         rates = self.__rates[unit]

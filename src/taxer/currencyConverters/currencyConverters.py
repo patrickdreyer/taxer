@@ -7,18 +7,6 @@ class CurrencyConverters:
     def __init__(self, config, cachePath):
         self.__config = config['currencyConverters']
         self.__converters = CurrencyConverters.__createConverters(self.__config, cachePath)
-        self.__providers = {
-            'AXN' : self.__converters['CCC'],
-            'BTC' : self.__converters['CCC'],
-            'ETH' : self.__converters['CCC'],
-            'HEX' : self.__converters['CCC'],
-            'HDRN': self.__converters['CCC'],
-            'XRM' : self.__converters['CCC'],
-            'XRP' : self.__converters['CCC'],
-            'EUR' : self.__converters['ER'],
-            'USD' : self.__converters['ER'],
-            'USDC': self.__converters['CCC']
-        }
 
     def load(self):
         for converter in self.__converters.values():
@@ -29,10 +17,12 @@ class CurrencyConverters:
         for converter in self.__converters.values():
             converter.store()
 
-    def exchangeRate(self, unit, date):
-        provider = self.__providers[unit]
-        rate = provider.exchangeRate(unit, date)
-        return rate
+    def exchangeRate(self, symbol, date):
+        for converter in self.__converters:
+            if symbol in converter.symbols:
+                rate = converter.exchangeRate(symbol, date)
+                return rate
+        raise KeyError("Symbol not supported by currency converters; symbol='{}'".format(symbol))
 
     @staticmethod
     def isFiat(unit):
