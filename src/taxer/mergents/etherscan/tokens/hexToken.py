@@ -31,7 +31,7 @@ class HexToken(Token):
         self.__etherscanApi = etherscanApi
         self.__contract = contract
 
-    def processTransaction(self, id, year, transaction, erc20Transaction):
+    def processTransaction(self, address, id, year, transaction, erc20Transaction):
         (name, args) = Ether.getFunction(self.__contract, transaction['input'])
 
         if name == 'xflobbyenter':

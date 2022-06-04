@@ -11,6 +11,6 @@ class AxnToken(Token):
     @property
     def address(self): return AxnToken.__address
 
-    def processTransaction(self, id, year, transaction, erc20Transaction):
+    def processTransaction(self, address, id, year, transaction, erc20Transaction):
         # we simply ignore any Axion transactions
         yield

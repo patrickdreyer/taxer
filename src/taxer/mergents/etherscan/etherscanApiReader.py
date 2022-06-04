@@ -25,7 +25,7 @@ class EtherscanApiReader(Reader):
             for transaction in transactions:
                 if transaction['token'] != None:
                     erc20Transaction = EtherscanApiReader.__getErc20Transaction(erc20Transactions, transaction['hash'])
-                    yield from transaction['token'].processTransaction(id, year, transaction, erc20Transaction)
+                    yield from transaction['token'].processTransaction(address, id, year, transaction, erc20Transaction)
                 elif transaction['from'] == address and transaction['to'] == address:
                     if transaction['dateTime'].year == year:
                         yield CancelFee(id, transaction['dateTime'], transaction['hash'], Ether.fee(transaction))
@@ -34,7 +34,7 @@ class EtherscanApiReader(Reader):
                         yield WithdrawTransfer(id, transaction['dateTime'], transaction['hash'], Ether.amount(transaction), Ether.fee(transaction))
                 elif transaction['to'] == address:
                     if transaction['dateTime'].year == year:
-                        yield DepositTransfer(id, transaction['dateTime'], transaction['hash'], Ether.amount(transaction), Currency('ETH', 0))
+                        yield DepositTransfer(id, transaction['dateTime'], transaction['hash'], Ether.amount(transaction), Ether.zero())
 
     def __transformTransaction(self, transaction):
         transaction['dateTime'] = pytz.utc.localize(datetime.datetime.fromtimestamp(int(transaction['timeStamp'])))
