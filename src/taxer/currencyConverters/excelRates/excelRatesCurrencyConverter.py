@@ -20,6 +20,7 @@ class ExcelRatesCurrencyConverter(CurrencyConverter):
 
     def __init__(self, config, cachePath):
         self.__cachePath = cachePath
+        self.__id = config['id']
 
     def load(self):
         fileMatches = self.__getFileMatches(self.__cachePath)
@@ -28,6 +29,10 @@ class ExcelRatesCurrencyConverter(CurrencyConverter):
 
     def store(self):
         pass
+
+    @property
+    def id(self):
+        return self.__id
 
     @property
     def symbols(self):

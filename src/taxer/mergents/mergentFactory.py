@@ -1,5 +1,7 @@
 from importlib import import_module
 
+from ..pluginLoader import PluginLoader
+
 
 class MergentFactory:
     @staticmethod
@@ -18,19 +20,4 @@ class MergentFactory:
             yield from mergent.createReaders()
 
     def __createMergents(self):
-        self.__mergents = []
-        for configKey in self.__config.keys():
-            mergentConfig = self.__config[configKey]
-            if ('disable' in mergentConfig and mergentConfig['disable']):
-                continue
-            className = configKey[0].upper() + configKey[1:]
-            fullName = '.{}.{}Mergent.{}Mergent'.format(configKey, configKey, className)
-            clss = MergentFactory.__importMergent(fullName)
-            instance = clss(mergentConfig, self.__inputPath, self.__cachePath)
-            self.__mergents.append(instance)
-
-    @staticmethod
-    def __importMergent(path):
-        modulePath, _, className = path.rpartition('.')
-        mod = import_module(modulePath, __package__)
-        return getattr(mod, className)
+        self.__mergents = PluginLoader.load(self.__config, __package__ + '.{}.{}Mergent.{}Mergent', lambda config, clss : clss(config, self.__inputPath, self.__cachePath))

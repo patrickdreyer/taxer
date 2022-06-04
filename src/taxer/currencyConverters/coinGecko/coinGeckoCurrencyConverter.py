@@ -22,6 +22,7 @@ class CoinGeckoCurrencyConverter(CurrencyConverter):
     def __init__(self, config, cachePath):
         self.__config = config['coinGecko']
         self.__cachePath = cachePath
+        self.__id = config['id']
         self.__api = CoinGeckoApi(self.__config)
 
     def load(self):
@@ -31,6 +32,10 @@ class CoinGeckoCurrencyConverter(CurrencyConverter):
     def store(self):
         CoinGeckoCurrencyConverter.__storeIds(self.__cachePath)
         CoinGeckoCurrencyConverter.__storeRates(self.__cachePath)
+
+    @property
+    def id(self):
+        return self.__id
 
     @property
     def symbols(self):

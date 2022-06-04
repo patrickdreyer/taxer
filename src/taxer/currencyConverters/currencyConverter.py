@@ -3,6 +3,10 @@ class CurrencyConverter:
     def store(self): pass
 
     @property
+    def id(self):
+        pass
+
+    @property
     def symbols(self):
         pass
 

@@ -17,8 +17,9 @@ class CryptoCurrencyChartCurrencyConverter(CurrencyConverter):
     __ratesDirty = False
 
     def __init__(self, config, cachePath):
-        self.__config = config['cryptoCurrencyChart']
+        self.__config = config
         self.__cachePath = cachePath
+        self.__id = config['id']
         self.__api = CryptoCurrencyChartApi(self.__config)
 
     def load(self):
@@ -28,6 +29,10 @@ class CryptoCurrencyChartCurrencyConverter(CurrencyConverter):
     def store(self):
         self.__storeIds()
         self.__storeRates()
+
+    @property
+    def id(self):
+        return self.__id
 
     @property
     def symbols(self):

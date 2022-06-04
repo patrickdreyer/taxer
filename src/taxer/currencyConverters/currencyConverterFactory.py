@@ -1,4 +1,4 @@
-from importlib import import_module
+from ..pluginLoader import PluginLoader
 
 
 class CurrencyConverterFactory:
@@ -37,17 +37,5 @@ class CurrencyConverterFactory:
 
     def __createConverters(self):
         self.__converters = {}
-        for configKey in self.__config.keys():
-            converterConfig = self.__config[configKey]
-            if ('disable' in converterConfig and converterConfig['disable']):
-                continue
-            className = configKey[0].upper() + configKey[1:]
-            fullName = '.{}.{}CurrencyConverter.{}CurrencyConverter'.format(configKey, configKey, className)
-            converterClass = CurrencyConverterFactory.__importConverter(fullName)
-            self.__converters[converterConfig['id']] = converterClass(self.__config, self.__cachePath)
-
-    @staticmethod
-    def __importConverter(path):
-        modulePath, _, className = path.rpartition('.')
-        mod = import_module(modulePath, __package__)
-        return getattr(mod, className)
+        for converter in PluginLoader.load(self.__config, __package__ + '.{}.{}CurrencyConverter.{}CurrencyConverter', lambda config, clss : clss(config, self.__cachePath)):
+            self.__converters[converter.id] = converter
