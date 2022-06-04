@@ -30,3 +30,7 @@ class Ether:
     @staticmethod
     def fee(transaction):
         return Currency('ETH', Decimal(transaction['gasUsed']) * Decimal(transaction['gasPrice']) / Ether.__divisor)
+
+    @staticmethod
+    def zero():
+        return Currency('ETH', 0)
