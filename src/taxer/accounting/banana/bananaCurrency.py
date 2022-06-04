@@ -1,4 +1,4 @@
-from ...currencyConverters.currencyConverters import CurrencyConverters
+from ...currencyConverters.currencyConverterFactory import CurrencyConverterFactory
 from ...transactions.currency import Currency
 from ..baseCurrency import BaseCurrency
 from ..costCenter import CostCenter
@@ -28,7 +28,7 @@ class BananaCurrency(Currency):
 
     @property
     def isFiat(self):
-        return CurrencyConverters.isFiat(self.unit)
+        return CurrencyConverterFactory.isFiat(self.unit)
 
     @staticmethod
     def __mapUnit(value):

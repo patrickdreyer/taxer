@@ -13,6 +13,8 @@ from ...transactions.sellTrade import SellTrade
 
 
 class CexApiReader(Reader):
+    __symbols = [ 'BTC', 'ETH', 'XRP' ]
+
     def __init__(self, config):
         self.__config = config
 
@@ -33,7 +35,7 @@ class CexApiReader(Reader):
                 yield BuyTrade(self.__config['id'], date, order['id'], crypto, fiat, fee)
 
     def __fetchArchivedOrders(self, year):
-        for symbol in self.__config['symbols']:
+        for symbol in self.__symbols:
             request = {
                 'dateTo': datetime.datetime(year, 12, 31).timestamp(),
                 'dateFrom': datetime.datetime(year, 1, 1).timestamp(),

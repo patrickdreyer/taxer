@@ -10,6 +10,7 @@ from ..currencyConverter import CurrencyConverter
 class CoinGeckoCurrencyConverter(CurrencyConverter):
     __idsFileName = 'CoinGeckoCurrency-Ids.csv'
     __ratesFileName = 'CoinGeckoCurrency-Rates.csv'
+    __symbols = [ 'AXN', 'BTC', 'ETH', 'HEX', 'HDRN', 'XRM', 'XRP', 'USDC' ]
 
     __log = logging.getLogger(__name__)
 
@@ -21,13 +22,8 @@ class CoinGeckoCurrencyConverter(CurrencyConverter):
     def __init__(self, config, cachePath):
         self.__config = config['coinGecko']
         self.__cachePath = cachePath
+        self.__id = config['id']
         self.__api = CoinGeckoApi(self.__config)
-
-    def exchangeRate(self, unit, date):
-        cacheKey = '{0}{1}'.format(unit, date.strftime('%Y%m%d'))
-        if not cacheKey in CoinGeckoCurrencyConverter.__rates:
-            self.__fetchExchangeRate(unit, date, cacheKey)
-        return Decimal(CoinGeckoCurrencyConverter.__rates[cacheKey])
 
     def load(self):
         CoinGeckoCurrencyConverter.__loadIds(self.__cachePath)
@@ -36,6 +32,20 @@ class CoinGeckoCurrencyConverter(CurrencyConverter):
     def store(self):
         CoinGeckoCurrencyConverter.__storeIds(self.__cachePath)
         CoinGeckoCurrencyConverter.__storeRates(self.__cachePath)
+
+    @property
+    def id(self):
+        return self.__id
+
+    @property
+    def symbols(self):
+        return self.__symbols
+
+    def exchangeRate(self, unit, date):
+        cacheKey = '{0}{1}'.format(unit, date.strftime('%Y%m%d'))
+        if not cacheKey in CoinGeckoCurrencyConverter.__rates:
+            self.__fetchExchangeRate(unit, date, cacheKey)
+        return Decimal(CoinGeckoCurrencyConverter.__rates[cacheKey])
 
     @staticmethod
     def __loadIds(cachePath):

@@ -4,11 +4,10 @@ import logging
 import os
 import pickle
 
-from .accounting.factory import AccountingFactory
-from .currencyConverters.currencyConverters import CurrencyConverters
-from .ignore import Ignore
-from .mergents.mergents import Mergents
-from .payments import Payments
+from .accounting.accountingfactory import AccountingFactory
+from .currencyConverters.currencyConverterFactory import CurrencyConverterFactory
+from .mergents.mergentFactory import MergentFactory
+from .transformers.transformerFactory import TransformerFactory
 
 class Application:
     __transactionsFileName = 'transactions.json'
@@ -20,10 +19,10 @@ class Application:
         Application.__log.info('BEGIN')
         self.__parseArguments()
         self.__readConfig()
-        self.__mergents = Mergents(self.__config, self.__args.input, self.__args.cache)
-        self.__transformers = [Ignore(self.__config['ignore']), Payments(self.__config['payments'])]
-        self.__currencyConverters = CurrencyConverters(self.__config, self.__args.cache).load()
-        self.__accountings = AccountingFactory(self.__args, self.__config, self.__currencyConverters).create()
+        self.__mergents = MergentFactory.create(self.__config, self.__args.input, self.__args.cache)
+        self.__transformers = TransformerFactory.create(self.__config)
+        self.__currencyConverters = CurrencyConverterFactory.create(self.__config, self.__args.cache).load()
+        self.__accountings = AccountingFactory.create(self.__args, self.__config, self.__currencyConverters)
 
         self.__process()
 

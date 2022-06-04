@@ -22,7 +22,7 @@ from ...transactions.transfer import Transfer
 from ...transactions.withdrawTransfer import WithdrawTransfer
 from ..accounting import Accounting
 from ..costCenter import CostCenter
-from .accounts import BananaAccounts
+from .bananaAccounts import BananaAccounts
 from .bananaCurrency import BananaCurrency
 
 

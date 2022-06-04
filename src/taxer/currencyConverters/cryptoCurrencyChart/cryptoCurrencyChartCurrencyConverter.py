@@ -8,6 +8,7 @@ from ..currencyConverter import CurrencyConverter
 
 
 class CryptoCurrencyChartCurrencyConverter(CurrencyConverter):
+    __symbols = [ 'AXN', 'BTC', 'ETH', 'HEX', 'HDRN', 'XRM', 'XRP', 'USDC' ]
     __log = logging.getLogger(__name__)
 
     __ids = dict()
@@ -16,15 +17,10 @@ class CryptoCurrencyChartCurrencyConverter(CurrencyConverter):
     __ratesDirty = False
 
     def __init__(self, config, cachePath):
-        self.__config = config['cryptoCurrencyChart']
+        self.__config = config
         self.__cachePath = cachePath
+        self.__id = config['id']
         self.__api = CryptoCurrencyChartApi(self.__config)
-
-    def exchangeRate(self, unit, date):
-        cacheKey = '{0}{1}'.format(unit, date.strftime('%Y%m%d'))
-        if not cacheKey in CryptoCurrencyChartCurrencyConverter.__rates:
-            self.__fetchExchangeRate(unit, date, cacheKey)
-        return Decimal(CryptoCurrencyChartCurrencyConverter.__rates[cacheKey])
 
     def load(self):
         self.__loadIds()
@@ -33,6 +29,20 @@ class CryptoCurrencyChartCurrencyConverter(CurrencyConverter):
     def store(self):
         self.__storeIds()
         self.__storeRates()
+
+    @property
+    def id(self):
+        return self.__id
+
+    @property
+    def symbols(self):
+        return self.__symbols
+
+    def exchangeRate(self, unit, date):
+        cacheKey = '{0}{1}'.format(unit, date.strftime('%Y%m%d'))
+        if not cacheKey in CryptoCurrencyChartCurrencyConverter.__rates:
+            self.__fetchExchangeRate(unit, date, cacheKey)
+        return Decimal(CryptoCurrencyChartCurrencyConverter.__rates[cacheKey])
 
     def __loadIds(self):
         filePath = os.path.join(self.__cachePath, self.__config['idsFileName'])
