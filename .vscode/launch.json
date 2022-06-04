@@ -11,12 +11,12 @@
             "program": "src/__main__.py",
             "console": "integratedTerminal",
             "args": [
-                "--input", "~/Dropbox/4-Buchhaltung/2020/Kryptos/reports",
-                "--cache", "~/Dropbox/4-Buchhaltung/2020/Kryptos/cache",
-                "--output", "~/Dropbox/4-Buchhaltung/2020/Kryptos/",
-                "--config", "~/Dropbox/4-Buchhaltung/2020/Kryptos/taxer.json",
-                "--year", "2020",
-                "--transactions", "~/Dropbox/4-Buchhaltung/2020/Kryptos/transactions"
+                "--input", "~/Dropbox/4-Buchhaltung/2021/Kryptos/reports",
+                "--cache", "~/Dropbox/4-Buchhaltung/2021/Kryptos/cache",
+                "--output", "~/Dropbox/4-Buchhaltung/2021/Kryptos/",
+                "--config", "~/Dropbox/4-Buchhaltung/2021/Kryptos/taxer.json",
+                "--year", "2021",
+                "--transactions", "~/Dropbox/4-Buchhaltung/2021/Kryptos/transactions"
             ]
         }
     ]
