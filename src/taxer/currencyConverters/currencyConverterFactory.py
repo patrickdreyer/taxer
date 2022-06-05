@@ -24,7 +24,7 @@ class CurrencyConverterFactory:
             converter.store()
 
     def exchangeRate(self, symbol, date):
-        for converter in self.__converters:
+        for converter in  self.__converters.values():
             if symbol in converter.symbols:
                 rate = converter.exchangeRate(symbol, date)
                 return rate
