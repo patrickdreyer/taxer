@@ -29,7 +29,7 @@ class PrimeXBTCovestingFileReader(FileReader):
             if date.year != self.__year:
                 continue
             symbol = row['Total profit'].split()[1]
-            amount = Currency(symbol, row['Total profit'].split()[0])
+            amount = Currency(symbol, row['Total profit'].split()[0].replace('−','-'))
             entryFee = Currency(symbol, Decimal(row['Initial equity'].split()[0]) * PrimeXBTCovestingFileReader.__entryFeePercentage if date >= PrimeXBTCovestingFileReader.__startEntryFee else 0)
             exitFee = Currency(symbol, row['Commission'].split()[0])
             yield Covesting(self.__config['id'], date, '', row['Name'], amount, entryFee, exitFee)

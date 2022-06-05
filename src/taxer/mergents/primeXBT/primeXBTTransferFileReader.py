@@ -21,16 +21,16 @@ class PrimeXBTTransferFileReader(FileReader):
         self.__year = year
         rows = self.__readFile(filePath)
         for row in rows:
-            date = pytz.utc.localize(parser.parse(row['Date/Time '].replace('\n', 'T')))
+            date = pytz.utc.localize(parser.parse(row['Date/Time']))
             if date.year != self.__year:
                 continue
-            symbol = row['Amount '].split()[1]
-            amount = Currency(symbol, row['Amount '].split()[0])
+            symbol = row['Amount'].split()[1]
+            amount = Currency(symbol, row['Amount'].split()[0])
             f = Currency(symbol, 0)
-            if row['From '].find('Blockchain') != -1:
-                yield DepositTransfer(self.__config['id'], date, row['ID '], amount, f)
-            elif row['To '].find('Blockchain') != -1:
-                yield WithdrawTransfer(self.__config['id'], date, row['ID '], amount, f)
+            if row['From'].find('Blockchain') != -1:
+                yield DepositTransfer(self.__config['id'], date, row['ID'], amount, f)
+            elif row['To'].find('Blockchain') != -1:
+                yield WithdrawTransfer(self.__config['id'], date, row['ID'], amount, f)
 
     @staticmethod
     def __readFile(filePath):
