@@ -1,11 +1,14 @@
 import logging
 
 
+from .csvFileDict import CsvFileDict
+
+
 class SymbolDict:
     __log = logging.getLogger(__name__)
 
-    def __init__(self, fileDict, api):
-        self.__fileDict = fileDict
+    def __init__(self, filePath, api):
+        self.__fileDict = CsvFileDict(filePath, ['unit', 'id'])
         self.__api = api
 
     def load(self):

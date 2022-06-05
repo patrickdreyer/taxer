@@ -1,11 +1,13 @@
 import logging
 
+from .csvFileArray import CsvFileArray
+
 
 class SymbolArray:
     __log = logging.getLogger(__name__)
 
-    def __init__(self, fileArray, api):
-        self.__fileArray = fileArray
+    def __init__(self, filePath, api):
+        self.__fileArray = CsvFileArray(filePath)
         self.__api = api
 
     def load(self):

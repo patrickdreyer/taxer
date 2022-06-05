@@ -8,11 +8,11 @@ from .csvFileDict import CsvFileDict
 class CurrencyConverter:
     __log = logging.getLogger(__name__)
 
-    def __init__(self, config, cachePath, api, ids, ratesFileName):
+    def __init__(self, config, cachePath, api, symbolMapper):
         self.__config = config
         self.__api = api
-        self.__ids = ids
-        self.__rates = CsvFileDict(os.path.join(cachePath, ratesFileName), ['key', 'rate'])
+        self.__ids = symbolMapper(os.path.join(cachePath, config['idsFileName']), api)
+        self.__rates = CsvFileDict(os.path.join(cachePath, config['ratesFileName']), ['key', 'rate'])
 
     def load(self):
         self.__ids.load()
