@@ -1,7 +1,7 @@
 import logging
 
 
-class SymbolMapper:
+class SymbolDict:
     __log = logging.getLogger(__name__)
 
     def __init__(self, fileDict, api):
@@ -23,7 +23,7 @@ class SymbolMapper:
         return self.__fileDict[symbol]
 
     def __loadIds(self):
-        SymbolMapper.__log.info('Get ids')
+        SymbolDict.__log.info('Get ids')
         coins = self.__api.getSymbols()
         for coin in coins:
             self.__fileDict[coin['symbol'].upper()] = coin['id']
