@@ -1,10 +1,13 @@
 import json
+import logging
 import requests
 
 from ..currencyConverterApi import CurrencyConverterApi
 
 
 class CryptoCurrencyChartApi(CurrencyConverterApi):
+    __log = logging.getLogger(__name__)
+
     def __init__(self, config):
         self.__config = config
         self.__session = requests.Session()
@@ -13,6 +16,7 @@ class CryptoCurrencyChartApi(CurrencyConverterApi):
         self.__session.close()
 
     def getSymbols(self):
+        CryptoCurrencyChartApi.__log.info('Get ids')
         query = 'https://{}:{}@{}/coin/list'.format(self.__config['apiKey'], self.__config['apiSecret'], self.__config['apiUrl'])
         response = self.__session.get(query)
         content = json.loads(response.content)

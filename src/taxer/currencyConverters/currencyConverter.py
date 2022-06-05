@@ -6,13 +6,12 @@ from .csvFileDict import CsvFileDict
 
 
 class CurrencyConverter:
-    __log = logging.getLogger(__name__)
-
     def __init__(self, config, cachePath, api, symbolMapper):
+        self.__log = logging.getLogger('%s.%s' % (self.__class__.__module__, self.__class__.__name__))
         self.__config = config
         self.__api = api
-        self.__ids = symbolMapper(os.path.join(cachePath, config['idsFileName']), api)
-        self.__rates = CsvFileDict(os.path.join(cachePath, config['ratesFileName']), ['key', 'rate'])
+        self.__ids = symbolMapper(self.__log, os.path.join(cachePath, config['idsFileName']), api)
+        self.__rates = CsvFileDict(self.__log, os.path.join(cachePath, config['ratesFileName']), ['key', 'rate'])
 
     def load(self):
         self.__ids.load()
@@ -33,7 +32,7 @@ class CurrencyConverter:
     def exchangeRate(self, symbol, date):
         cacheKey = '{0}{1}'.format(symbol, date.strftime('%Y%m%d'))
         if not cacheKey in self.__rates():
-            CurrencyConverter.__log.info("Fetch exchange rate; symbol='%s', date='%s'", symbol, date)
+            self.__log.info("Fetch exchange rate; symbol='%s', date='%s'", symbol, date)
             id = self.__ids.map(symbol)
             self.__rates[cacheKey] = self.__api.getRate(id, date)
         return Decimal(self.__rates[cacheKey])
