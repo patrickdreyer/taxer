@@ -13,7 +13,8 @@ class ExchangeRateHostApi(CurrencyConverterApi):
         self.__session.close()
 
     def getSymbols(self):
-        response = self.__session.get('{}/symbols'.format(self.__config['url']))
+        query = '{}/symbols'.format(self.__config['url'])
+        response = self.__session.get(query)
         content = json.loads(response.content)
         return content['symbols'].keys()
 
