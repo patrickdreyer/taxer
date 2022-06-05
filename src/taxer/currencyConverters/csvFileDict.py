@@ -28,12 +28,13 @@ class CsvFileDict:
     def load(self):
         if not os.path.isfile(self.__filePath):
             CsvFileDict.__log.info("Cache not present; filePath='%s'", self.__filePath)
-            return
+            return False
         CsvFileDict.__log.info("Load cache; filePath='%s'", self.__filePath)
         with open(self.__filePath) as file:
             reader = csv.reader(file, dialect='unix')
             for line in reader:
                 self.__dict[line[0]] = line[1]
+        return True
 
     def store(self):
         if not self.__dirty:

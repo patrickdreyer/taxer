@@ -8,8 +8,6 @@ from ..currencyConverter import CurrencyConverter
 
 
 class CryptoCurrencyChartCurrencyConverter(CurrencyConverter):
-    __symbols = [ 'AXN', 'BTC', 'ETH', 'HEX', 'HDRN', 'XRM', 'XRP', 'USDC' ]
-
     __log = logging.getLogger(__name__)
 
     def __init__(self, config, cachePath):
@@ -19,7 +17,8 @@ class CryptoCurrencyChartCurrencyConverter(CurrencyConverter):
         self.__rates = CsvFileDict(os.path.join(cachePath, self.__config['ratesFileName']), ['key', 'rate'])
 
     def load(self):
-        self.__ids.load()
+        if not self.__ids.load():
+            self.__loadIds()
         self.__rates.load()
 
     def store(self):
@@ -32,7 +31,7 @@ class CryptoCurrencyChartCurrencyConverter(CurrencyConverter):
 
     @property
     def symbols(self):
-        return self.__symbols
+        return self.__ids().keys()
 
     def exchangeRate(self, unit, date):
         cacheKey = '{0}{1}'.format(unit, date.strftime('%Y%m%d'))
@@ -40,19 +39,17 @@ class CryptoCurrencyChartCurrencyConverter(CurrencyConverter):
             self.__fetchExchangeRate(unit, date, cacheKey)
         return Decimal(self.__rates[cacheKey])
 
-    def __fetchExchangeRate(self, unit, date, cacheKey):
-        CryptoCurrencyChartCurrencyConverter.__log.info("Fetch exchange rate; unit='%s', date='%s'", unit, date)
-        id = self.__mapUnit2Id(unit)
+    def __fetchExchangeRate(self, symbol, date, cacheKey):
+        CryptoCurrencyChartCurrencyConverter.__log.info("Fetch exchange rate; symbol='%s', date='%s'", symbol, date)
+        id = self.__ids[symbol]
         coin = self.__api.getCoinMarketDataById(id, date)
         ret = coin['price']
         self.__rates[cacheKey] = ret
 
-    def __mapUnit2Id(self, unit):
-        if not unit in self.__ids():
-            CryptoCurrencyChartCurrencyConverter.__log.info('Fetch unit to id map')
-            coins = self.__api.getCoinList()
-            for coin in coins:
-                symbol = coin['symbol']
-                id = coin['id']
-                self.__ids[symbol.upper()] = id
-        return self.__ids[unit]
+    def __loadIds(self):
+        CryptoCurrencyChartCurrencyConverter.__log.info('Get ids')
+        coins = self.__api.getCoinList()
+        for coin in coins:
+            symbol = coin['symbol']
+            id = coin['id']
+            self.__ids[symbol.upper()] = id
