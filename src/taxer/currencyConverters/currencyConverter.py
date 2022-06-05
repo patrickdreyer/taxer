@@ -10,4 +10,4 @@ class CurrencyConverter:
     def symbols(self):
         pass
 
-    def exchangeRate(self, unit, date): pass
+    def exchangeRate(self, symbol, date): pass

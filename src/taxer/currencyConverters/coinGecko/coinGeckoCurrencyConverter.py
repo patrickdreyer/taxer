@@ -33,23 +33,16 @@ class CoinGeckoCurrencyConverter(CurrencyConverter):
     def symbols(self):
         return self.__ids().keys()
 
-    def exchangeRate(self, unit, date):
-        cacheKey = '{0}{1}'.format(unit, date.strftime('%Y%m%d'))
+    def exchangeRate(self, symbol, date):
+        cacheKey = '{0}{1}'.format(symbol, date.strftime('%Y%m%d'))
         if not cacheKey in self.__rates():
-            self.__fetchExchangeRate(unit, date, cacheKey)
+            CoinGeckoCurrencyConverter.__log.info("Fetch exchange rate; symbol='%s', date='%s'", symbol, date)
+            id = self.__ids[symbol]
+            self.__rates[cacheKey] = self.__api.getRate(id, date)
         return Decimal(self.__rates[cacheKey])
-
-    def __fetchExchangeRate(self, unit, date, cacheKey):
-        CoinGeckoCurrencyConverter.__log.info("Fetch exchange rate; unit='%s', date='%s'", unit, date)
-        id = self.__ids[unit]
-        marketData = self.__api.getCoinMarketDataById(id, date)
-        ret = marketData['current_price']['chf']
-        self.__rates[cacheKey] = ret
 
     def __loadIds(self):
         CoinGeckoCurrencyConverter.__log.info('Get ids')
-        coins = self.__api.getCoinList()
+        coins = self.__api.getSymbols()
         for coin in coins:
-            symbol = coin['symbol']
-            id = coin['id']
-            self.__ids[symbol.upper()] = id
+            self.__ids[coin['symbol'].upper()] = coin['id']
