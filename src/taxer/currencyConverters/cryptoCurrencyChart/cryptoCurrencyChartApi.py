@@ -10,6 +10,8 @@ class CryptoCurrencyChartApi(CurrencyConverterApi):
 
     def __init__(self, config):
         self.__config = config
+        parts = urlparse(self.__config['url'])
+        self.__config['url'] = '{}://{}:{}@{}{}'.format(parts.scheme, self.__config['key'], self.__config['secret'], parts.netloc, parts.path)
         self.__session = requests.Session()
 
     def __del__(self):
@@ -25,6 +27,6 @@ class CryptoCurrencyChartApi(CurrencyConverterApi):
         return content['coin']['price']
 
     def __get(self, query):
-        query = 'https://{}:{}@{}{}'.format(self.__config['key'], self.__config['secret'], self.__config['url'], query)
+        query = '{}{}'.format(self.__config['url'], query)
         response = self.__session.get(query)
         return json.loads(response.content)
