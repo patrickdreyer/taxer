@@ -17,13 +17,14 @@ class CryptoCurrencyChartApi(CurrencyConverterApi):
 
     def getSymbols(self):
         CryptoCurrencyChartApi.__log.info('Get ids')
-        query = 'https://{}:{}@{}/coin/list'.format(self.__config['key'], self.__config['secret'], self.__config['url'])
-        response = self.__session.get(query)
-        content = json.loads(response.content)
+        content = self.__get('/coin/list')
         return content['coins']
 
     def getRate(self, symbol, date):
-        query = 'https://{}:{}@{}/coin/view/{}/{}/CHF'.format(self.__config['key'], self.__config['secret'], self.__config['url'], symbol, date.strftime('%Y-%m-%d'))
-        response = self.__session.get(query)
-        content = json.loads(response.content)
+        content = self.__get('/coin/view/{}/{}/CHF'.format(symbol, date.strftime('%Y-%m-%d')))
         return content['coin']['price']
+
+    def __get(self, query):
+        query = 'https://{}:{}@{}{}'.format(self.__config['key'], self.__config['secret'], self.__config['url'], query)
+        response = self.__session.get(query)
+        return json.loads(response.content)

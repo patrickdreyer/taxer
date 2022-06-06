@@ -17,13 +17,14 @@ class CoinGeckoApi(CurrencyConverterApi):
 
     def getSymbols(self):
         CoinGeckoApi.__log.info('Get ids')
-        query = '{}/coins/list'.format(self.__config['url'])
-        response = self.__session.get(query)
-        content = json.loads(response.content)
+        content = self.__get('/coins/list')
         return content
 
     def getRate(self, symbol, date):
-        query = '{}/coins/{}/history?date={}&localization=false'.format(self.__config['url'], symbol, date.strftime('%d-%m-%Y'))
-        response = self.__session.get(query)
-        content = json.loads(response.content)
+        content = self.__get('/coins/{}/history?date={}&localization=false'.format(symbol, date.strftime('%d-%m-%Y')))
         return content['market_data']['current_price']['chf']
+
+    def __get(self, query):
+        query = '{}{}'.format(self.__config['url'], query)
+        response = self.__session.get(query)
+        return json.loads(response.content)
