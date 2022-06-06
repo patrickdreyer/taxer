@@ -1,12 +1,19 @@
+import collections
+import datetime
 import json
 import logging
 import requests
+import time
+from urllib.parse import urlparse
 
 from ..currencyConverterApi import CurrencyConverterApi
 
 
 class CryptoCurrencyChartApi(CurrencyConverterApi):
     __log = logging.getLogger(__name__)
+    __callUnit = datetime.timedelta(seconds=1)
+    __callsPerUnit = 10
+    __calls = collections.deque(maxlen=__callsPerUnit)
 
     def __init__(self, config):
         self.__config = config
@@ -27,6 +34,20 @@ class CryptoCurrencyChartApi(CurrencyConverterApi):
         return content['coin']['price']
 
     def __get(self, query):
+        self.__throttle()
         query = '{}{}'.format(self.__config['url'], query)
         response = self.__session.get(query)
         return json.loads(response.content)
+
+    def __throttle(self):
+        self.__calls.append(datetime.datetime.now())
+        size = len(self.__calls)
+        if size < self.__calls.maxlen:
+            return
+        newest = self.__calls[0]
+        oldest = self.__calls[size-1]
+        difference = newest - oldest
+        if difference > CryptoCurrencyChartApi.__callUnit:
+            return
+        wait = (CryptoCurrencyChartApi.__callUnit - difference).microseconds / 1000000
+        time.sleep(wait)
