@@ -1,10 +1,13 @@
 import json
+import logging
 import requests
 
 from ..currencyConverterApi import CurrencyConverterApi
 
 
 class ExchangeRateHostApi(CurrencyConverterApi):
+    __log = logging.getLogger(__name__)
+
     def __init__(self, config):
         self.__config = config
         self.__session = requests.Session()
@@ -13,12 +16,15 @@ class ExchangeRateHostApi(CurrencyConverterApi):
         self.__session.close()
 
     def getSymbols(self):
-        response = self.__session.get('{}/symbols'.format(self.__config['url']))
-        content = json.loads(response.content)
+        ExchangeRateHostApi.__log.info('Get ids')
+        content = self.__get('/symbols')
         return content['symbols'].keys()
 
     def getRate(self, symbol, date):
-        query = '{}/{}?base={}&symbols={}'.format(self.__config['url'], date.strftime('%Y-%m-%d'), symbol, 'CHF')
-        response = self.__session.get(query)
-        content = json.loads(response.content)
+        content = self.__get('/{}?base={}&symbols={}'.format(date.strftime('%Y-%m-%d'), symbol, 'CHF'))
         return content['rates']['CHF']
+
+    def __get(self, query):
+        query = '{}{}'.format(self.__config['url'], query)
+        response = self.__session.get(query)
+        return json.loads(response.content)
