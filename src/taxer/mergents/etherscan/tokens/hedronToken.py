@@ -25,7 +25,7 @@ class HedronToken(Token):
         self.__contract = contract
 
     def processTransaction(self, address, id, year, transaction, erc20Transaction):
-        if transaction['dateTime'].year == year:
+        if transaction['dateTime'].year != year:
             return
 
         (name, args) = Ether.getFunction(self.__contract, transaction['input'])
