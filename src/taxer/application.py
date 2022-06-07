@@ -80,6 +80,8 @@ class Application:
         if not self.__args.transactions:
             return
         Application.__log.info("Serialize transactions; filePath='%s'", self.__args.transactions)
+        if not os.path.exists(self.__args.transactions):
+            os.makedirs(self.__args.transactions)
         with open(os.path.join(self.__args.transactions, Application.__transactionsFileName), 'wb') as file:
             pickle.dump(transactions, file)
 
