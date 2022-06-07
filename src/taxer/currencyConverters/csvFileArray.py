@@ -27,7 +27,7 @@ class CsvFileArray:
             return False
         self.__log.info("Load cache; filePath='%s'", self.__filePath)
         with open(self.__filePath, 'r') as file:
-            self.__array = map(lambda l: l.replace('\n', ''), file.readlines())
+            self.__array = list(map(lambda l: l.replace('\n', ''), file.readlines()))
         return True
 
     def store(self):
@@ -36,5 +36,5 @@ class CsvFileArray:
             return
         self.__log.info("Store cache; filePath='%s'", self.__filePath)
         with open(self.__filePath, 'w') as file:
-            array = map(lambda v: '{}\n'.format(v), self.__array)
+            array = list(map(lambda v: '{}\n'.format(v), self.__array))
             file.writelines(array)
