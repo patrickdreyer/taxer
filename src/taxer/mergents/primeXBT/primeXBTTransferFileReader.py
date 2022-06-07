@@ -8,6 +8,51 @@ from ...transactions.depositTransfer import DepositTransfer
 from ...transactions.withdrawTransfer import WithdrawTransfer
 
 
+class RowParserFactory:
+    @staticmethod
+    def create(row):
+        return RowParser2020(row) if 'Date/Time ' in row else RowParser(row)
+
+class RowParser:
+    def __init__(self, row):
+        self._row = row
+    def __call__(self, row):
+        self._row = row
+        return self
+    @property
+    def dateTime(self):
+        return self._row['Date/Time']
+    @property
+    def id(self):
+        return self._row['ID']
+    @property
+    def amount(self):
+        return self._row['Amount']
+    @property
+    def frm(self):
+        return self._row['From']
+    @property
+    def to(self):
+        return self._row['To']
+
+class RowParser2020(RowParser):
+    @property
+    def dateTime(self):
+        return self._row['Date/Time '].replace('\n', 'T')
+    @property
+    def id(self):
+        return self._row['ID ']
+    @property
+    def amount(self):
+        return self._row['Amount ']
+    @property
+    def frm(self):
+        return self._row['From ']
+    @property
+    def to(self):
+        return self._row['To ']
+
+
 class PrimeXBTTransferFileReader(FileReader):
     def __init__(self, config, path):
         super().__init__(path)
@@ -18,19 +63,21 @@ class PrimeXBTTransferFileReader(FileReader):
         return self.__config['fileNamePatterns']['transfer']
 
     def readFile(self, filePath, year):
+        rowParser = None
         self.__year = year
         rows = self.__readFile(filePath)
         for row in rows:
-            date = pytz.utc.localize(parser.parse(row['Date/Time']))
+            rowParser = rowParser(row) if rowParser else RowParserFactory.create(row)
+            date = pytz.utc.localize(parser.parse(rowParser.dateTime))
             if date.year != self.__year:
                 continue
-            symbol = row['Amount'].split()[1]
-            amount = Currency(symbol, row['Amount'].split()[0])
+            symbol = rowParser.amount.split()[1]
+            amount = Currency(symbol, rowParser.amount.split()[0])
             f = Currency(symbol, 0)
-            if row['From'].find('Blockchain') != -1:
-                yield DepositTransfer(self.__config['id'], date, row['ID'], amount, f)
-            elif row['To'].find('Blockchain') != -1:
-                yield WithdrawTransfer(self.__config['id'], date, row['ID'], amount, f)
+            if rowParser.frm.find('Blockchain') != -1:
+                yield DepositTransfer(self.__config['id'], date, rowParser.id, amount, f)
+            elif rowParser.to.find('Blockchain') != -1:
+                yield WithdrawTransfer(self.__config['id'], date, rowParser.id, amount, f)
 
     @staticmethod
     def __readFile(filePath):
