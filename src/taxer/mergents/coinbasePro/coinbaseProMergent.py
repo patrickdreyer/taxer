@@ -1,11 +1,14 @@
 from ..mergent import Mergent
-from .coinbaseProFileReader import CoinbaseProFileReader
+from .coinbaseProApi import CoinbaseProApi
+from .coinbaseProApiAuth import CoinbaseProApiAuth
+from .coinbaseProApiReader import CoinbaseProApiReader
 
 
 class CoinbaseProMergent(Mergent):
     def __init__(self, config, inputPath, cachePath):
         self.__config = config
-        self.__inputPath = inputPath
 
     def createReaders(self):
-        yield CoinbaseProFileReader(self.__config, self.__inputPath)
+        auth = CoinbaseProApiAuth(self.__config)
+        api = CoinbaseProApi(self.__config, auth)
+        yield CoinbaseProApiReader(self.__config, api)
