@@ -23,6 +23,11 @@ class CoinbaseProApi:
     def getAllTransfers(self, profileId):
         yield from self.__getPaginated('/transfers', {'profile_id': profileId})
 
+    def getAllFills(self, profileId):
+        products = self.__getItems('/products', {})
+        productIds = [p['id'] for p in products if p['base_currency'] in self.__config['symbols'] and p['quote_currency'] in self.__config['symbols']]
+        for productId in productIds:
+            yield from self.__getPaginated('/fills', {'profile_id': profileId, 'product_id': productId})
 
     def __getItems(self, path, params):
         response = self.__get(path, params)
