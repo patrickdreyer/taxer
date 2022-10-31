@@ -1,7 +1,9 @@
+from .dateTime import DateTimeX
+
 class Transaction:
     def __init__(self, mergentId, dateTime, id, note=''):
         self.__mergentId = mergentId
-        self.__dateTime = dateTime
+        self.__dateTime = DateTimeX(dateTime.year, dateTime.month, dateTime.day, dateTime.hour, dateTime.minute)
         self.__id = id
         self.__note = note
 
