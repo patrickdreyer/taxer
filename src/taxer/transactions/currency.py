@@ -26,13 +26,17 @@ class Currency:
         return self.__amountRaw
 
     def __add__(self, other):
+        if other.amount == 0:
+            return self
         if self.unit != other.unit:
-            raise "Currency not the same; self={}, other={}".format(self.unit, other.unit)
+            raise Exception(f'Currency not the same; self={self.unit}, other={other.unit}')
         return Currency(self.unit, self.amount + other.amount)
 
     def __sub__(self, other):
+        if other.amount == 0:
+            return self
         if self.unit != other.unit:
-            raise "Currency not the same; self={}, other={}".format(self.unit, other.unit)
+            raise Exception(f'Currency not the same; self={self.unit}, other={other.unit}')
         return Currency(self.unit, self.amount - other.amount)
 
     def __str__(self):
