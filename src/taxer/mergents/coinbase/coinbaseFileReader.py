@@ -1,5 +1,6 @@
 import csv
 from  dateutil import parser
+from pytz import utc
 
 from ..fileReader import FileReader
 from ...transactions.currency import Currency
@@ -22,7 +23,7 @@ class CoinbaseFileReader(FileReader):
         rows = CoinbaseFileReader.__readFile(filePath)
         CoinbaseFileReader.__skipHeader(rows)
         for row in rows:
-            date = parser.isoparse(row[0])
+            date = utc.localize(parser.isoparse(row[0]))
             if date.year != year:
                 continue
             amount = Currency(row[2], row[3])

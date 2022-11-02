@@ -1,8 +1,8 @@
 import csv
-import datetime
+from datetime import datetime
 from  dateutil import parser
 from decimal import Decimal
-import pytz
+from pytz import utc
 
 from ..fileReader import FileReader
 from ...transactions.covesting import Covesting
@@ -10,7 +10,7 @@ from ...transactions.currency import Currency
 
 
 class PrimeXBTCovestingFileReader(FileReader):
-    __startEntryFee = pytz.utc.localize(datetime.datetime(2020, 12, 1))
+    __startEntryFee = datetime(2020, 12, 1, tzinfo=utc)
     __entryFeePercentage = Decimal(0.01)
 
     def __init__(self, config, path):
@@ -25,7 +25,7 @@ class PrimeXBTCovestingFileReader(FileReader):
         self.__year = year
         rows = self.__readFile(filePath)
         for row in rows:
-            date = pytz.utc.localize(parser.parse(row['Closing date']))
+            date = utc.localize(parser.parse(row['Closing date']))
             if date.year != self.__year:
                 continue
             symbol = row['Total profit'].split()[1]

@@ -1,7 +1,7 @@
 import csv
 from  dateutil import parser
 import itertools
-import pytz
+from pytz import utc
 import re
 
 from ..fileReader import FileReader
@@ -53,7 +53,7 @@ class CexFileReader(FileReader):
 
     @staticmethod
     def __convertRow(row):
-        row['DateUTC'] = pytz.utc.localize(parser.isoparse(row['DateUTC']))
+        row['DateUTC'] = utc.localize(parser.isoparse(row['DateUTC']))
         return row
 
     def __filterCancelations(self, transaction):

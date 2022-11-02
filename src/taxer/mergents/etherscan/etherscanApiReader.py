@@ -1,5 +1,5 @@
-import datetime
-import pytz
+from datetime import datetime
+from pytz import utc
 
 from .ether import Ether
 from ..reader import Reader
@@ -37,7 +37,7 @@ class EtherscanApiReader(Reader):
                         yield DepositTransfer(id, transaction['dateTime'], transaction['hash'], Ether.amount(transaction), Ether.zero())
 
     def __transformTransaction(self, transaction):
-        transaction['dateTime'] = pytz.utc.localize(datetime.datetime.fromtimestamp(int(transaction['timeStamp'])))
+        transaction['dateTime'] = utc.localize(datetime.fromtimestamp(int(transaction['timeStamp'])))
         transaction['token'] = self.__getTokenByTransaction(transaction)
         return transaction
 

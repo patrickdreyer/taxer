@@ -1,6 +1,6 @@
-import datetime
-from  dateutil import parser
-import pytz
+from datetime import datetime
+from dateutil import parser
+from pytz import utc
 
 from ..reader import Reader
 from ...transactions.buyTrade import BuyTrade
@@ -63,5 +63,5 @@ class CoinbaseProApiReader(Reader):
 
     def __transformTransfers(self, accounts, transfer):
         transfer['currency'] = [a['currency'] for a in accounts if a['id'] == transfer['account_id']][0]
-        transfer['dateTime'] = pytz.utc.localize(datetime.datetime.strptime(transfer['completed_at'].replace('+00', ''), '%Y-%m-%d %H:%M:%S.%f'))
+        transfer['dateTime'] = utc.localize(datetime.strptime(transfer['completed_at'].replace('+00', ''), '%Y-%m-%d %H:%M:%S.%f'))
         return transfer

@@ -1,5 +1,6 @@
 import csv
 from  dateutil import parser
+from pytz import utc
 
 from ..fileReader import FileReader
 from ...transactions.buyTrade import BuyTrade
@@ -23,7 +24,7 @@ class CoinbaseProFileReader(FileReader):
         for row in rows:
             # fills
             if 'product' in row:
-                date = parser.isoparse(row['created at'])
+                date = utc.localize(parser.isoparse(row['created at']))
                 if date.year != year:
                     continue
                 crypto = Currency(row['size unit'], row['size'])

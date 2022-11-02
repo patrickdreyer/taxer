@@ -1,7 +1,7 @@
 import csv
 from  dateutil import parser
 import itertools
-import pytz
+from pytz import utc
 
 from ..fileReader import FileReader
 from ...transactions.currency import Currency
@@ -46,7 +46,7 @@ class PrimeXBTMarginFileReader(FileReader):
 
     @staticmethod
     def __convertRow(row):
-        row[3] = pytz.utc.localize(parser.parse(row[3]))
+        row[3] = utc.localize(parser.parse(row[3]))
         return row
 
     def __filterWrongYear(self, row):

@@ -1,9 +1,10 @@
-import datetime
-from  dateutil import parser
+from datetime import datetime
+from dateutil import parser
 from decimal import Decimal
 import hashlib
 import hmac
 import json
+from pytz import utc
 import requests
 
 from ..reader import Reader
@@ -35,12 +36,14 @@ class CexApiReader(Reader):
                 yield BuyTrade(self.__config['id'], date, order['id'], crypto, fiat, fee)
 
     def __fetchArchivedOrders(self, year):
+        start = datetime(year, 1, 1, tzinfo=utc).timestamp()
+        end = datetime(year, 12, 31, tzinfo=utc).timestamp()
         for symbol in self.__symbols:
             request = {
-                'dateTo': datetime.datetime(year, 12, 31).timestamp(),
-                'dateFrom': datetime.datetime(year, 1, 1).timestamp(),
-                'lastTxDateTo': datetime.datetime(year, 12, 31).timestamp(),
-                'lastTxDateFrom': datetime.datetime(year, 1, 1).timestamp()
+                'dateFrom': start,
+                'dateTo': end,
+                'lastTxDateFrom': start,
+                'lastTxDateTo': end
             }
             add = self.__createSignature()
             request.update(add)
@@ -50,7 +53,7 @@ class CexApiReader(Reader):
             yield from json.loads(response.content)
 
     def __createSignature(self):
-        timestamp = int(datetime.datetime.now().timestamp() * 1000)
+        timestamp = int(datetime.now(utc).timestamp() * 1000)
         message = "{}{}{}".format(timestamp, self.__config['userId'], self.__config['key'])
         signature = hmac.new(self.__config['secret'].encode(), message.encode(), hashlib.sha256).hexdigest()
         return {

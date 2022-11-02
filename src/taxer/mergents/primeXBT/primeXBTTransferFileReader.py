@@ -1,6 +1,6 @@
 import csv
-from  dateutil import parser
-import pytz
+from dateutil import parser
+from pytz import utc
 
 from ..fileReader import FileReader
 from ...transactions.currency import Currency
@@ -68,7 +68,7 @@ class PrimeXBTTransferFileReader(FileReader):
         rows = self.__readFile(filePath)
         for row in rows:
             rowParser = rowParser(row) if rowParser else RowParserFactory.create(row)
-            date = pytz.utc.localize(parser.parse(rowParser.dateTime))
+            date = utc.localize(parser.parse(rowParser.dateTime))
             if date.year != self.__year:
                 continue
             symbol = rowParser.amount.split()[1]
