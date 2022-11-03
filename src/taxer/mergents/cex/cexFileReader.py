@@ -36,12 +36,12 @@ class CexFileReader(FileReader):
                     fee = Currency(transaction['FeeSymbol'], transaction['FeeAmount'])
                     if fee.amount > 0:
                         amount = amount - fee
-                    yield DepositTransfer(self.__config['id'], date, id, amount, fee)
+                    yield DepositTransfer(self.__config['id'], date, id, amount, fee, None)
                 elif type == 'withdraw':
                     fee = Currency(transaction['FeeSymbol'], transaction['FeeAmount'])
                     if fee.amount > 0:
                         amount = amount - fee
-                    yield WithdrawTransfer(self.__config['id'], date, id, amount, fee)
+                    yield WithdrawTransfer(self.__config['id'], date, id, amount, fee, None)
                 elif type == 'costsNothing':
                     yield Reimbursement(self.__config['id'], date, id, amount)
 

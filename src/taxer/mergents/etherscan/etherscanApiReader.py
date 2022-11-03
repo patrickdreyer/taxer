@@ -31,10 +31,10 @@ class EtherscanApiReader(Reader):
                         yield CancelFee(id, transaction['dateTime'], transaction['hash'], Ether.fee(transaction))
                 elif transaction['from'] == address:
                     if transaction['dateTime'].year == year:
-                        yield WithdrawTransfer(id, transaction['dateTime'], transaction['hash'], Ether.amount(transaction), Ether.fee(transaction))
+                        yield WithdrawTransfer(id, transaction['dateTime'], transaction['hash'], Ether.amount(transaction), Ether.fee(transaction), transaction['to'])
                 elif transaction['to'] == address:
                     if transaction['dateTime'].year == year:
-                        yield DepositTransfer(id, transaction['dateTime'], transaction['hash'], Ether.amount(transaction), Ether.zero())
+                        yield DepositTransfer(id, transaction['dateTime'], transaction['hash'], Ether.amount(transaction), Ether.zero(), transaction['from'])
 
     def __transformTransaction(self, transaction):
         transaction['dateTime'] = utc.localize(datetime.fromtimestamp(int(transaction['timeStamp'])))

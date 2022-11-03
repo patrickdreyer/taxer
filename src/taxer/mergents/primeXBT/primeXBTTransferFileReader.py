@@ -1,5 +1,6 @@
 import csv
 from dateutil import parser
+import re
 from pytz import utc
 
 from ..fileReader import FileReader
@@ -34,6 +35,9 @@ class RowParser:
     @property
     def to(self):
         return self._row['To']
+    @property
+    def info(self):
+        return self._row['Info']
 
 class RowParser2020(RowParser):
     @property
@@ -51,12 +55,16 @@ class RowParser2020(RowParser):
     @property
     def to(self):
         return self._row['To ']
+    @property
+    def info(self):
+        return self._row['Info ']
 
 
 class PrimeXBTTransferFileReader(FileReader):
     def __init__(self, config, path):
         super().__init__(path)
         self.__config = config
+        self.__infoPattern = re.compile(r'address (.*)$') # 'Blockchain withdrawal: e55d9cf348daaee9983305d368cf11268ff7a9b22062a56de791e6b6c7b19bc4, address 37Dm4VhGAyCbfpVXuh837K2yNXEaAUg2Zs'
 
     @property
     def filePattern(self):
@@ -74,10 +82,11 @@ class PrimeXBTTransferFileReader(FileReader):
             symbol = rowParser.amount.split()[1]
             amount = Currency(symbol, rowParser.amount.split()[0])
             f = Currency(symbol, 0)
+            address = self.__infoPattern.search(rowParser.info).group(1)
             if rowParser.frm.find('Blockchain') != -1:
-                yield DepositTransfer(self.__config['id'], date, rowParser.id, amount, f)
+                yield DepositTransfer(self.__config['id'], date, rowParser.id, amount, f, address)
             elif rowParser.to.find('Blockchain') != -1:
-                yield WithdrawTransfer(self.__config['id'], date, rowParser.id, amount, f)
+                yield WithdrawTransfer(self.__config['id'], date, rowParser.id, amount, f, address)
 
     @staticmethod
     def __readFile(filePath):

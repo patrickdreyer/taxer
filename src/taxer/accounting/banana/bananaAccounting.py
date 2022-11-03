@@ -185,7 +185,7 @@ class BananaAccounting(Accounting):
                 #                date,    receipt,        description,  debit,     credit,                 amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
                 yield (date[0], [date[1], transaction.id, 'Einzahlung', c.account, self.__accounts.equity, c.amount, c.unit,   c.baseCurrency.exchangeRate, c.baseCurrency.amount, '',     c.costCenter])
             else:
-                BananaAccounting.__log.warn("%s - Transfer; ???->%s, %s, %s", transaction.dateTime, transaction.mergentId, transaction.amount, transaction.id)
+                BananaAccounting.__log.warn("%s - Transfer; ???->%s, %s, id=%s, address=%s", transaction.dateTime, transaction.mergentId, transaction.amount, transaction.id, transaction.address)
                 description = 'Transfer ? -> {}'.format(transaction.mergentId)
                 #                date,    receipt,        description, debit,     credit, amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
                 yield (date[0], [date[1], transaction.id, description, c.account, '',     c.amount, c.unit,   c.baseCurrency.exchangeRate, c.baseCurrency.amount, '',     c.costCenter])
@@ -194,7 +194,7 @@ class BananaAccounting(Accounting):
                 BananaAccounting.__log.debug("%s - Withdraw; %s, %s", transaction.dateTime, transaction.mergentId, c)
                 description = 'Auszahlung'
             else:
-                BananaAccounting.__log.warn("%s - Transfer; %s->???, %s, %s", transaction.dateTime, transaction.mergentId, c, transaction.id)
+                BananaAccounting.__log.warn("%s - Transfer; %s->???, %s, id=%s, address=%s", transaction.dateTime, transaction.mergentId, c, transaction.id, transaction.address)
                 description = 'Transfer {} -> ?'.format(transaction.mergentId)
             #                    date,    receipt,        description, debit,                  credit,    amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
             yield     (date[0], [date[1], transaction.id, description, self.__accounts.equity, c.account, c.amount, c.unit,   c.baseCurrency.exchangeRate, c.baseCurrency.amount, '',     c.costCenter.minus()])
@@ -242,7 +242,7 @@ class BananaAccounting(Accounting):
     def __transformPayment(self, transaction):
         BananaAccounting.__log.debug("%s - Payment; %s, %s, %s", transaction.dateTime, transaction.mergentId, transaction.amount, transaction.note)
         date = BananaAccounting.__getDate(transaction)
-        description = 'Bezahlung'
+        description = f'Bezahlung; {transaction.note}'
         w = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.amount, transaction)
         #                    date,    receipt,        description, deposit,                withdrawal, amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
         yield     (date[0], [date[1], transaction.id, description, self.__accounts.equity, w.account,  w.amount, w.unit,   w.baseCurrency.exchangeRate, w.baseCurrency.amount, '',     w.costCenter.minus(), transaction.note])

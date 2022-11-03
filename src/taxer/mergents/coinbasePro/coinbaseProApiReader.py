@@ -35,14 +35,14 @@ class CoinbaseProApiReader(Reader):
                 # even if fee is given in transfer, CBP does not deduce it
                 # if 'fee' in transfer['details']:
                 #     fee = Currency(transfer['currency'], transfer['details']['fee'])
-                yield WithdrawTransfer(self.__config['id'], transfer['dateTime'], transfer['id'], Currency(transfer['currency'], transfer['amount']), fee)
+                yield WithdrawTransfer(self.__config['id'], transfer['dateTime'], transfer['id'], Currency(transfer['currency'], transfer['amount']), fee, None)
             elif transfer['type'] == 'deposit':
                 if transfer['dateTime'].year != year:
                     continue
                 fee = Currency(transfer['currency'], 0)
                 if 'fee' in transfer['details']:
                     fee = Currency(transfer['currency'], transfer['details']['fee'])
-                yield DepositTransfer(self.__config['id'], transfer['dateTime'], transfer['id'], Currency(transfer['currency'], transfer['amount']), fee)
+                yield DepositTransfer(self.__config['id'], transfer['dateTime'], transfer['id'], Currency(transfer['currency'], transfer['amount']), fee, None)
 
     def __fetchFills(self, profileId, accounts, year):
         fills = self.__api.getAllFills(profileId)

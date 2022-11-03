@@ -28,10 +28,11 @@ class BitboxFileReader(FileReader):
 
             if self.__row['Type'] == 'sent':
                 f = Currency(self.__row['Unit'], self.__row['Fee'])
-                yield WithdrawTransfer(self.__config['id'], date, id, c, f, self.__row['Note'])
+                yield WithdrawTransfer(self.__config['id'], date, id, c, f, self.__row['Address'], self.__row['Note'])
 
             elif self.__row['Type'] == 'received':
-                yield DepositTransfer(self.__config['id'], date, id, c, Currency(self.__row['Unit'], 0), self.__row['Note'])
+                f = Currency(self.__row['Unit'], 0)
+                yield DepositTransfer(self.__config['id'], date, id, c, f, self.__row['Address'], self.__row['Note'])
 
     def __readFile(self, filePath):
         with open(filePath) as csvFile:
