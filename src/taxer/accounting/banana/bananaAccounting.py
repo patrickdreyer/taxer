@@ -125,29 +125,39 @@ class BananaAccounting(Accounting):
         yield     (date[0], [date[1], transaction.id, 'Margin Trade - Ausstieg', self.__accounts.fees,   a.account,              x.amount, a.unit,   x.baseCurrency.exchangeRate, x.baseCurrency.amount, '',    x.costCenter.minus()])
 
     def __transformTransfers(self, transfers):
-        # repeat in case of left-overs from multiple matchings
-        while len(self.__accountedTransferIds) < len(transfers):
+        transfers.sort(key=lambda t: t.dateTime)
+
+        # repeat as long as at least one match was found
+        atLeastOnce = True
+        while atLeastOnce:
+            atLeastOnce = False
             for transfer in transfers:
                 if transfer.id in self.__accountedTransferIds:
                     continue
-                elif isinstance(transfer, DepositTransfer):
+                atLeastOnce = True
+
+                if isinstance(transfer, DepositTransfer):
                     earliestDateTime = transfer.dateTime - timedelta(days=1)
-                    nonAccountedPastWithdraws = filter(lambda t: self.__nonAccounted(WithdrawTransfer, earliestDateTime, transfer.dateTime, t), transfers)
+                    nonAccountedPastWithdraws = [t for t in transfers if self.__nonAccounted(WithdrawTransfer, earliestDateTime, transfer.dateTime, t)]
+                    #nonAccountedPastWithdraws = filter(lambda t: self.__nonAccounted(WithdrawTransfer, earliestDateTime, transfer.dateTime, t), transfers)
                     matches = [withdrawal for withdrawal in nonAccountedPastWithdraws if self.__matchingTransfers(withdrawal, transfer)]
                     if len(matches) == 0:
                         yield from self.__transformSingleTransfer(transfer)
-                    elif len(matches) == 1:
+                    else:
                         yield from self.__transformDoubleTransfers(transfer, matches[0])
-                    # we simply skip multiple matchings as they might be correctly matched with an earlier WithdrawTransfer
                 elif isinstance(transfer, WithdrawTransfer):
                     latestDateTime = transfer.dateTime + timedelta(days=1)
-                    nonAccountedFutureDeposits = filter(lambda t: self.__nonAccounted(DepositTransfer, transfer.dateTime, latestDateTime, t), transfers)
+                    nonAccountedFutureDeposits = [t for t in transfers if self.__nonAccounted(DepositTransfer, transfer.dateTime, latestDateTime, t)]
+                    #nonAccountedFutureDeposits = filter(lambda t: self.__nonAccounted(DepositTransfer, transfer.dateTime, latestDateTime, t), transfers)
                     matches = [deposit for deposit in nonAccountedFutureDeposits if self.__matchingTransfers(deposit, transfer)]
                     if len(matches) == 0:
                         yield from self.__transformSingleTransfer(transfer)
-                    elif len(matches) == 1:
+                    else:
                         yield from self.__transformDoubleTransfers(matches[0], transfer)
-                    # we simply skip multiple matchings as they might be correctly matched with a later DepositTransfer
+        nonAccounted = [t for t in transfers if not transfer.id in self.__accountedTransferIds]
+        for t in nonAccounted:
+            BananaAccounting.__log.debug("Non accounted transfer; %s, %s, %s", transfer.dateTime, transfer.mergentId, transfer.amount)
+
 
     def __nonAccounted(self, type, earlierstDateTime, latestDateTime, transfer):
         return isinstance(transfer, type) \
