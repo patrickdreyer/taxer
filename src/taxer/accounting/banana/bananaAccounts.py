@@ -18,6 +18,10 @@ class BananaAccounts:
     def staked(self):
         return self.__config['staked']
 
+    @property
+    def liquidity(self):
+        return self.__config['liquidity']
+
     def get(self, unit, mergentId):
         u = self.__config['map'][unit]
         m = u[mergentId]
