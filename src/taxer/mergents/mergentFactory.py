@@ -20,4 +20,4 @@ class MergentFactory:
             yield from mergent.createReaders()
 
     def __createMergents(self):
-        self.__mergents = PluginLoader.load(self.__config, __package__ + '.{}.{}Mergent.{}Mergent', lambda config, clss : clss(config, self.__inputPath, self.__cachePath))
+        self.__mergents = PluginLoader.loadByConfig(self.__config, __package__ + '.{}.{}Mergent.{}Mergent', lambda config, clss : clss(config, self.__inputPath, self.__cachePath))

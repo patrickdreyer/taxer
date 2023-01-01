@@ -1,5 +1,6 @@
 import json
 import os
+import web3
 
 from ...throttler import Throttler
 
@@ -12,12 +13,21 @@ class EtherscanApi:
         self.__config = config
         self.__cachePath = cachePath
         self.__session = session
+        self.__web3 = web3.Web3()
+
 
     def getNormalTransactions(self, address):
         yield from self.__getTransactions(lambda page : '{}?module=account&action=txlist&address={}&startblock=0&endblock=99999999&page={}&offset={}&sort=asc&apikey={}'.format(self.__config['apiUrl'], address, page, EtherscanApi.__offset, self.__config['apiKeyToken']))
 
     def getErc20Transactions(self, address):
         yield from self.__getTransactions(lambda page : '{}?module=account&action=tokentx&address={}&page={}&offset={}&sort=asc&apikey={}'.format(self.__config['apiUrl'], address, page, EtherscanApi.__offset, self.__config['apiKeyToken']))
+
+    def getInternalTransactions(self, transactionHash):
+        query = '{}?module=account&action=txlistinternal&txhash={}&apikey={}'.format(self.__config['apiUrl'], transactionHash, self.__config['apiKeyToken'])
+        self.__throttler.throttle()
+        response = self.__session.get(query)
+        content = json.loads(response.content)
+        return content['result']
 
     def __getTransactions(self, queryFunc):
         page = 1
@@ -32,6 +42,14 @@ class EtherscanApi:
                 yield i
             page += 1
 
+    # https://github.com/ethereum/web3.py/blob/v4.9.1/docs/contracts.rst#utils
+    def getContract(self, address):
+        abi = self.getContractAbi(address)
+        if abi == None:
+            return None
+        contract = self.__web3.eth.contract(address=self.__web3.toChecksumAddress(address), abi=abi)
+        return contract
+
     def getContractAbi(self, contractAddress):
         filePath = os.path.join(self.__cachePath, '{}.abi'.format(contractAddress))
         if os.path.isfile(filePath):
@@ -40,14 +58,32 @@ class EtherscanApi:
         self.__throttler.throttle()
         response = self.__session.get('{}?module=contract&action=getabi&address={}&apikey={}'.format(self.__config['apiUrl'], contractAddress, self.__config['apiKeyToken']))
         content = json.loads(response.content)
+        if content['message'] == 'NOTOK':
+            return None
         with open(filePath, 'w') as file:
             file.write(content['result'])
         return content['result']
 
-    def getLogs(self, block, address, topic0, fromAddress):
-        topic1 = '0x{:0>64}'.format(fromAddress[2:])
-        query = '{}?module=logs&action=getLogs&fromBlock={}&toBlock={}&address={}&topic0={}&topic0_1_opr=and&topic1={}&apikey={}'.format(self.__config['apiUrl'], block, block, address, topic0, topic1, self.__config['apiKeyToken'])
+    def getLogs(self, block, *, address = None, topic0 = None, topic1 = None, topic2 = None):
+        params = []
+        if address:
+            params.append(f"address={address}")
+        if topic0:
+            params.append(f"topic0={topic0}")
+        if topic1:
+            params.append(f"topic1={topic1}")
+        if topic2:
+            params.append(f"topic2={topic2}")
+        if topic0 and topic1:
+            params.append('topic0_1_opr=and')
+        params = str.join('&', params)
+        query = f"{self.__config['apiUrl']}?module=logs&action=getLogs&fromBlock={block}&toBlock={block}&{params}&apikey={self.__config['apiKeyToken']}"
         self.__throttler.throttle()
         response = self.__session.get(query)
         content = json.loads(response.content)
+        if content['message'] == 'NOTOK':
+            raise Exception(content['result'])
         return content['result']
+
+    def getPublicNameTagByAddress(self, address):
+        return self.__config['publicNameTags'][address] if address in self.__config['publicNameTags'] else None

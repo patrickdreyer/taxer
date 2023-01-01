@@ -4,19 +4,25 @@ from decimal import Decimal
 import logging
 import os
 
+from ...transactions.addLiquidity import AddLiquidity
 from ...transactions.buyTrade import BuyTrade
 from ...transactions.cancelFee import CancelFee
+from ...transactions.claimLiquidityFees import ClaimLiquidityFees
 from ...transactions.covesting import Covesting
+from ...transactions.createLiquidityPool import CreateLiquidityPool
 from ...transactions.depositTransfer import DepositTransfer
 from ...transactions.endStake import EndStake
 from ...transactions.enterLobby import EnterLobby
 from ...transactions.exitLobby import ExitLobby
+from ...transactions.liquidityPool import LiquidityPool
 from ...transactions.marginTrade import MarginTrade
 from ...transactions.mint import Mint
 from ...transactions.payment import Payment
 from ...transactions.reimbursement import Reimbursement
+from ...transactions.removeLiquidity import RemoveLiquidity
 from ...transactions.sellTrade import SellTrade
 from ...transactions.startStake import StartStake
+from ...transactions.swap import Swap
 from ...transactions.trade import Trade
 from ...transactions.transfer import Transfer
 from ...transactions.withdrawTransfer import WithdrawTransfer
@@ -76,6 +82,10 @@ class BananaAccounting(Accounting):
                 transfers.append(transaction)
             elif isinstance(transaction, Mint):
                 yield from self.__transformMint(transaction)
+            elif isinstance(transaction, Swap):
+                yield from self.__transformSwap(transaction)
+            elif issubclass(type(transaction), LiquidityPool):
+                yield from self.__transformLiquidityPool(transaction)
             else:
                 BananaAccounting.__log.error("Unknown transaction; class='%s'", type(transaction).__name__)
                 raise ValueError("Unknown transaction; type='{}'".format(type(transaction)))
@@ -338,6 +348,65 @@ class BananaAccounting(Accounting):
         yield (date[0], [date[1], transaction.id, description, '',                   self.__accounts.equity, c.amount, c.unit,   c.baseCurrency.exchangeRate, c.baseCurrency.amount, '',     ''])
         # fee
         yield (date[0], [date[1], transaction.id, description, self.__accounts.fees, f.account,              f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, '',     f.costCenter.minus()])
+
+    def __transformSwap(self, transaction):
+        date = BananaAccounting.__getDate(transaction)
+        description = f"Swap {transaction.sourceAmount.unit} -> {transaction.destinationAmount.unit}"
+        sf = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.sourceAmount, transaction)
+        st = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.destinationAmount, transaction)
+        f = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.fee, transaction)
+        BananaAccounting.__log.debug("%s - Swap; %s->%s", transaction.dateTime, transaction.sourceAmount, transaction.destinationAmount)
+        # swapTo,        date,    receipt,        description, deposit,              withdrawal, amount,    currency, exchangeRate,                 baseCurrencyAmount,     shares, costCenter1
+        yield (date[0], [date[1], transaction.id, description, st.account,           '',         st.amount, st.unit,  st.baseCurrency.exchangeRate, st.baseCurrency.amount, '',     st.costCenter])
+        # swapFrom
+        yield (date[0], [date[1], transaction.id, description, '',                   sf.account, sf.amount, sf.unit,  sf.baseCurrency.exchangeRate, sf.baseCurrency.amount, '',     sf.costCenter.minus()])
+        # fee
+        yield (date[0], [date[1], transaction.id, description, self.__accounts.fees, f.account,  f.amount,  f.unit,   f.baseCurrency.exchangeRate,  f.baseCurrency.amount,  '',     f.costCenter.minus()])
+
+    def __transformLiquidityPool(self, transaction):
+            date = BananaAccounting.__getDate(transaction)
+            a0 = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.amount0, transaction)
+            a1 = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.amount1, transaction)
+            f = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.fee, transaction)
+            if isinstance(transaction, CreateLiquidityPool):
+                BananaAccounting.__log.debug("%s - Provide liquidity; %s, %s/%s", transaction.dateTime, transaction.poolId, a0, a1)
+                description = f"Liquidität bereit stellen; {transaction.poolId}: {transaction.amount0.unit}/{transaction.amount1.unit}"
+                # amount0        date,    receipt,        description, debit,                     credit,                  amount,    currency, exchangeRate,                 baseCurrencyAmount,     shares, costCenter1
+                yield (date[0], [date[1], transaction.id, description, self.__accounts.liquidity, a0.account,              a0.amount, a0.unit,  a0.baseCurrency.exchangeRate, a0.baseCurrency.amount, '',     ''])
+                # amount1
+                yield (date[0], [date[1], transaction.id, description, self.__accounts.liquidity, a1.account,              a1.amount, a1.unit,  a1.baseCurrency.exchangeRate, a1.baseCurrency.amount, '',     ''])
+                # fee
+                yield (date[0], [date[1], transaction.id, description, self.__accounts.fees,      f.account,               f.amount,  f.unit,   f.baseCurrency.exchangeRate,  f.baseCurrency.amount,  '',     f.costCenter.minus()])
+            elif isinstance(transaction, AddLiquidity):
+                BananaAccounting.__log.debug("%s - Add liquidity; %s, %s/%s", transaction.dateTime, transaction.poolId, a0, a1)
+                description = f"Liquidität erhöhen; {transaction.poolId}: {transaction.amount0.unit}/{transaction.amount1.unit}"
+                # amount0        date,    receipt,        description, debit,                     credit,                  amount,    currency, exchangeRate,                 baseCurrencyAmount,     shares, costCenter1
+                yield (date[0], [date[1], transaction.id, description, self.__accounts.liquidity, a0.account,              a0.amount, a0.unit,  a0.baseCurrency.exchangeRate, a0.baseCurrency.amount, '',     ''])
+                # amount1
+                yield (date[0], [date[1], transaction.id, description, self.__accounts.liquidity, a1.account,              a1.amount, a1.unit,  a1.baseCurrency.exchangeRate, a1.baseCurrency.amount, '',     ''])
+                # fee
+                yield (date[0], [date[1], transaction.id, description, self.__accounts.fees,      f.account,               f.amount,  f.unit,   f.baseCurrency.exchangeRate,  f.baseCurrency.amount,  '',     f.costCenter.minus()])
+            elif isinstance(transaction, ClaimLiquidityFees):
+                BananaAccounting.__log.debug("%s - Claim liquidity fees; %s, %s/%s", transaction.dateTime, transaction.poolId, a0, a1)
+                description = f"Liquiditätsgebühren einziehen; {transaction.poolId}: {transaction.amount0.unit}/{transaction.amount1.unit}"
+                # amount0        date,    receipt,        description, debit,                credit,                 amount,    currency, exchangeRate,                 baseCurrencyAmount,     shares, costCenter1
+                yield (date[0], [date[1], transaction.id, description, a0.account,           self.__accounts.equity, a0.amount, a0.unit,  a0.baseCurrency.exchangeRate, a0.baseCurrency.amount, '',     a0.costCenter])
+                # amount1
+                yield (date[0], [date[1], transaction.id, description, a1.account,           self.__accounts.equity, a1.amount, a1.unit,  a1.baseCurrency.exchangeRate, a1.baseCurrency.amount, '',     a1.costCenter])
+                # fee
+                yield (date[0], [date[1], transaction.id, description, self.__accounts.fees, f.account,              f.amount,  f.unit,   f.baseCurrency.exchangeRate,  f.baseCurrency.amount,  '',     f.costCenter.minus()])
+            elif isinstance(transaction, RemoveLiquidity):
+                BananaAccounting.__log.debug("%s - Remove liquidity; %s, %s/%s", transaction.dateTime, transaction.poolId, a0, a1)
+                description = f"Liquidität auflösen; {transaction.poolId}: {transaction.amount0.unit}/{transaction.amount1.unit}"
+                # amount0        date,    receipt,        description, debit,                credit,                    amount,    currency, exchangeRate,                 baseCurrencyAmount,     shares, costCenter1
+                yield (date[0], [date[1], transaction.id, description, a0.account,           self.__accounts.liquidity, a0.amount, a0.unit,  a0.baseCurrency.exchangeRate, a0.baseCurrency.amount, '',     ''])
+                # amount1
+                yield (date[0], [date[1], transaction.id, description, a1.account,           self.__accounts.liquidity, a1.amount, a1.unit,  a1.baseCurrency.exchangeRate, a1.baseCurrency.amount, '',     ''])
+                # fee
+                yield (date[0], [date[1], transaction.id, description, self.__accounts.fees, f.account,                 f.amount,  f.unit,   f.baseCurrency.exchangeRate,  f.baseCurrency.amount,  '',     f.costCenter.minus()])
+            else:
+                BananaAccounting.__log.error("Unknown liquidity pool transaction; class='%s'", type(transaction).__name__)
+                raise ValueError("Unknown liquidity pool transaction; type='{}'".format(type(transaction)))
 
     @staticmethod
     def __getDate(transaction):
