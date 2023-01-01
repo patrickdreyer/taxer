@@ -1,5 +1,3 @@
-from web3 import Web3
-
 from ..contract import Contract
 from ...ether import Ether
 from .....transactions.swap import Swap
@@ -25,19 +23,34 @@ class V3RouterContract(Contract):
             return
 
         (name, args) = Ether.decodeContractInput(self.__web3Contract, transaction['input'])
-
-        if name == 'exactinput':
-            swapping = Ether.amountFromTransaction(transaction)
-            if swapping.amount == 0:
-                raise NotImplementedError(f"Swapping from non ETH not yet supported; contract='{V3RouterContract.__publicNameTag}'")
-
-            transferAmount1Log = self.__etherscanApi.getLogsByTopic2(transaction['blockNumber'], Ether.toTopic(address))[0]
-            contract1 = self.__contracts.getByAddress(transferAmount1Log['address'])
-            output = Ether.decodeContractEventData(contract1.web3Contract, 'Transfer', transferAmount1Log['topics'], transferAmount1Log['data'])
-            swapped = contract1.amount(output['value'])
-
-            fee = Ether.feeFromTransaction(transaction)
-
-            yield Swap(id, transaction['dateTime'], transaction['hash'], swapping, swapped, fee, V3RouterContract.__publicNameTag)
+        if name == 'multicall':
+            (name, args) = Ether.decodeContractInput(self.__web3Contract, args['data'][0])
+            if name == 'exactinput':
+                yield from self.__exactInput(address, transaction)
+            else:
+                raise KeyError(f"Unknown contract multicall function; contract='{V3RouterContract.__publicNameTag}', functionName='multicall.{name}'")
+        elif name == 'exactinput':
+            yield from self.__exactInput(address, transaction)
         else:
             raise KeyError(f"Unknown contract function; contract='{V3RouterContract.__publicNameTag}', functionName='{name}'")
+
+    def __exactInput(self, address, transaction):
+        swapping = Ether.amountFromTransaction(transaction)
+        if swapping.amount > 0:
+            # ETH -> Token
+            swappedTransferLog = self.__etherscanApi.getLogsByTopic2(transaction['blockNumber'], Ether.toTopic(address))[0]
+            swappedContract = self.__contracts.getByAddress(swappedTransferLog['address'])
+            swappedOutput = Ether.decodeContractEventData(swappedContract.web3Contract, 'Transfer', swappedTransferLog['topics'], swappedTransferLog['data'])
+            swapped = swappedContract.amount(swappedOutput['value'])
+        else:
+            # Token -> ETH
+            swappingTransferLog = self.__etherscanApi.getLogsByTopic1(transaction['blockNumber'], Ether.toTopic(address))[0]
+            swappingContract = self.__contracts.getByAddress(swappingTransferLog['address'])
+            swappingOutput = Ether.decodeContractEventData(swappingContract.web3Contract, 'Transfer', swappingTransferLog['topics'], swappingTransferLog['data'])
+            swapping = swappingContract.amount(swappingOutput['value'])
+            internalTransaction = [it for it in self.__etherscanApi.getInternalTransactions(transaction['hash']) if it['to'] == address][0]
+            swapped = Ether.amount(internalTransaction['value'])
+        #TODO Token -> Token
+
+        fee = Ether.feeFromTransaction(transaction)
+        yield Swap(id, transaction['dateTime'], transaction['hash'], swapping, swapped, fee, V3RouterContract.__publicNameTag)
