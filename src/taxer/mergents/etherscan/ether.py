@@ -13,7 +13,7 @@ class Ether:
             ret = contract.decode_function_input(input)
             return (ret[0].fn_name.lower(), ret[1])
         except:
-            return None
+            return (None, None)
 
     @staticmethod
     def amount(transaction):
