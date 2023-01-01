@@ -13,9 +13,12 @@ class UsdcContract(Contract):
     def address(self): return UsdcContract.__address
 
     def __init__(self, contracts, etherscanApi):
-        self.__contract = etherscanApi.getContract(UsdcContract.__address)
+        pass
 
     def processTransaction(self, address, id, year, transaction, erc20Transaction):
+        if transaction['dateTime'].year != year:
+            yield from []
+            return
         raise NotImplementedError(f"Not implemented contact; id={UsdcContract.__id}")
 
     @staticmethod
