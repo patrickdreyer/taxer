@@ -26,15 +26,15 @@ class V3RouterContract(Contract):
         if name == 'multicall':
             (name, args) = Ether.decodeContractInput(self.__web3Contract, args['data'][0])
             if name == 'exactinput':
-                yield from self.__exactInput(address, transaction)
+                yield from self.__exactInput(address, id, transaction)
             else:
                 yield from self.__exactOutput(address, id, transaction)
         elif name == 'exactinput':
-            yield from self.__exactInput(address, transaction)
+            yield from self.__exactInput(address, id, transaction)
         else:
             raise KeyError(f"Unknown contract function; contract='{V3RouterContract.__publicNameTag}', functionName='{name}'")
 
-    def __exactInput(self, address, transaction):
+    def __exactInput(self, address, id, transaction):
         swapping = Ether.amountFromTransaction(transaction)
         if swapping.amount > 0:
             # ETH -> Token
@@ -52,7 +52,7 @@ class V3RouterContract(Contract):
         fee = Ether.feeFromTransaction(transaction)
         yield Swap(id, transaction['dateTime'], transaction['hash'], swapping, swapped, fee, V3RouterContract.__publicNameTag)
 
-    def __exactOutput(self, id, address, transaction):
+    def __exactOutput(self, address, id, transaction):
         swapping = Ether.amountFromTransaction(transaction)
         swapped = self.__getSwappedAmount(address, transaction)
         fee = Ether.feeFromTransaction(transaction)
