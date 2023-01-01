@@ -79,5 +79,14 @@ class EtherscanApi:
         content = json.loads(response.content)
         return content['result']
 
+    def getLogsByTopic2(self, block, topic2):
+        query = f"{self.__config['apiUrl']}?module=logs&action=getLogs&fromBlock={block}&toBlock={block}&topic2={topic2}&apikey={self.__config['apiKeyToken']}"
+        self.__throttler.throttle()
+        response = self.__session.get(query)
+        content = json.loads(response.content)
+        if content['message'] == 'NOTOK':
+            raise Exception(content['result'])
+        return content['result']
+
     def getPublicNameTagByAddress(self, address):
         return self.__config['publicNameTags'][address] if address in self.__config['publicNameTags'] else None

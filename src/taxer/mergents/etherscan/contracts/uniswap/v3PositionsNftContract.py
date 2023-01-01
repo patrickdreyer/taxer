@@ -17,6 +17,9 @@ class V3PositionsNftContract(Contract):
     @property
     def address(self): return V3PositionsNftContract.__address
 
+    @property
+    def web3Contract(self): return self.__web3Contract
+
     def __init__(self, contracts, etherscanApi):
         self.__etherscanApi = etherscanApi
         self.__contracts = contracts
@@ -29,7 +32,7 @@ class V3PositionsNftContract(Contract):
         if name == 'multicall':
             (name, args) = Ether.decodeContractInput(self.__web3Contract, args['data'][0])
             if name == 'mint':
-                yield from self.__mint(year, transaction, args)
+                yield from self.__mint(transaction, args)
             elif name == 'decreaseliquidity':
                 poolId = int(args['params'][0])
                 (amount0, amount1) = self.__pools.decrease(poolId, args['params'][1], args['params'][2], args['params'][3])
@@ -47,11 +50,11 @@ class V3PositionsNftContract(Contract):
             else:
                 raise KeyError(f"Unknown contract multicall function; contract='{V3PositionsNftContract.__publicNameTag}', functionName='multicall.{name}'")
         elif name == 'mint':
-            yield from self.__mint(year, transaction, args)
+            yield from self.__mint(transaction, args)
         else:
             raise KeyError(f"Unknown contract function; contract='{V3PositionsNftContract.__publicNameTag}', functionName='{name}'")
 
-    def __mint(self, year, transaction, args):
+    def __mint(self, transaction, args):
         contract0 = self.__contracts.getByAddress(args['params'][0])
         contract1 = self.__contracts.getByAddress(args['params'][1])
 

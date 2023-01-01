@@ -26,6 +26,27 @@ class Ether:
         return {outputs[i]['name']:value for i, value in enumerate(values)}
 
     @staticmethod
+    def decodeContractEventData(contract:web3.contract.Contract, name:str, topics, data:str):
+        events = [e for e in contract.events.abi if 'name' in e and e['name'] == name]
+        if not events:
+            raise KeyError(f"Event name not found; contract='{contract.name}', event='{name}'")
+        inputs = events[0]['inputs']
+        ret = {}
+
+        topicInputs = [i for i in inputs if i['indexed']]
+        for i, value in enumerate(topics[1:]): # always skip topic0
+            ret[topicInputs[i]['name']] = value
+
+        dataInputs = [i for i in inputs if not i['indexed']]
+        dataTypes = [i['type'] for i in dataInputs]
+        dataBytes = web3.Web3.toBytes(hexstr=data)
+        values = decode(dataTypes, dataBytes)
+        for i, value in enumerate(values):
+            ret[dataInputs[i]['name']] = value
+
+        return ret
+
+    @staticmethod
     def amountFromTransaction(transaction):
         return Ether.amount(transaction['value'])
 
@@ -40,3 +61,7 @@ class Ether:
     @staticmethod
     def zero():
         return Currency('ETH', 0)
+
+    @staticmethod
+    def toTopic(address:str):
+        return '0x000000000000000000000000' + address.replace('0x', '')

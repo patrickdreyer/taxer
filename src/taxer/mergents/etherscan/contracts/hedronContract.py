@@ -16,14 +16,17 @@ class HedronContract(Contract):
     @property
     def address(self): return HedronContract.__address
 
+    @property
+    def web3Contract(self): return self.__web3Contract
+
     def __init__(self, contracts, etherscanApi):
-        self.__contract = etherscanApi.getContract(HedronContract.__address)
+        self.__web3Contract = etherscanApi.getContract(HedronContract.__address)
 
     def processTransaction(self, address, id, year, transaction, erc20Transaction):
         if transaction['dateTime'].year != year:
             return
 
-        (name, args) = Ether.decodeContractInput(self.__contract, transaction['input'])
+        (name, args) = Ether.decodeContractInput(self.__web3Contract, transaction['input'])
 
         if name == 'transfer':
             if transaction['from'] == address:
