@@ -11,7 +11,7 @@ from ....transactions.withdrawTransfer import WithdrawTransfer
 # https://hedron.pro/#/guide
 class HedronContract(Contract):
     __id = 'HDRN'
-    __address = '0x3819f64f282bf135d62168c1e513280daf905e06'
+    __address = '0x3819f64f282bf135d62168C1e513280dAF905e06'
 
     @property
     def address(self): return HedronContract.__address

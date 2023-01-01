@@ -9,7 +9,7 @@ from ....transactions.swap import Swap
 
 class MetamaskSwapRouterContract(Contract):
     __publicNameTag = 'Metamask: Swap Router'
-    __address = '0x881d40237659c251811cec9c364ef91dc08d300c'
+    __address = '0x881D40237659C251811CEC9c364ef91dC08D300C'
     __feeAddress = "0x11ededebf63bef0ea2d2d071bdf88f71543ec6fb"
 
     @property
@@ -26,9 +26,9 @@ class MetamaskSwapRouterContract(Contract):
 
         if name == 'swap':
             internalTransactions = self.__etherscanApi.getInternalTransactions(transaction['hash'])
-            swappingTransaction = list(t for t in internalTransactions if t['from'] == self.__address)
-            swappedTransaction = list(t for t in internalTransactions if t['to'] == address)
-            feeTransaction = list(t for t in internalTransactions if t['to'] == MetamaskSwapRouterContract.__feeAddress)[0]
+            swappingTransaction = list(t for t in internalTransactions if t['from'].lower() == self.__address.lower())
+            swappedTransaction = list(t for t in internalTransactions if t['to'].lower() == address.lower())
+            feeTransaction = list(t for t in internalTransactions if t['to'].lower() == MetamaskSwapRouterContract.__feeAddress)[0]
             if len(swappingTransaction) > 0:
                 swapping = Ether.amountFromTransaction(swappingTransaction[0])
                 swapped = MetamaskSwapRouterContract.__tokenAmount(erc20Transaction)

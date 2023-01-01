@@ -10,7 +10,7 @@ from .....transactions.removeLiquidity import RemoveLiquidity
 
 class V3PositionsNftContract(Contract):
     __publicNameTag = 'Uniswap V3: Positions NFT'
-    __address = '0xc36442b4a4522e871399cd717abdd847ab11fe88'
+    __address = '0xC36442b4a4522E871399CD717aBDD847Ab11FE88'
     __increaseLiquidityTopic = '0x3067048beee31b25b2f1681f88dac838c8bba36af25bfb2b7cf7473a5847e35f'
     __collectTopic = '0x40d0efd1a53d60ecbf40971b9daf7dc90178c3aadc7aab1765632738fa8b8f01'
 

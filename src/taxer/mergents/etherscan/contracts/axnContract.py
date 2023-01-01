@@ -2,7 +2,7 @@ from .contract import Contract
 
 
 class AxnContract(Contract):
-    __address = '0x7d85e23014f84e6e21d5663acd8751bef3562352'
+    __address = '0x7D85e23014F84E6E21d5663aCD8751bEF3562352'
 
     @property
     def address(self): return AxnContract.__address

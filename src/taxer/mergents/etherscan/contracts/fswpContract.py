@@ -2,7 +2,7 @@ from .contract import Contract
 
 
 class FswpContract(Contract):
-    __address = '0x25be894d8b04ea2a3d916fec9b32ec0f38d08aa9'
+    __address = '0x25bE894d8b04ea2a3d916FeC9B32ec0f38d08aA9'
 
     @property
     def address(self): return FswpContract.__address
