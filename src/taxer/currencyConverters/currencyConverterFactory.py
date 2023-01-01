@@ -37,5 +37,5 @@ class CurrencyConverterFactory:
 
     def __createConverters(self):
         self.__converters = {}
-        for converter in PluginLoader.load(self.__config, __package__ + '.{}.{}CurrencyConverter.{}CurrencyConverter', lambda config, clss : clss(config, self.__cachePath)):
+        for converter in PluginLoader.loadByConfig(self.__config, __package__ + '.{}.{}CurrencyConverter.{}CurrencyConverter', lambda config, clss : clss(config, self.__cachePath)):
             self.__converters[converter.id] = converter

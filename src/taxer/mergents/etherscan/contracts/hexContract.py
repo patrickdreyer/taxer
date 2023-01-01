@@ -20,17 +20,12 @@ class HexContract(Contract):
     __lobby = {}
     __stakes = {}
 
-    @staticmethod
-    def create(etherscanApi):
-        contract = Ether.getContract(etherscanApi, HexContract.__address)
-        return HexContract(etherscanApi, contract)
-
     @property
     def address(self): return HexContract.__address
 
-    def __init__(self, etherscanApi, contract):
+    def __init__(self, etherscanApi):
         self.__etherscanApi = etherscanApi
-        self.__contract = contract
+        self.__contract = Ether.getContract(etherscanApi, HexContract.__address)
 
     def processTransaction(self, address, id, year, transaction, erc20Transaction):
         (name, args) = Ether.decodeContractInput(self.__contract, transaction['input'])

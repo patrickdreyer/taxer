@@ -2,15 +2,9 @@ import json
 import os
 import requests
 
+from .contracts.contracts import Contracts
 from .etherscanApi import EtherscanApi
 from .etherscanApiReader import EtherscanApiReader
-from .contracts.axnContract import AxnContract
-from .contracts.axn2Contract import Axn2Contract
-from .contracts.hexContract import HexContract
-from .contracts.hedronContract import HedronContract
-from .contracts.fswpContract import FswpContract
-from .contracts.metamaskSwapRouterContract import MetamaskSwapRouterContract
-from .contracts.uniswapV3PositionsNFT import UniswapV3PositionsNFT
 from ..mergent import Mergent
 
 
@@ -25,14 +19,7 @@ class EtherscanMergent(Mergent):
     def createReaders(self):
         with requests.Session() as session:
             etherscanApi = EtherscanApi(self.__config, self.__cachePath, session)
-            contracts = [
-                HexContract.create(etherscanApi),
-                HedronContract.create(etherscanApi),
-                AxnContract.create(),
-                Axn2Contract.create(),
-                FswpContract.create(),
-                MetamaskSwapRouterContract.create(etherscanApi)
-            ]
+            contracts = Contracts(etherscanApi).initialize()
             yield EtherscanApiReader(self.__config, etherscanApi, contracts)
 
     def readConfig(self):
