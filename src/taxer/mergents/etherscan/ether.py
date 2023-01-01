@@ -64,4 +64,4 @@ class Ether:
 
     @staticmethod
     def toTopic(address:str):
-        return '0x000000000000000000000000' + address.replace('0x', '')
+        return f"0x{address[2:]:0>64}"
