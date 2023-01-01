@@ -51,3 +51,6 @@ class EtherscanApi:
         response = self.__session.get(query)
         content = json.loads(response.content)
         return content['result']
+
+    def getPublicNameTagByAddress(self, address):
+        return self.__config['publicNameTags'][address] if address in self.__config['publicNameTags'] else None

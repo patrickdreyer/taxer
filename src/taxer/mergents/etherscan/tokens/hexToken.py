@@ -7,6 +7,7 @@ from ....transactions.currency import Currency
 from ....transactions.enterLobby import EnterLobby
 from ....transactions.endStake import EndStake
 from ....transactions.exitLobby import ExitLobby
+from ....transactions.payment import Payment
 from ....transactions.startStake import StartStake
 
 
@@ -69,6 +70,14 @@ class HexToken(Token):
                 tokenAmountUnstaked = HexToken.__amount(erc20Transaction)
                 tokenInterest = tokenAmountUnstaked - tokenAmountStaked
                 yield EndStake(id, transaction['dateTime'], transaction['hash'], tokenAmountStaked, tokenInterest, tokenAmountUnstaked, Ether.fee(transaction))
+
+        elif name == 'approve':
+            if transaction['dateTime'].year == year:
+                publicNameTag = self.__etherscanApi.getPublicNameTagByAddress(args['spender'])
+                yield Payment(id, transaction['dateTime'], transaction['hash'], 0, Ether.fee(transaction), publicNameTag)
+
+        else:
+            raise KeyError("Unknown token function; token='{}', functionName='{}'".format(HexToken.__id, name))
 
     @staticmethod
     def __amount(transaction):

@@ -2,5 +2,5 @@ from .transfer import Transfer
 
 
 class Payment(Transfer):
-    def __init__(self, withdrawTransfer, note):
-        super().__init__(withdrawTransfer.mergentId, withdrawTransfer.dateTime, withdrawTransfer.id, withdrawTransfer.amount, withdrawTransfer.fee, None, note)
+    def __init__(self, mergentId, dateTime, id, amount, fee, note):
+        super().__init__(mergentId, dateTime, id, amount, fee, None, note)
