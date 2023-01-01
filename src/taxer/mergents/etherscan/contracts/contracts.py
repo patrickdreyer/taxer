@@ -22,7 +22,7 @@ class Contracts(dict):
             return None
         if address.lower() in self:
             return self[address.lower()]
-        contract = Ether.getContract(self.__etherscanApi, address)
+        contract = self.__etherscanApi.getContract(address)
         if not contract:
             self.__invalidAddresses.append(address.lower())
         return contract

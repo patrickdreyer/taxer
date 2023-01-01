@@ -17,7 +17,7 @@ class HedronContract(Contract):
     def address(self): return HedronContract.__address
 
     def __init__(self, contracts, etherscanApi):
-        self.__contract = Ether.getContract(etherscanApi, HedronContract.__address)
+        self.__contract = etherscanApi.getContract(HedronContract.__address)
 
     def processTransaction(self, address, id, year, transaction, erc20Transaction):
         if transaction['dateTime'].year != year:

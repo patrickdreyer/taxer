@@ -1,5 +1,6 @@
 import json
 import os
+import web3
 
 from ...throttler import Throttler
 
@@ -38,6 +39,15 @@ class EtherscanApi:
             for i in content['result']:
                 yield i
             page += 1
+
+    # https://github.com/ethereum/web3.py/blob/v4.9.1/docs/contracts.rst#utils
+    def getContract(self, address):
+        w3 = web3.Web3()
+        abi = self.getContractAbi(address)
+        if abi == None:
+            return None
+        contract = w3.eth.contract(address=w3.toChecksumAddress(address), abi=abi)
+        return contract
 
     def getContractAbi(self, contractAddress):
         filePath = os.path.join(self.__cachePath, '{}.abi'.format(contractAddress))
