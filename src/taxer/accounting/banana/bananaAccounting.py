@@ -137,18 +137,14 @@ class BananaAccounting(Accounting):
                 atLeastOnce = True
 
                 if isinstance(transfer, DepositTransfer):
-                    earliestDateTime = transfer.dateTime - timedelta(days=1)
-                    nonAccountedPastWithdraws = [t for t in transfers if self.__nonAccounted(WithdrawTransfer, earliestDateTime, transfer.dateTime, t)]
-                    #nonAccountedPastWithdraws = filter(lambda t: self.__nonAccounted(WithdrawTransfer, earliestDateTime, transfer.dateTime, t), transfers)
+                    nonAccountedPastWithdraws = [t for t in transfers if self.__nonAccounted(WithdrawTransfer, transfer.dateTime - timedelta(days=1), transfer.dateTime + timedelta(hours=1), t)]
                     matches = [withdrawal for withdrawal in nonAccountedPastWithdraws if self.__matchingTransfers(withdrawal, transfer)]
                     if len(matches) == 0:
                         yield from self.__transformSingleTransfer(transfer)
                     else:
                         yield from self.__transformDoubleTransfers(transfer, matches[0])
                 elif isinstance(transfer, WithdrawTransfer):
-                    latestDateTime = transfer.dateTime + timedelta(days=1)
-                    nonAccountedFutureDeposits = [t for t in transfers if self.__nonAccounted(DepositTransfer, transfer.dateTime, latestDateTime, t)]
-                    #nonAccountedFutureDeposits = filter(lambda t: self.__nonAccounted(DepositTransfer, transfer.dateTime, latestDateTime, t), transfers)
+                    nonAccountedFutureDeposits = [t for t in transfers if self.__nonAccounted(DepositTransfer, transfer.dateTime - timedelta(hours=1), transfer.dateTime + timedelta(days=1), t)]
                     matches = [deposit for deposit in nonAccountedFutureDeposits if self.__matchingTransfers(deposit, transfer)]
                     if len(matches) == 0:
                         yield from self.__transformSingleTransfer(transfer)
