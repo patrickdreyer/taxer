@@ -28,13 +28,13 @@ class EtherscanApiReader(Reader):
                     yield from contract.processTransaction(address, id, year, transaction, erc20Transaction)
                 elif transaction['from'] == address and transaction['to'] == address:
                     if transaction['dateTime'].year == year:
-                        yield CancelFee(id, transaction['dateTime'], transaction['hash'], Ether.fee(transaction))
+                        yield CancelFee(id, transaction['dateTime'], transaction['hash'], Ether.feeFromTransaction(transaction))
                 elif transaction['from'] == address:
                     if transaction['dateTime'].year == year:
-                        yield WithdrawTransfer(id, transaction['dateTime'], transaction['hash'], Ether.amount(transaction), Ether.fee(transaction), transaction['to'])
+                        yield WithdrawTransfer(id, transaction['dateTime'], transaction['hash'], Ether.amountFromTransaction(transaction), Ether.feeFromTransaction(transaction), transaction['to'])
                 elif transaction['to'] == address:
                     if transaction['dateTime'].year == year:
-                        yield DepositTransfer(id, transaction['dateTime'], transaction['hash'], Ether.amount(transaction), Ether.zero(), transaction['from'])
+                        yield DepositTransfer(id, transaction['dateTime'], transaction['hash'], Ether.amountFromTransaction(transaction), Ether.zero(), transaction['from'])
 
     def __transformTransaction(self, transaction):
         transaction['dateTime'] = utc.localize(datetime.fromtimestamp(int(transaction['timeStamp'])))

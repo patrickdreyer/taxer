@@ -13,6 +13,8 @@ class EtherscanApi:
         self.__config = config
         self.__cachePath = cachePath
         self.__session = session
+        self.__web3 = web3.Web3()
+
 
     def getNormalTransactions(self, address):
         yield from self.__getTransactions(lambda page : '{}?module=account&action=txlist&address={}&startblock=0&endblock=99999999&page={}&offset={}&sort=asc&apikey={}'.format(self.__config['apiUrl'], address, page, EtherscanApi.__offset, self.__config['apiKeyToken']))
@@ -42,11 +44,10 @@ class EtherscanApi:
 
     # https://github.com/ethereum/web3.py/blob/v4.9.1/docs/contracts.rst#utils
     def getContract(self, address):
-        w3 = web3.Web3()
         abi = self.getContractAbi(address)
         if abi == None:
             return None
-        contract = w3.eth.contract(address=w3.toChecksumAddress(address), abi=abi)
+        contract = self.__web3.eth.contract(address=self.__web3.toChecksumAddress(address), abi=abi)
         return contract
 
     def getContractAbi(self, contractAddress):
@@ -66,6 +67,13 @@ class EtherscanApi:
     def getLogs(self, block, address, topic0, fromAddress):
         topic1 = '0x{:0>64}'.format(fromAddress[2:])
         query = '{}?module=logs&action=getLogs&fromBlock={}&toBlock={}&address={}&topic0={}&topic0_1_opr=and&topic1={}&apikey={}'.format(self.__config['apiUrl'], block, block, address, topic0, topic1, self.__config['apiKeyToken'])
+        self.__throttler.throttle()
+        response = self.__session.get(query)
+        content = json.loads(response.content)
+        return content['result']
+
+    def getLogsByTopic(self, block, address, topic0):
+        query = f"{self.__config['apiUrl']}?module=logs&action=getLogs&fromBlock={block}&toBlock={block}&address={address}&topic0={topic0}&apikey={self.__config['apiKeyToken']}"
         self.__throttler.throttle()
         response = self.__session.get(query)
         content = json.loads(response.content)

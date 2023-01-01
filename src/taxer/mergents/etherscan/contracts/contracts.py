@@ -1,7 +1,6 @@
 import os
 
 
-from ..ether import Ether
 from ....pluginLoader import PluginLoader
 
 
@@ -12,7 +11,7 @@ class Contracts(dict):
 
     def initialize(self):
         path = os.path.dirname(__file__)
-        contracts = PluginLoader.loadFromFiles(path, __package__, '*Contract.py', lambda clss: clss(self, self.__etherscanApi))
+        contracts = PluginLoader.loadFromFiles(path, __package__, '**/*Contract.py', lambda clss: clss(self, self.__etherscanApi))
         for contract in contracts:
             self[contract.address.lower()] = contract
         return self

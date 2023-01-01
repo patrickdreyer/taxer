@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from ..contract import Contract
+from .contract import Contract
 from ..ether import Ether
 from ....transactions.currency import Currency
 from ....transactions.depositTransfer import DepositTransfer
@@ -27,7 +27,7 @@ class HedronContract(Contract):
 
         if name == 'transfer':
             if transaction['from'] == address:
-                yield WithdrawTransfer(id, transaction['dateTime'], transaction['hash'], HedronContract.__amount(args['amount']), Ether.fee(transaction))
+                yield WithdrawTransfer(id, transaction['dateTime'], transaction['hash'], HedronContract.__amount(args['amount']), Ether.feeFromTransaction(transaction))
             elif transaction['to'] == address:
                 yield DepositTransfer(id, transaction['dateTime'], transaction['hash'], HedronContract.__amount(args['amount']), Ether.zero())
 
@@ -36,7 +36,7 @@ class HedronContract(Contract):
             return
 
         elif name == 'mintnative':
-            yield Mint(id, transaction['dateTime'], transaction['hash'], HedronContract.__amountFromTransaction(erc20Transaction), Ether.fee(transaction))
+            yield Mint(id, transaction['dateTime'], transaction['hash'], HedronContract.__amountFromTransaction(erc20Transaction), Ether.feeFromTransaction(transaction))
 
         else:
             raise KeyError("Unknown token function; token='{}', functionName='{}'".format(HedronContract.__id, name))

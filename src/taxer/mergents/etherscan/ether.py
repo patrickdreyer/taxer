@@ -1,4 +1,5 @@
 from decimal import Decimal
+from eth_abi import decode
 import web3
 
 from ...transactions.currency import Currency
@@ -16,11 +17,24 @@ class Ether:
             return (None, None)
 
     @staticmethod
-    def amount(transaction):
-        return Currency('ETH', Decimal(transaction['value']) / Ether.__divisor)
+    def decodeContractFunctionData(contract:web3.contract.Contract, name:str, data:str):
+        function = contract.get_function_by_name(name)
+        outputs = function.abi['outputs']
+        types = [o['type'] for o in outputs]
+        dataBytes = web3.Web3.toBytes(hexstr=data)
+        values = decode(types, dataBytes)
+        return {outputs[i]['name']:value for i, value in enumerate(values)}
 
     @staticmethod
-    def fee(transaction):
+    def amountFromTransaction(transaction):
+        return Ether.amount(transaction['value'])
+
+    @staticmethod
+    def amount(value):
+        return Currency('ETH', Decimal(value) / Ether.__divisor)
+
+    @staticmethod
+    def feeFromTransaction(transaction):
         return Currency('ETH', Decimal(transaction['gasUsed']) * Decimal(transaction['gasPrice']) / Ether.__divisor)
 
     @staticmethod

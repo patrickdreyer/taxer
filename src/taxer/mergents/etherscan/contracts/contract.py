@@ -1,3 +1,6 @@
+import web3
+
+
 class Contract:
     @property
     def address(self): pass

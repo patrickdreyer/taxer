@@ -21,10 +21,11 @@ class PluginLoader:
     @staticmethod
     def loadFromFiles(path, package, fileNamePattern, classFactory):
         ret = []
-        for fileName in glob.iglob(fileNamePattern, root_dir=path):
-            folderName = fileName.replace('.py', '')
-            className = f"{fileName[0].upper()}{fileName[1:]}".replace('.py', '')
-            fullName = f"{package}.{folderName}.{className}"
+        for relativeFileNamePath in glob.iglob(fileNamePattern, root_dir=path, recursive=True):
+            fileName = os.path.basename(relativeFileNamePath).replace('.py', '')
+            folder = os.path.dirname(relativeFileNamePath).replace('/', '.')
+            className = f"{fileName[0].upper()}{fileName[1:]}"
+            fullName = f"{package}.{folder}.{fileName}.{className}" if folder else f"{package}.{fileName}.{className}" 
             clss = PluginLoader.__import(fullName)
             instance = classFactory(clss)
             ret.append(instance)
