@@ -35,7 +35,7 @@ class V3PositionsNftContract(Contract):
                 yield from self.__mint(id, year, transaction, args)
             elif name == 'increaseliquidity':
                 poolId = int(args['params'][0])
-                collectLog = self.__etherscanApi.getLogsByTopic(transaction['blockNumber'], V3PositionsNftContract.__address, V3PositionsNftContract.__increaseLiquidityTopic)[0]
+                collectLog = self.__etherscanApi.getLogs(transaction['blockNumber'], address = V3PositionsNftContract.__address, topic0 = V3PositionsNftContract.__increaseLiquidityTopic)[0]
                 output = Ether.decodeContractEventData(self.__web3Contract, 'IncreaseLiquidity', collectLog['topics'], collectLog['data'])
                 (amount0, amount1) = self.__pools.increase(poolId, output['liquidity'], output['amount0'], output['amount1'])
                 if transaction['dateTime'].year == year:
@@ -50,7 +50,7 @@ class V3PositionsNftContract(Contract):
             elif name == 'collect':
                 if transaction['dateTime'].year == year:
                     poolId = int(args['params'][0])
-                    collectLog = self.__etherscanApi.getLogsByTopic(transaction['blockNumber'], V3PositionsNftContract.__address, V3PositionsNftContract.__collectTopic)[0]
+                    collectLog = self.__etherscanApi.getLogs(transaction['blockNumber'], address = V3PositionsNftContract.__address, topic0 = V3PositionsNftContract.__collectTopic)[0]
                     output = Ether.decodeContractEventData(self.__web3Contract, 'Collect', collectLog['topics'], collectLog['data'])
                     (amount0, amount1) = self.__pools.collect(poolId, output['amount0'], output['amount1'])
                     fee = Ether.amountFromTransaction(transaction)
@@ -66,7 +66,7 @@ class V3PositionsNftContract(Contract):
         contract0 = self.__contracts.getByAddress(args['params'][0])
         contract1 = self.__contracts.getByAddress(args['params'][1])
 
-        increaseLiquidityLog = self.__etherscanApi.getLogsByTopic(transaction['blockNumber'], V3PositionsNftContract.__address, V3PositionsNftContract.__increaseLiquidityTopic)[0]
+        increaseLiquidityLog = self.__etherscanApi.getLogs(transaction['blockNumber'], address = V3PositionsNftContract.__address, topic0 = V3PositionsNftContract.__increaseLiquidityTopic)[0]
         output = Ether.decodeContractFunctionData(self.__web3Contract, 'increaseLiquidity', increaseLiquidityLog['data'])
         poolId = Web3.toInt(hexstr=increaseLiquidityLog['topics'][1])
         liquidity = output['liquidity']

@@ -64,32 +64,20 @@ class EtherscanApi:
             file.write(content['result'])
         return content['result']
 
-    def getLogs(self, block, address, topic0, fromAddress):
-        topic1 = '0x{:0>64}'.format(fromAddress[2:])
-        query = '{}?module=logs&action=getLogs&fromBlock={}&toBlock={}&address={}&topic0={}&topic0_1_opr=and&topic1={}&apikey={}'.format(self.__config['apiUrl'], block, block, address, topic0, topic1, self.__config['apiKeyToken'])
-        self.__throttler.throttle()
-        response = self.__session.get(query)
-        content = json.loads(response.content)
-        return content['result']
-
-    def getLogsByTopic(self, block, address, topic0):
-        query = f"{self.__config['apiUrl']}?module=logs&action=getLogs&fromBlock={block}&toBlock={block}&address={address}&topic0={topic0}&apikey={self.__config['apiKeyToken']}"
-        self.__throttler.throttle()
-        response = self.__session.get(query)
-        content = json.loads(response.content)
-        return content['result']
-
-    def getLogsByTopic1(self, block, topic1):
-        query = f"{self.__config['apiUrl']}?module=logs&action=getLogs&fromBlock={block}&toBlock={block}&topic1={topic1}&apikey={self.__config['apiKeyToken']}"
-        self.__throttler.throttle()
-        response = self.__session.get(query)
-        content = json.loads(response.content)
-        if content['message'] == 'NOTOK':
-            raise Exception(content['result'])
-        return content['result']
-
-    def getLogsByTopic2(self, block, topic2):
-        query = f"{self.__config['apiUrl']}?module=logs&action=getLogs&fromBlock={block}&toBlock={block}&topic2={topic2}&apikey={self.__config['apiKeyToken']}"
+    def getLogs(self, block, *, address = None, topic0 = None, topic1 = None, topic2 = None):
+        params = []
+        if address:
+            params.append(f"address={address}")
+        if topic0:
+            params.append(f"topic0={topic0}")
+        if topic1:
+            params.append(f"topic1={topic1}")
+        if topic2:
+            params.append(f"topic2={topic2}")
+        if topic0 and topic1:
+            params.append('topic0_1_opr=and')
+        params = str.join('&', params)
+        query = f"{self.__config['apiUrl']}?module=logs&action=getLogs&fromBlock={block}&toBlock={block}&{params}&apikey={self.__config['apiKeyToken']}"
         self.__throttler.throttle()
         response = self.__session.get(query)
         content = json.loads(response.content)

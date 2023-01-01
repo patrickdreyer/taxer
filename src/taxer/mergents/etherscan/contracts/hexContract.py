@@ -50,7 +50,7 @@ class HexContract(Contract):
                 yield ExitLobby(id, transaction['dateTime'], transaction['hash'], Ether.amountFromTransaction(lobbyEnterTransaction), HexContract.__amount(erc20Transaction), Ether.feeFromTransaction(transaction))
 
         elif name == 'stakestart':
-            logs = self.__etherscanApi.getLogs(transaction['blockNumber'], transaction['to'], HexContract.__stakeStartTopic, transaction['from'])
+            logs = self.__etherscanApi.getLogs(transaction['blockNumber'], address = transaction['to'], topic0 = HexContract.__stakeStartTopic, topic1 = Ether.toTopic(transaction['from']))
             logs = [l for l in logs if l['transactionHash'] == transaction['hash']]
             stakeId = int(logs[0]['topics'][2], 16)
             self.__stakes[stakeId] = {
