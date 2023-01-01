@@ -17,6 +17,7 @@ from ...transactions.payment import Payment
 from ...transactions.reimbursement import Reimbursement
 from ...transactions.sellTrade import SellTrade
 from ...transactions.startStake import StartStake
+from ...transactions.swap import Swap
 from ...transactions.trade import Trade
 from ...transactions.transfer import Transfer
 from ...transactions.withdrawTransfer import WithdrawTransfer
@@ -76,6 +77,8 @@ class BananaAccounting(Accounting):
                 transfers.append(transaction)
             elif isinstance(transaction, Mint):
                 yield from self.__transformMint(transaction)
+            elif isinstance(transaction, Swap):
+                yield from self.__transformSwap(transaction)
             else:
                 BananaAccounting.__log.error("Unknown transaction; class='%s'", type(transaction).__name__)
                 raise ValueError("Unknown transaction; type='{}'".format(type(transaction)))
@@ -338,6 +341,20 @@ class BananaAccounting(Accounting):
         yield (date[0], [date[1], transaction.id, description, '',                   self.__accounts.equity, c.amount, c.unit,   c.baseCurrency.exchangeRate, c.baseCurrency.amount, '',     ''])
         # fee
         yield (date[0], [date[1], transaction.id, description, self.__accounts.fees, f.account,              f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, '',     f.costCenter.minus()])
+
+    def __transformSwap(self, transaction):
+        date = BananaAccounting.__getDate(transaction)
+        description = f"Swap {transaction.sourceAmount.unit} -> {transaction.destinationAmount.unit}"
+        sf = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.sourceAmount, transaction)
+        st = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.destinationAmount, transaction)
+        f = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.fee, transaction)
+        BananaAccounting.__log.debug("%s - Swap; %s->%s", transaction.dateTime, transaction.sourceAmount, transaction.destinationAmount)
+        # swapTo,        date,    receipt,        description, deposit,              withdrawal, amount,    currency, exchangeRate,                 baseCurrencyAmount,     shares, costCenter1
+        yield (date[0], [date[1], transaction.id, description, st.account,           '',         st.amount, st.unit,  st.baseCurrency.exchangeRate, st.baseCurrency.amount, '',     st.costCenter])
+        # swapFrom
+        yield (date[0], [date[1], transaction.id, description, '',                   sf.account, sf.amount, sf.unit,  sf.baseCurrency.exchangeRate, sf.baseCurrency.amount, '',     sf.costCenter.minus()])
+        # fee
+        yield (date[0], [date[1], transaction.id, description, self.__accounts.fees, f.account,  f.amount,  f.unit,   f.baseCurrency.exchangeRate,  f.baseCurrency.amount,  '',     f.costCenter.minus()])
 
     @staticmethod
     def __getDate(transaction):

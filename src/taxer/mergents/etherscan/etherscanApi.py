@@ -19,6 +19,13 @@ class EtherscanApi:
     def getErc20Transactions(self, address):
         yield from self.__getTransactions(lambda page : '{}?module=account&action=tokentx&address={}&page={}&offset={}&sort=asc&apikey={}'.format(self.__config['apiUrl'], address, page, EtherscanApi.__offset, self.__config['apiKeyToken']))
 
+    def getInternalTransactions(self, transactionHash):
+        query = '{}?module=account&action=txlistinternal&txhash={}&apikey={}'.format(self.__config['apiUrl'], transactionHash, self.__config['apiKeyToken'])
+        self.__throttler.throttle()
+        response = self.__session.get(query)
+        content = json.loads(response.content)
+        return content['result']
+
     def __getTransactions(self, queryFunc):
         page = 1
         while True:
@@ -40,6 +47,8 @@ class EtherscanApi:
         self.__throttler.throttle()
         response = self.__session.get('{}?module=contract&action=getabi&address={}&apikey={}'.format(self.__config['apiUrl'], contractAddress, self.__config['apiKeyToken']))
         content = json.loads(response.content)
+        if content['message'] == 'NOTOK':
+            return None
         with open(filePath, 'w') as file:
             file.write(content['result'])
         return content['result']

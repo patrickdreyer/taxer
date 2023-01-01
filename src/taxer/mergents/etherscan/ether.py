@@ -12,11 +12,13 @@ class Ether:
     def getContract(etherscanApi, address):
         w3 = web3.Web3()
         abi = etherscanApi.getContractAbi(address)
+        if abi == None:
+            return None
         contract = w3.eth.contract(address=w3.toChecksumAddress(address), abi=abi)
         return contract
 
     @staticmethod
-    def getFunction(contract, input):
+    def decodeContractInput(contract, input):
         try:
             ret = contract.decode_function_input(input)
             return (ret[0].fn_name.lower(), ret[1])

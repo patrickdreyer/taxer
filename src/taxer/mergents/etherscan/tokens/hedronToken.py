@@ -28,7 +28,7 @@ class HedronToken(Token):
         if transaction['dateTime'].year != year:
             return
 
-        (name, args) = Ether.getFunction(self.__contract, transaction['input'])
+        (name, args) = Ether.decodeContractInput(self.__contract, transaction['input'])
 
         if name == 'transfer':
             if transaction['from'] == address:

@@ -33,7 +33,7 @@ class HexToken(Token):
         self.__contract = contract
 
     def processTransaction(self, address, id, year, transaction, erc20Transaction):
-        (name, args) = Ether.getFunction(self.__contract, transaction['input'])
+        (name, args) = Ether.decodeContractInput(self.__contract, transaction['input'])
 
         if name == 'xflobbyenter':
             day = (transaction['dateTime'].date() - HexToken.__firstLobbyDate).days
@@ -74,7 +74,12 @@ class HexToken(Token):
         elif name == 'approve':
             if transaction['dateTime'].year == year:
                 publicNameTag = self.__etherscanApi.getPublicNameTagByAddress(args['spender'])
-                yield Payment(id, transaction['dateTime'], transaction['hash'], 0, Ether.fee(transaction), publicNameTag)
+                yield Payment(id, transaction['dateTime'], transaction['hash'], Ether.zero(), Ether.fee(transaction), publicNameTag)
+
+        elif name == 'transfer':
+            if transaction['dateTime'].year == year:
+                publicNameTag = self.__etherscanApi.getPublicNameTagByAddress(args['recipient'])
+                yield Payment(id, transaction['dateTime'], transaction['hash'], Ether.zero(), Ether.fee(transaction), publicNameTag)
 
         else:
             raise KeyError("Unknown token function; token='{}', functionName='{}'".format(HexToken.__id, name))
