@@ -3,6 +3,7 @@ from web3 import Web3
 from .v3Pools import V3Pools
 from ..contract import Contract
 from ...ether import Ether
+from .....transactions.addLiquidity import AddLiquidity
 from .....transactions.claimLiquidityFees import ClaimLiquidityFees
 from .....transactions.createLiquidityPool import CreateLiquidityPool
 from .....transactions.removeLiquidity import RemoveLiquidity
@@ -28,11 +29,18 @@ class V3PositionsNftContract(Contract):
 
     def processTransaction(self, address, id, year, transaction, erc20Transaction):
         (name, args) = Ether.decodeContractInput(self.__web3Contract, transaction['input'])
-
         if name == 'multicall':
             (name, args) = Ether.decodeContractInput(self.__web3Contract, args['data'][0])
             if name == 'mint':
-                yield from self.__mint(transaction, args)
+                yield from self.__mint(id, year, transaction, args)
+            elif name == 'increaseliquidity':
+                poolId = int(args['params'][0])
+                collectLog = self.__etherscanApi.getLogsByTopic(transaction['blockNumber'], V3PositionsNftContract.__address, V3PositionsNftContract.__increaseLiquidityTopic)[0]
+                output = Ether.decodeContractEventData(self.__web3Contract, 'IncreaseLiquidity', collectLog['topics'], collectLog['data'])
+                (amount0, amount1) = self.__pools.increase(poolId, output['liquidity'], output['amount0'], output['amount1'])
+                if transaction['dateTime'].year == year:
+                    fee = Ether.amountFromTransaction(transaction)
+                    yield AddLiquidity(id, transaction['dateTime'], transaction['hash'], amount0, amount1, fee, poolId, V3PositionsNftContract.__publicNameTag)
             elif name == 'decreaseliquidity':
                 poolId = int(args['params'][0])
                 (amount0, amount1) = self.__pools.decrease(poolId, args['params'][1], args['params'][2], args['params'][3])
@@ -42,7 +50,7 @@ class V3PositionsNftContract(Contract):
             elif name == 'collect':
                 if transaction['dateTime'].year == year:
                     poolId = int(args['params'][0])
-                    collectLog = self.__etherscanApi.getLogsByTopic(transaction['blockNumber'], address, V3PositionsNftContract.__collectTopic)[0]
+                    collectLog = self.__etherscanApi.getLogsByTopic(transaction['blockNumber'], V3PositionsNftContract.__address, V3PositionsNftContract.__collectTopic)[0]
                     output = Ether.decodeContractEventData(self.__web3Contract, 'Collect', collectLog['topics'], collectLog['data'])
                     (amount0, amount1) = self.__pools.collect(poolId, output['amount0'], output['amount1'])
                     fee = Ether.amountFromTransaction(transaction)
@@ -50,11 +58,11 @@ class V3PositionsNftContract(Contract):
             else:
                 raise KeyError(f"Unknown contract multicall function; contract='{V3PositionsNftContract.__publicNameTag}', functionName='multicall.{name}'")
         elif name == 'mint':
-            yield from self.__mint(transaction, args)
+            yield from self.__mint(id, year, transaction, args)
         else:
             raise KeyError(f"Unknown contract function; contract='{V3PositionsNftContract.__publicNameTag}', functionName='{name}'")
 
-    def __mint(self, transaction, args):
+    def __mint(self, id, year, transaction, args):
         contract0 = self.__contracts.getByAddress(args['params'][0])
         contract1 = self.__contracts.getByAddress(args['params'][1])
 

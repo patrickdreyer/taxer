@@ -16,6 +16,11 @@ class V3Pool:
     @property
     def contract1(self): return self.__contract1
 
+    def increase(self, liquidity:int, amount0:Currency, amount1:Currency):
+        self.__liquidity += liquidity
+        self.__amount0 = self.__amount0 - amount0
+        self.__amount1 = self.__amount1 - amount1
+
     def decrease(self, liquidity:int, amount0:Currency, amount1:Currency):
         self.__liquidity -= liquidity
         if self.__liquidity == 0:
