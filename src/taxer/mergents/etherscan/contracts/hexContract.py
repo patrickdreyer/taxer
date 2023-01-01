@@ -16,7 +16,7 @@ class HexContract(Contract):
     __address = '0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39'
     __firstLobbyDate = datetime(2019, 12, 3).date()
     __stakeStartTopic = '0x14872dc760f33532684e68e1b6d5fd3f71ba7b07dee76bdb2b084f28b74233ef'
-    __divisor = 10000000
+    __divisor = 100000000
 
     __lobby = {}
     __stakes = {}
