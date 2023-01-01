@@ -1,7 +1,7 @@
 import csv
 from  dateutil import parser
 import itertools
-import pytz
+from pytz import utc
 import re
 
 from ..fileReader import FileReader
@@ -36,12 +36,12 @@ class CexFileReader(FileReader):
                     fee = Currency(transaction['FeeSymbol'], transaction['FeeAmount'])
                     if fee.amount > 0:
                         amount = amount - fee
-                    yield DepositTransfer(self.__config['id'], date, id, amount, fee)
+                    yield DepositTransfer(self.__config['id'], date, id, amount, fee, None)
                 elif type == 'withdraw':
                     fee = Currency(transaction['FeeSymbol'], transaction['FeeAmount'])
                     if fee.amount > 0:
                         amount = amount - fee
-                    yield WithdrawTransfer(self.__config['id'], date, id, amount, fee)
+                    yield WithdrawTransfer(self.__config['id'], date, id, amount, fee, None)
                 elif type == 'costsNothing':
                     yield Reimbursement(self.__config['id'], date, id, amount)
 
@@ -53,7 +53,7 @@ class CexFileReader(FileReader):
 
     @staticmethod
     def __convertRow(row):
-        row['DateUTC'] = pytz.utc.localize(parser.isoparse(row['DateUTC']))
+        row['DateUTC'] = utc.localize(parser.isoparse(row['DateUTC']))
         return row
 
     def __filterCancelations(self, transaction):

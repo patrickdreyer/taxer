@@ -1,16 +1,18 @@
 import collections
-import datetime
+from datetime import datetime
+from datetime import timedelta
 import time
+from pytz import utc
 
 
 class Throttler:
-    __unit = datetime.timedelta(seconds=1)
+    __unit = timedelta(seconds=1)
 
     def __init__(self, callsPerSecond):
         self.__calls = collections.deque(maxlen=callsPerSecond)
 
     def throttle(self):
-        self.__calls.append(datetime.datetime.now())
+        self.__calls.append(datetime.now(utc))
         size = len(self.__calls)
         if size < self.__calls.maxlen:
             return

@@ -13,6 +13,11 @@ class PaymentsTransformer(Transformer):
     def __map(self, transaction):
         if not isinstance(transaction, WithdrawTransfer):
             return transaction
-        if not transaction.id in self.__config:
-            return transaction
-        return Payment(transaction, self.__config[transaction.id])
+        if transaction.id in self.__config:
+            note = self.__config.get(transaction.id)
+            return Payment(transaction, note)
+        if  transaction.address in self.__config:
+            note = self.__config.get(transaction.address)
+            return Payment(transaction, note)
+        return transaction
+        

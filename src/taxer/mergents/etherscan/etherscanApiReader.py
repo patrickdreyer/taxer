@@ -1,5 +1,5 @@
-import datetime
-import pytz
+from datetime import datetime
+from pytz import utc
 
 from .ether import Ether
 from ..reader import Reader
@@ -31,13 +31,13 @@ class EtherscanApiReader(Reader):
                         yield CancelFee(id, transaction['dateTime'], transaction['hash'], Ether.fee(transaction))
                 elif transaction['from'] == address:
                     if transaction['dateTime'].year == year:
-                        yield WithdrawTransfer(id, transaction['dateTime'], transaction['hash'], Ether.amount(transaction), Ether.fee(transaction))
+                        yield WithdrawTransfer(id, transaction['dateTime'], transaction['hash'], Ether.amount(transaction), Ether.fee(transaction), transaction['to'])
                 elif transaction['to'] == address:
                     if transaction['dateTime'].year == year:
-                        yield DepositTransfer(id, transaction['dateTime'], transaction['hash'], Ether.amount(transaction), Ether.zero())
+                        yield DepositTransfer(id, transaction['dateTime'], transaction['hash'], Ether.amount(transaction), Ether.zero(), transaction['from'])
 
     def __transformTransaction(self, transaction):
-        transaction['dateTime'] = pytz.utc.localize(datetime.datetime.fromtimestamp(int(transaction['timeStamp'])))
+        transaction['dateTime'] = utc.localize(datetime.fromtimestamp(int(transaction['timeStamp'])))
         transaction['token'] = self.__getTokenByTransaction(transaction)
         return transaction
 

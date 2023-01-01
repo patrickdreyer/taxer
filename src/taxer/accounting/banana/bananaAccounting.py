@@ -125,29 +125,35 @@ class BananaAccounting(Accounting):
         yield     (date[0], [date[1], transaction.id, 'Margin Trade - Ausstieg', self.__accounts.fees,   a.account,              x.amount, a.unit,   x.baseCurrency.exchangeRate, x.baseCurrency.amount, '',    x.costCenter.minus()])
 
     def __transformTransfers(self, transfers):
-        # repeat in case of left-overs from multiple matchings
-        while len(self.__accountedTransferIds) < len(transfers):
+        transfers.sort(key=lambda t: t.dateTime)
+
+        # repeat as long as at least one match was found
+        atLeastOnce = True
+        while atLeastOnce:
+            atLeastOnce = False
             for transfer in transfers:
                 if transfer.id in self.__accountedTransferIds:
                     continue
-                elif isinstance(transfer, DepositTransfer):
-                    earliestDateTime = transfer.dateTime - timedelta(days=1)
-                    nonAccountedPastWithdraws = filter(lambda t: self.__nonAccounted(WithdrawTransfer, earliestDateTime, transfer.dateTime, t), transfers)
+                atLeastOnce = True
+
+                if isinstance(transfer, DepositTransfer):
+                    nonAccountedPastWithdraws = [t for t in transfers if self.__nonAccounted(WithdrawTransfer, transfer.dateTime - timedelta(days=1), transfer.dateTime + timedelta(hours=1), t)]
                     matches = [withdrawal for withdrawal in nonAccountedPastWithdraws if self.__matchingTransfers(withdrawal, transfer)]
                     if len(matches) == 0:
                         yield from self.__transformSingleTransfer(transfer)
-                    elif len(matches) == 1:
+                    else:
                         yield from self.__transformDoubleTransfers(transfer, matches[0])
-                    # we simply skip multiple matchings as they might be correctly matched with an earlier WithdrawTransfer
                 elif isinstance(transfer, WithdrawTransfer):
-                    latestDateTime = transfer.dateTime + timedelta(days=1)
-                    nonAccountedFutureDeposits = filter(lambda t: self.__nonAccounted(DepositTransfer, transfer.dateTime, latestDateTime, t), transfers)
+                    nonAccountedFutureDeposits = [t for t in transfers if self.__nonAccounted(DepositTransfer, transfer.dateTime - timedelta(hours=1), transfer.dateTime + timedelta(days=1), t)]
                     matches = [deposit for deposit in nonAccountedFutureDeposits if self.__matchingTransfers(deposit, transfer)]
                     if len(matches) == 0:
                         yield from self.__transformSingleTransfer(transfer)
-                    elif len(matches) == 1:
+                    else:
                         yield from self.__transformDoubleTransfers(matches[0], transfer)
-                    # we simply skip multiple matchings as they might be correctly matched with a later DepositTransfer
+        nonAccounted = [t for t in transfers if not transfer.id in self.__accountedTransferIds]
+        for t in nonAccounted:
+            BananaAccounting.__log.debug("Non accounted transfer; %s, %s, %s", transfer.dateTime, transfer.mergentId, transfer.amount)
+
 
     def __nonAccounted(self, type, earlierstDateTime, latestDateTime, transfer):
         return isinstance(transfer, type) \
@@ -175,7 +181,7 @@ class BananaAccounting(Accounting):
                 #                date,    receipt,        description,  debit,     credit,                 amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
                 yield (date[0], [date[1], transaction.id, 'Einzahlung', c.account, self.__accounts.equity, c.amount, c.unit,   c.baseCurrency.exchangeRate, c.baseCurrency.amount, '',     c.costCenter])
             else:
-                BananaAccounting.__log.warn("%s - Transfer; ???->%s, %s, %s", transaction.dateTime, transaction.mergentId, transaction.amount, transaction.id)
+                BananaAccounting.__log.warn("%s - Transfer; ???->%s, %s, id=%s, address=%s", transaction.dateTime, transaction.mergentId, transaction.amount, transaction.id, transaction.address)
                 description = 'Transfer ? -> {}'.format(transaction.mergentId)
                 #                date,    receipt,        description, debit,     credit, amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
                 yield (date[0], [date[1], transaction.id, description, c.account, '',     c.amount, c.unit,   c.baseCurrency.exchangeRate, c.baseCurrency.amount, '',     c.costCenter])
@@ -184,7 +190,7 @@ class BananaAccounting(Accounting):
                 BananaAccounting.__log.debug("%s - Withdraw; %s, %s", transaction.dateTime, transaction.mergentId, c)
                 description = 'Auszahlung'
             else:
-                BananaAccounting.__log.warn("%s - Transfer; %s->???, %s, %s", transaction.dateTime, transaction.mergentId, c, transaction.id)
+                BananaAccounting.__log.warn("%s - Transfer; %s->???, %s, id=%s, address=%s", transaction.dateTime, transaction.mergentId, c, transaction.id, transaction.address)
                 description = 'Transfer {} -> ?'.format(transaction.mergentId)
             #                    date,    receipt,        description, debit,                  credit,    amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
             yield     (date[0], [date[1], transaction.id, description, self.__accounts.equity, c.account, c.amount, c.unit,   c.baseCurrency.exchangeRate, c.baseCurrency.amount, '',     c.costCenter.minus()])
@@ -232,7 +238,7 @@ class BananaAccounting(Accounting):
     def __transformPayment(self, transaction):
         BananaAccounting.__log.debug("%s - Payment; %s, %s, %s", transaction.dateTime, transaction.mergentId, transaction.amount, transaction.note)
         date = BananaAccounting.__getDate(transaction)
-        description = 'Bezahlung'
+        description = f'Bezahlung; {transaction.note}'
         w = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.amount, transaction)
         #                    date,    receipt,        description, deposit,                withdrawal, amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
         yield     (date[0], [date[1], transaction.id, description, self.__accounts.equity, w.account,  w.amount, w.unit,   w.baseCurrency.exchangeRate, w.baseCurrency.amount, '',     w.costCenter.minus(), transaction.note])
