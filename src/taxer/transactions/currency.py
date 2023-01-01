@@ -6,8 +6,11 @@ class Currency:
 
     def __init__(self, unit, amount):
         self.__unit = unit
-        self.__amountRaw = Decimal() if amount == '' else Decimal(amount)
-        self.__amount = abs(self.__amountRaw)
+        if amount is None:
+            self.__amountRaw = self.__amount = 0
+        else:
+            self.__amountRaw = Decimal() if amount == '' else Decimal(amount)
+            self.__amount = abs(self.__amountRaw)
         if self.__unit == 'satoshi':
             self.__unit = 'BTC'
             self.__amountRaw = self.__amountRaw * Currency.__satoshiToBTC
