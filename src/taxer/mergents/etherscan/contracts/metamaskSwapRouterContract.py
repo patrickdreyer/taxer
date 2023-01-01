@@ -15,7 +15,7 @@ class MetamaskSwapRouterContract(Contract):
     @property
     def address(self): return MetamaskSwapRouterContract.__address
 
-    def __init__(self, etherscanApi):
+    def __init__(self, contracts, etherscanApi):
         self.__etherscanApi = etherscanApi
 
     def processTransaction(self, address, id, year, transaction, erc20Transaction):

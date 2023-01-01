@@ -29,7 +29,6 @@ class PluginLoader:
             instance = classFactory(clss)
             ret.append(instance)
         return ret
-        
 
     @staticmethod
     def __import(path):

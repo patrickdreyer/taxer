@@ -23,7 +23,7 @@ class HexContract(Contract):
     @property
     def address(self): return HexContract.__address
 
-    def __init__(self, etherscanApi):
+    def __init__(self, contracts, etherscanApi):
         self.__etherscanApi = etherscanApi
         self.__contract = Ether.getContract(etherscanApi, HexContract.__address)
 

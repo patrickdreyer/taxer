@@ -7,7 +7,7 @@ class FswpContract(Contract):
     @property
     def address(self): return FswpContract.__address
 
-    def __init__(self, etherscanApi):
+    def __init__(self, contracts, etherscanApi):
         pass
 
     def processTransaction(self, address, id, year, transaction, erc20Transaction):

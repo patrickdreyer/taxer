@@ -13,7 +13,7 @@ class EtherscanApiReader(Reader):
         config['accounts'] = {k.lower():v for k,v in config['accounts'].items()}
         self.__config = config
         self.__etherscanApi = etherscanApi
-        self.__contracts = {c.address:c for c in contracts}
+        self.__contracts = contracts
 
     def read(self, year):
         for address,id in self.__config['accounts'].items():
@@ -41,14 +41,11 @@ class EtherscanApiReader(Reader):
         return transaction
 
     def __getContractByTransaction(self, transaction):
-        token = self.__getContractByAddress(transaction['from'])
+        token = self.__contracts.getByAddress(transaction['from'])
         if token: return token
-        token = self.__getContractByAddress(transaction['to'])
+        token = self.__contracts.getByAddress(transaction['to'])
         if token: return token
         return None
-
-    def __getContractByAddress(self, address):
-        return self.__contracts[address] if address in self.__contracts else None
 
     @staticmethod
     def __getErc20Transaction(transactions, hash):

@@ -16,7 +16,7 @@ class HedronContract(Contract):
     @property
     def address(self): return HedronContract.__address
 
-    def __init__(self, etherscanApi):
+    def __init__(self, contracts, etherscanApi):
         self.__contract = Ether.getContract(etherscanApi, HedronContract.__address)
 
     def processTransaction(self, address, id, year, transaction, erc20Transaction):
