@@ -2,17 +2,15 @@ import json
 import os
 import requests
 
-from taxer.mergents.etherscan.tokens.axnToken import AxnToken
-from taxer.mergents.etherscan.tokens.hedronToken import HedronToken
-
 from .etherscanApi import EtherscanApi
 from .etherscanApiReader import EtherscanApiReader
-from .tokens.axnToken import AxnToken
-from .tokens.axn2Token import Axn2Token
-from .tokens.hexToken import HexToken
-from .tokens.hedronToken import HedronToken
-from .tokens.fswpToken import FswpToken
-from .closedSourceContracts.metamaskSwapRouterContract import MetamaskSwapRouterContract
+from .contracts.axnContract import AxnContract
+from .contracts.axn2Contract import Axn2Contract
+from .contracts.hexContract import HexContract
+from .contracts.hedronContract import HedronContract
+from .contracts.fswpContract import FswpContract
+from .contracts.metamaskSwapRouterContract import MetamaskSwapRouterContract
+from .contracts.uniswapV3PositionsNFT import UniswapV3PositionsNFT
 from ..mergent import Mergent
 
 
@@ -27,9 +25,15 @@ class EtherscanMergent(Mergent):
     def createReaders(self):
         with requests.Session() as session:
             etherscanApi = EtherscanApi(self.__config, self.__cachePath, session)
-            tokens = [HexToken.create(etherscanApi), HedronToken.create(etherscanApi), AxnToken.create(), Axn2Token.create(), FswpToken.create()]
-            closedSourceContracts = [MetamaskSwapRouterContract.create(etherscanApi)]
-            yield EtherscanApiReader(self.__config, etherscanApi, tokens, closedSourceContracts)
+            contracts = [
+                HexContract.create(etherscanApi),
+                HedronContract.create(etherscanApi),
+                AxnContract.create(),
+                Axn2Contract.create(),
+                FswpContract.create(),
+                MetamaskSwapRouterContract.create(etherscanApi)
+            ]
+            yield EtherscanApiReader(self.__config, etherscanApi, contracts)
 
     def readConfig(self):
         filePath = os.path.join(os.path.dirname(__file__), EtherscanMergent.__configFileName)

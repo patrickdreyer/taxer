@@ -1,8 +1,8 @@
 from datetime import datetime
 from decimal import Decimal
 
+from ..contract import Contract
 from ..ether import Ether
-from ..token import Token
 from ....transactions.currency import Currency
 from ....transactions.enterLobby import EnterLobby
 from ....transactions.endStake import EndStake
@@ -11,7 +11,7 @@ from ....transactions.payment import Payment
 from ....transactions.startStake import StartStake
 
 
-class HexToken(Token):
+class HexContract(Contract):
     __id = 'HEX'
     __address = '0x2b591e99afe9f32eaa6214f7b7629768c40eeb39'
     __firstLobbyDate = datetime(2019, 12, 3).date()
@@ -22,11 +22,11 @@ class HexToken(Token):
 
     @staticmethod
     def create(etherscanApi):
-        contract = Ether.getContract(etherscanApi, HexToken.__address)
-        return HexToken(etherscanApi, contract)
+        contract = Ether.getContract(etherscanApi, HexContract.__address)
+        return HexContract(etherscanApi, contract)
 
     @property
-    def address(self): return HexToken.__address
+    def address(self): return HexContract.__address
 
     def __init__(self, etherscanApi, contract):
         self.__etherscanApi = etherscanApi
@@ -36,29 +36,29 @@ class HexToken(Token):
         (name, args) = Ether.decodeContractInput(self.__contract, transaction['input'])
 
         if name == 'xflobbyenter':
-            day = (transaction['dateTime'].date() - HexToken.__firstLobbyDate).days
+            day = (transaction['dateTime'].date() - HexContract.__firstLobbyDate).days
             self.__lobby[day] = transaction
             if transaction['dateTime'].year == year:
-                yield EnterLobby(id, transaction['dateTime'], transaction['hash'], Ether.amount(transaction), Ether.fee(transaction), HexToken.__id)
+                yield EnterLobby(id, transaction['dateTime'], transaction['hash'], Ether.amount(transaction), Ether.fee(transaction), HexContract.__id)
 
         elif name == 'xflobbyexit':
             if transaction['dateTime'].year == year:
                 day = args['enterDay']
                 lobbyEnterTransaction = self.__lobby[day]
-                yield ExitLobby(id, transaction['dateTime'], transaction['hash'], Ether.amount(lobbyEnterTransaction), HexToken.__amount(erc20Transaction), Ether.fee(transaction))
+                yield ExitLobby(id, transaction['dateTime'], transaction['hash'], Ether.amount(lobbyEnterTransaction), HexContract.__amount(erc20Transaction), Ether.fee(transaction))
 
         elif name == 'stakestart':
-            logs = self.__etherscanApi.getLogs(transaction['blockNumber'], transaction['to'], HexToken.__stakeStartTopic, transaction['from'])
+            logs = self.__etherscanApi.getLogs(transaction['blockNumber'], transaction['to'], HexContract.__stakeStartTopic, transaction['from'])
             logs = [l for l in logs if l['transactionHash'] == transaction['hash']]
             stakeId = int(logs[0]['topics'][2], 16)
             self.__stakes[stakeId] = {
-                'amount'   : HexToken.__amount(erc20Transaction),
+                'amount'   : HexContract.__amount(erc20Transaction),
                 'shares'   : args['newStakedHearts'],
                 'days'     : args['newStakedDays'],
                 'startDate': transaction['dateTime'].date()
             }
             if transaction['dateTime'].year == year:
-                yield StartStake(id, transaction['dateTime'], transaction['hash'], HexToken.__amount(erc20Transaction), Ether.fee(transaction))
+                yield StartStake(id, transaction['dateTime'], transaction['hash'], HexContract.__amount(erc20Transaction), Ether.fee(transaction))
 
         elif name == 'stakeend':
             if transaction['dateTime'].year == year:
@@ -67,7 +67,7 @@ class HexToken(Token):
                     raise Exception("Stake end without matching Erc20 transaction; transactionHash='{}'".format(transaction['hash']))
 
                 tokenAmountStaked = self.__stakes[stakeId]['amount']
-                tokenAmountUnstaked = HexToken.__amount(erc20Transaction)
+                tokenAmountUnstaked = HexContract.__amount(erc20Transaction)
                 tokenInterest = tokenAmountUnstaked - tokenAmountStaked
                 yield EndStake(id, transaction['dateTime'], transaction['hash'], tokenAmountStaked, tokenInterest, tokenAmountUnstaked, Ether.fee(transaction))
 
@@ -82,8 +82,8 @@ class HexToken(Token):
                 yield Payment(id, transaction['dateTime'], transaction['hash'], Ether.zero(), Ether.fee(transaction), publicNameTag)
 
         else:
-            raise KeyError("Unknown token function; token='{}', functionName='{}'".format(HexToken.__id, name))
+            raise KeyError("Unknown token function; token='{}', functionName='{}'".format(HexContract.__id, name))
 
     @staticmethod
     def __amount(transaction):
-        return Currency(HexToken.__id, Decimal(transaction['value']) / Decimal('1' + '0'*int(transaction['tokenDecimal'])))
+        return Currency(HexContract.__id, Decimal(transaction['value']) / Decimal('1' + '0'*int(transaction['tokenDecimal'])))

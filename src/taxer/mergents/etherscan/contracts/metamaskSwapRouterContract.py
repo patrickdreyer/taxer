@@ -1,8 +1,8 @@
 from decimal import Decimal
 import re
 
-from ..ether import Ether
 from ..contract import Contract
+from ..ether import Ether
 from ....transactions.currency import Currency
 from ....transactions.swap import Swap
 
@@ -22,7 +22,10 @@ class MetamaskSwapRouterContract(Contract):
     def __init__(self, etherscanApi):
         self.__etherscanApi = etherscanApi
 
-    def processTransaction(self, address, id, transaction, erc20Transaction):
+    def processTransaction(self, address, id, year, transaction, erc20Transaction):
+        if transaction['dateTime'].year != year:
+            return
+
         name = MetamaskSwapRouterContract.__getFunction(transaction['functionName'])
 
         if name == 'swap':
