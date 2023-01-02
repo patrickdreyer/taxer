@@ -41,7 +41,7 @@ class V3RouterContract(Contract):
             swapped = self.__getSwappedAmount(address, transaction)
         else:
             # Token -> ETH
-            swappingTransferLog = self.__etherscanApi.getLogs(transaction['blockNumber'], topic1 = Ether.toTopic(address))[0]
+            swappingTransferLog = self.__etherscanApi.getFirstLog(transaction['blockNumber'], topic1 = Ether.toTopic(address))
             swappingContract = self.__contracts.getByAddress(swappingTransferLog['address'])
             swappingOutput = Ether.decodeContractEventData(swappingContract.web3Contract, 'Transfer', swappingTransferLog['topics'], swappingTransferLog['data'])
             swapping = swappingContract.amount(swappingOutput['value'])
@@ -59,7 +59,7 @@ class V3RouterContract(Contract):
         yield Swap(id, transaction['dateTime'], transaction['hash'], swapping, swapped, fee, V3RouterContract.__publicNameTag)
 
     def __getSwappedAmount(self, address, transaction):
-        swappedTransferLog = self.__etherscanApi.getLogs(transaction['blockNumber'], topic2 = Ether.toTopic(address))[0]
+        swappedTransferLog = self.__etherscanApi.getFirstLog(transaction['blockNumber'], topic2 = Ether.toTopic(address))
         swappedContract = self.__contracts.getByAddress(swappedTransferLog['address'])
         swappedOutput = Ether.decodeContractEventData(swappedContract.web3Contract, 'Transfer', swappedTransferLog['topics'], swappedTransferLog['data'])
         return swappedContract.amount(swappedOutput['value'])
