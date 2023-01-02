@@ -19,8 +19,10 @@ class PaymentStrategy(BananaStrategy):
         PaymentStrategy.__log.debug("%s - Payment; %s, %s, %s", transaction.dateTime, transaction.mergentId, transaction.amount, transaction.note)
         description = f'Bezahlung; {transaction.note}'
         w = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.amount, transaction)
-        #                                                     description, deposit,                withdrawal, amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
-        yield BananaStrategy._createBooking(transaction,     [description, self.__accounts.equity, w.account,  w.amount, w.unit,   w.baseCurrency.exchangeRate, w.baseCurrency.amount, '',     w.costCenter.minus(), transaction.note])
-        if transaction.fee.amount > 0:
-            f = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.fee, transaction)
+        if w.amount > 0:
+            # amount                                          description, deposit,                withdrawal, amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
+            yield BananaStrategy._createBooking(transaction, [description, self.__accounts.equity, w.account,  w.amount, w.unit,   w.baseCurrency.exchangeRate, w.baseCurrency.amount, '',     w.costCenter.minus(), transaction.note])
+        f = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.fee, transaction)
+        if f.amount > 0:
+            # fee
             yield BananaStrategy._createBooking(transaction, [description, self.__accounts.fees,   w.account,  f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, '',     f.costCenter.minus()])

@@ -63,5 +63,10 @@ class Ether:
         return Currency('ETH', 0)
 
     @staticmethod
-    def toTopic(address:str):
-        return f"0x{address[2:]:0>64}"
+    def toTopic(address):
+        if not isinstance(address, str):
+            address = hex(address)
+        elif isinstance(address, str) and address[:2].lower() != '0x':
+            address = hex(int(address))
+        address = address.replace('0x', '')
+        return f"0x{address:0>64}"

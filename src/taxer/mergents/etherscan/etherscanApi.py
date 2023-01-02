@@ -85,5 +85,9 @@ class EtherscanApi:
             raise Exception(content['result'])
         return content['result']
 
+    def getFirstLog(self, block, *, address = None, topic0 = None, topic1 = None, topic2 = None):
+        logs = self.getLogs(block, address = address, topic0 = topic0, topic1 = topic1, topic2 = topic2)
+        return logs[0]
+
     def getPublicNameTagByAddress(self, address):
         return self.__config['publicNameTags'][address] if address in self.__config['publicNameTags'] else None
