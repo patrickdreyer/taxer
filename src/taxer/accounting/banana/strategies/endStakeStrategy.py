@@ -22,11 +22,11 @@ class EndStakeStrategy(BananaStrategy):
         i = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.interest, transaction)
         f = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.fee, transaction)
         EndStakeStrategy.__log.debug("%s - Stake end; %s", transaction.dateTime, transaction.amount)
-        # deposit                            date,                          receipt,        description, deposit,              withdrawal,             amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
-        yield (transaction['bananaDate'][0], [transaction['bananaDate'][1], transaction.id, description, d.account,            '',                     d.amount, d.unit,   d.baseCurrency.exchangeRate, d.baseCurrency.amount, '',     d.costCenter])
+        # deposit                                         description, deposit,              withdrawal,             amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
+        yield BananaStrategy._createBooking(transaction, [description, d.account,            '',                     d.amount, d.unit,   d.baseCurrency.exchangeRate, d.baseCurrency.amount, '',     d.costCenter])
         # unstake
-        yield (transaction['bananaDate'][0], [transaction['bananaDate'][1], transaction.id, description, '',                   u.account,              u.amount, u.unit,   u.baseCurrency.exchangeRate, u.baseCurrency.amount, '',     u.costCenter.minus()])
+        yield BananaStrategy._createBooking(transaction, [description, '',                   u.account,              u.amount, u.unit,   u.baseCurrency.exchangeRate, u.baseCurrency.amount, '',     u.costCenter.minus()])
         # interest
-        yield (transaction['bananaDate'][0], [transaction['bananaDate'][1], transaction.id, description, '',                   self.__accounts.equity, i.amount, i.unit,   i.baseCurrency.exchangeRate, i.baseCurrency.amount, '',     ''])
+        yield BananaStrategy._createBooking(transaction, [description, '',                   self.__accounts.equity, i.amount, i.unit,   i.baseCurrency.exchangeRate, i.baseCurrency.amount, '',     ''])
         # fee
-        yield (transaction['bananaDate'][0], [transaction['bananaDate'][1], transaction.id, description, self.__accounts.fees, f.account,              f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, '',     f.costCenter.minus()])
+        yield BananaStrategy._createBooking(transaction, [description, self.__accounts.fees, f.account,              f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, '',     f.costCenter.minus()])

@@ -23,9 +23,9 @@ class EnterLobbyStrategy(BananaStrategy):
         lAccount = self.__accounts.get(transaction.amount.unit, transaction.lobby)
         lCostCenter = CostCenter(transaction.lobby, transaction.amount)
         EnterLobbyStrategy.__log.debug("%s - Lobby enter; %s, %s", transaction.dateTime, transaction.lobby, transaction.amount)
-        # withdrawal                         date,                          receipt,        description, deposit,              withdrawal, amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
-        yield (transaction['bananaDate'][0], [transaction['bananaDate'][1], transaction.id, description, '',                   w.account,  w.amount, w.unit,   w.baseCurrency.exchangeRate, w.baseCurrency.amount, '',     w.costCenter.minus()])
+        # withdrawal                                      description, deposit,              withdrawal, amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
+        yield BananaStrategy._createBooking(transaction, [description, '',                   w.account,  w.amount, w.unit,   w.baseCurrency.exchangeRate, w.baseCurrency.amount, '',     w.costCenter.minus()])
         # lobby
-        yield (transaction['bananaDate'][0], [transaction['bananaDate'][1], transaction.id, description, lAccount,             '',         w.amount, w.unit,   w.baseCurrency.exchangeRate, w.baseCurrency.amount, '',     lCostCenter])
+        yield BananaStrategy._createBooking(transaction, [description, lAccount,             '',         w.amount, w.unit,   w.baseCurrency.exchangeRate, w.baseCurrency.amount, '',     lCostCenter])
         # fee
-        yield (transaction['bananaDate'][0], [transaction['bananaDate'][1], transaction.id, description, self.__accounts.fees, w.account,  f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, '',     w.costCenter.minus()])
+        yield BananaStrategy._createBooking(transaction, [description, self.__accounts.fees, w.account,  f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, '',     w.costCenter.minus()])

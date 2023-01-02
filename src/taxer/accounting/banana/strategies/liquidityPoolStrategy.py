@@ -24,41 +24,53 @@ class LiquidityPoolStrategy(BananaStrategy):
         a1 = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.amount1, transaction)
         f = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.fee, transaction)
         if isinstance(transaction, CreateLiquidityPool):
-            LiquidityPoolStrategy.__log.debug("%s - Provide liquidity; %s, %s/%s", transaction.dateTime, transaction.poolId, a0, a1)
-            description = f"Liquidität bereit stellen; {transaction.poolId}: {transaction.amount0.unit}/{transaction.amount1.unit}"
-            # amount0                            date,                          receipt,        description, debit,                     credit,                  amount,    currency, exchangeRate,                 baseCurrencyAmount,     shares, costCenter1
-            yield (transaction['bananaDate'][0], [transaction['bananaDate'][1], transaction.id, description, self.__accounts.liquidity, a0.account,              a0.amount, a0.unit,  a0.baseCurrency.exchangeRate, a0.baseCurrency.amount, '',     ''])
-            # amount1
-            yield (transaction['bananaDate'][0], [transaction['bananaDate'][1], transaction.id, description, self.__accounts.liquidity, a1.account,              a1.amount, a1.unit,  a1.baseCurrency.exchangeRate, a1.baseCurrency.amount, '',     ''])
-            # fee
-            yield (transaction['bananaDate'][0], [transaction['bananaDate'][1], transaction.id, description, self.__accounts.fees,      f.account,               f.amount,  f.unit,   f.baseCurrency.exchangeRate,  f.baseCurrency.amount,  '',     f.costCenter.minus()])
+            yield from self.__transformCreateLiquidityPool(transaction, a0, a1, f)
         elif isinstance(transaction, AddLiquidity):
-            LiquidityPoolStrategy.__log.debug("%s - Add liquidity; %s, %s/%s", transaction.dateTime, transaction.poolId, a0, a1)
-            description = f"Liquidität erhöhen; {transaction.poolId}: {transaction.amount0.unit}/{transaction.amount1.unit}"
-            # amount0                            date,                          receipt,        description, debit,                     credit,                  amount,    currency, exchangeRate,                 baseCurrencyAmount,     shares, costCenter1
-            yield (transaction['bananaDate'][0], [transaction['bananaDate'][1], transaction.id, description, self.__accounts.liquidity, a0.account,              a0.amount, a0.unit,  a0.baseCurrency.exchangeRate, a0.baseCurrency.amount, '',     ''])
-            # amount1
-            yield (transaction['bananaDate'][0], [transaction['bananaDate'][1], transaction.id, description, self.__accounts.liquidity, a1.account,              a1.amount, a1.unit,  a1.baseCurrency.exchangeRate, a1.baseCurrency.amount, '',     ''])
-            # fee
-            yield (transaction['bananaDate'][0], [transaction['bananaDate'][1], transaction.id, description, self.__accounts.fees,      f.account,               f.amount,  f.unit,   f.baseCurrency.exchangeRate,  f.baseCurrency.amount,  '',     f.costCenter.minus()])
+            yield from self.__transformAddLiquidity(transaction, a0, a1, f)
         elif isinstance(transaction, ClaimLiquidityFees):
-            LiquidityPoolStrategy.__log.debug("%s - Claim liquidity fees; %s, %s/%s", transaction.dateTime, transaction.poolId, a0, a1)
-            description = f"Liquiditätsgebühren einziehen; {transaction.poolId}: {transaction.amount0.unit}/{transaction.amount1.unit}"
-            # amount0                            date,                          receipt,        description, debit,                credit,                 amount,    currency, exchangeRate,                 baseCurrencyAmount,     shares, costCenter1
-            yield (transaction['bananaDate'][0], [transaction['bananaDate'][1], transaction.id, description, a0.account,           self.__accounts.equity, a0.amount, a0.unit,  a0.baseCurrency.exchangeRate, a0.baseCurrency.amount, '',     a0.costCenter])
-            # amount1
-            yield (transaction['bananaDate'][0], [transaction['bananaDate'][1], transaction.id, description, a1.account,           self.__accounts.equity, a1.amount, a1.unit,  a1.baseCurrency.exchangeRate, a1.baseCurrency.amount, '',     a1.costCenter])
-            # fee
-            yield (transaction['bananaDate'][0], [transaction['bananaDate'][1], transaction.id, description, self.__accounts.fees, f.account,              f.amount,  f.unit,   f.baseCurrency.exchangeRate,  f.baseCurrency.amount,  '',     f.costCenter.minus()])
+            yield from self.__transformClaimLiquidityFees(transaction, a0, a1, f)
         elif isinstance(transaction, RemoveLiquidity):
-            LiquidityPoolStrategy.__log.debug("%s - Remove liquidity; %s, %s/%s", transaction.dateTime, transaction.poolId, a0, a1)
-            description = f"Liquidität auflösen; {transaction.poolId}: {transaction.amount0.unit}/{transaction.amount1.unit}"
-            # amount0                            date,                          receipt,        description, debit,                credit,                    amount,    currency, exchangeRate,                 baseCurrencyAmount,     shares, costCenter1
-            yield (transaction['bananaDate'][0], [transaction['bananaDate'][1], transaction.id, description, a0.account,           self.__accounts.liquidity, a0.amount, a0.unit,  a0.baseCurrency.exchangeRate, a0.baseCurrency.amount, '',     ''])
-            # amount1
-            yield (transaction['bananaDate'][0], [transaction['bananaDate'][1], transaction.id, description, a1.account,           self.__accounts.liquidity, a1.amount, a1.unit,  a1.baseCurrency.exchangeRate, a1.baseCurrency.amount, '',     ''])
-            # fee
-            yield (transaction['bananaDate'][0], [transaction['bananaDate'][1], transaction.id, description, self.__accounts.fees, f.account,                 f.amount,  f.unit,   f.baseCurrency.exchangeRate,  f.baseCurrency.amount,  '',     f.costCenter.minus()])
+            yield from self.__transformRemoveLiquidity(transaction, a0, a1, f)
         else:
             LiquidityPoolStrategy.__log.error("Unknown liquidity pool transaction; class='%s'", type(transaction).__name__)
             raise ValueError("Unknown liquidity pool transaction; type='{}'".format(type(transaction)))
+
+    def __transformCreateLiquidityPool(self, transaction, a0, a1, f):
+        LiquidityPoolStrategy.__log.debug("%s - Provide liquidity; %s, %s/%s", transaction.dateTime, transaction.poolId, a0, a1)
+        description = f"Liquidität bereit stellen; {transaction.poolId}: {transaction.amount0.unit}/{transaction.amount1.unit}"
+        # amount0                                         description, debit,                     credit,                  amount,    currency, exchangeRate,                 baseCurrencyAmount,     shares, costCenter1
+        yield BananaStrategy._createBooking(transaction, [description, self.__accounts.liquidity, a0.account,              a0.amount, a0.unit,  a0.baseCurrency.exchangeRate, a0.baseCurrency.amount, '',     ''])
+        # amount1
+        yield BananaStrategy._createBooking(transaction, [description, self.__accounts.liquidity, a1.account,              a1.amount, a1.unit,  a1.baseCurrency.exchangeRate, a1.baseCurrency.amount, '',     ''])
+        # fee
+        yield BananaStrategy._createBooking(transaction, [description, self.__accounts.fees,      f.account,               f.amount,  f.unit,   f.baseCurrency.exchangeRate,  f.baseCurrency.amount,  '',     f.costCenter.minus()])
+
+    def __transformAddLiquidity(self, transaction, a0, a1, f):
+        LiquidityPoolStrategy.__log.debug("%s - Add liquidity; %s, %s/%s", transaction.dateTime, transaction.poolId, a0, a1)
+        description = f"Liquidität erhöhen; {transaction.poolId}: {transaction.amount0.unit}/{transaction.amount1.unit}"
+        # amount0                                         description, debit,                     credit,                  amount,    currency, exchangeRate,                 baseCurrencyAmount,     shares, costCenter1
+        yield BananaStrategy._createBooking(transaction, [description, self.__accounts.liquidity, a0.account,              a0.amount, a0.unit,  a0.baseCurrency.exchangeRate, a0.baseCurrency.amount, '',     ''])
+        # amount1
+        yield BananaStrategy._createBooking(transaction, [description, self.__accounts.liquidity, a1.account,              a1.amount, a1.unit,  a1.baseCurrency.exchangeRate, a1.baseCurrency.amount, '',     ''])
+        # fee
+        yield BananaStrategy._createBooking(transaction, [description, self.__accounts.fees,      f.account,               f.amount,  f.unit,   f.baseCurrency.exchangeRate,  f.baseCurrency.amount,  '',     f.costCenter.minus()])
+
+    def __transformClaimLiquidityFees(self, transaction, a0, a1, f):
+        LiquidityPoolStrategy.__log.debug("%s - Claim liquidity fees; %s, %s/%s", transaction.dateTime, transaction.poolId, a0, a1)
+        description = f"Liquiditätsgebühren einziehen; {transaction.poolId}: {transaction.amount0.unit}/{transaction.amount1.unit}"
+        # amount0                                         description, debit,                credit,                 amount,    currency, exchangeRate,                 baseCurrencyAmount,     shares, costCenter1
+        yield BananaStrategy._createBooking(transaction, [description, a0.account,           self.__accounts.equity, a0.amount, a0.unit,  a0.baseCurrency.exchangeRate, a0.baseCurrency.amount, '',     a0.costCenter])
+        # amount1
+        yield BananaStrategy._createBooking(transaction, [description, a1.account,           self.__accounts.equity, a1.amount, a1.unit,  a1.baseCurrency.exchangeRate, a1.baseCurrency.amount, '',     a1.costCenter])
+        # fee
+        yield BananaStrategy._createBooking(transaction, [description, self.__accounts.fees, f.account,              f.amount,  f.unit,   f.baseCurrency.exchangeRate,  f.baseCurrency.amount,  '',     f.costCenter.minus()])
+
+    def __transformRemoveLiquidity(self, transaction, a0, a1, f):
+        LiquidityPoolStrategy.__log.debug("%s - Remove liquidity; %s, %s/%s", transaction.dateTime, transaction.poolId, a0, a1)
+        description = f"Liquidität auflösen; {transaction.poolId}: {transaction.amount0.unit}/{transaction.amount1.unit}"
+        # amount0                                         description, debit,                credit,                    amount,    currency, exchangeRate,                 baseCurrencyAmount,     shares, costCenter1
+        yield BananaStrategy._createBooking(transaction, [description, a0.account,           self.__accounts.liquidity, a0.amount, a0.unit,  a0.baseCurrency.exchangeRate, a0.baseCurrency.amount, '',     ''])
+        # amount1
+        yield BananaStrategy._createBooking(transaction, [description, a1.account,           self.__accounts.liquidity, a1.amount, a1.unit,  a1.baseCurrency.exchangeRate, a1.baseCurrency.amount, '',     ''])
+        # fee
+        yield BananaStrategy._createBooking(transaction, [description, self.__accounts.fees, f.account,                 f.amount,  f.unit,   f.baseCurrency.exchangeRate,  f.baseCurrency.amount,  '',     f.costCenter.minus()])

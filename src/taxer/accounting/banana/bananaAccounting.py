@@ -35,7 +35,6 @@ class BananaAccounting(Accounting):
             strategy.initialize()
 
         for transaction in transactions:
-            transaction['bananaDate'] = BananaAccounting.__getDate(transaction)
             strategy = list([s for s in strategies if s.doesTransform(transaction)])
             if len(strategy) != 1:
                 BananaAccounting.__log.error("Unknown transaction; class='%s'", type(transaction).__name__)
@@ -45,7 +44,3 @@ class BananaAccounting(Accounting):
 
         for strategy in strategies:
             yield from strategy.finalize()
-
-    @staticmethod
-    def __getDate(transaction):
-        return [transaction.dateTime.date(), transaction.dateTime.date().strftime('%d.%m.%Y')]

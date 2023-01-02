@@ -22,13 +22,13 @@ class MarginTradeStrategy(BananaStrategy):
         e = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.entryFee, transaction)
         # exit fee
         x = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.exitFee, transaction)
-        #                                        date,                          receipt,        description,               deposit,                withdrawal,             amount,   currency, exchangeRate,                baseCurrencyAmount,   shares, costCenter1
+        #                                                     description,               deposit,                withdrawal,             amount,   currency, exchangeRate,                baseCurrencyAmount,   shares, costCenter1
         if e.amount > 0:
-            yield (transaction['bananaDate'][0], [transaction['bananaDate'][1], transaction.id, 'Margin Trade - Einstieg', self.__accounts.fees,   e.account,              e.amount, e.unit,   e.baseCurrency.exchangeRate, e.baseCurrency.amount, '',    e.costCenter.minus()])
+            yield BananaStrategy._createBooking(transaction, ['Margin Trade - Einstieg', self.__accounts.fees,   e.account,              e.amount, e.unit,   e.baseCurrency.exchangeRate, e.baseCurrency.amount, '',    e.costCenter.minus()])
         if a.amountRaw >= 0:
             MarginTradeStrategy.__log.debug("%s - Margin gain; %s, %s", transaction.dateTime, transaction.mergentId, a)
-            yield (transaction['bananaDate'][0], [transaction['bananaDate'][1], transaction.id, 'Margin Trade - Gewinn',   a.account,              self.__accounts.equity, a.amount, a.unit,   a.baseCurrency.exchangeRate, a.baseCurrency.amount, '',    a.costCenter])
+            yield BananaStrategy._createBooking(transaction, ['Margin Trade - Gewinn',   a.account,              self.__accounts.equity, a.amount, a.unit,   a.baseCurrency.exchangeRate, a.baseCurrency.amount, '',    a.costCenter])
         else:
             MarginTradeStrategy.__log.debug("%s - Margin loss; %s, %s", transaction.dateTime, transaction.mergentId, a)
-            yield (transaction['bananaDate'][0], [transaction['bananaDate'][1], transaction.id, 'Margin Trade - Verlust',  self.__accounts.equity, a.account,              a.amount, a.unit,   a.baseCurrency.exchangeRate, a.baseCurrency.amount, '',    a.costCenter.minus()])
-        yield     (transaction['bananaDate'][0], [transaction['bananaDate'][1], transaction.id, 'Margin Trade - Ausstieg', self.__accounts.fees,   a.account,              x.amount, a.unit,   x.baseCurrency.exchangeRate, x.baseCurrency.amount, '',    x.costCenter.minus()])
+            yield BananaStrategy._createBooking(transaction, ['Margin Trade - Verlust',  self.__accounts.equity, a.account,              a.amount, a.unit,   a.baseCurrency.exchangeRate, a.baseCurrency.amount, '',    a.costCenter.minus()])
+        yield BananaStrategy._createBooking(transaction,     ['Margin Trade - Ausstieg', self.__accounts.fees,   a.account,              x.amount, a.unit,   x.baseCurrency.exchangeRate, x.baseCurrency.amount, '',    x.costCenter.minus()])

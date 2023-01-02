@@ -6,3 +6,8 @@ class BananaStrategy:
 
     def doesTransform(self, transaction): pass
     def transform(self, transaction): pass
+
+    @staticmethod
+    def _createBooking(transaction, args):
+        pre = [transaction.dateTime.date().strftime('%d.%m.%Y'), transaction.id]
+        return (transaction.dateTime.date(), pre + args)
