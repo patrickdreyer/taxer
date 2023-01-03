@@ -1,7 +1,7 @@
 from .transaction import Transaction
 
 
-class CancelFee(Transaction):
+class Fee(Transaction):
     def __init__(self, mergentId, dateTime, id, amount):
         super().__init__(mergentId, dateTime, id)
         self.__amount = amount

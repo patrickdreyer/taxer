@@ -3,8 +3,8 @@ from pytz import utc
 
 from .ether import Ether
 from ..reader import Reader
-from ...transactions.cancelFee import CancelFee
 from ...transactions.depositTransfer import DepositTransfer
+from ...transactions.fee import Fee
 from ...transactions.withdrawTransfer import WithdrawTransfer
 
 
@@ -20,24 +20,28 @@ class EtherscanApiReader(Reader):
             erc20Transactions = list(self.__etherscanApi.getErc20Transactions(address))
             transactions = self.__etherscanApi.getNormalTransactions(address)
             transactions = (self.__transformTransaction(t) for t in iter(transactions))
-            transactions = (t for t in transactions if t['isError'] == '0')
             for transaction in transactions:
-                contract = self.__getContractByTransaction(transaction)
-                if contract != None:
-                    erc20Transaction = EtherscanApiReader.__getErc20Transaction(erc20Transactions, transaction['hash'])
-                    yield from contract.processTransaction(address, id, year, transaction, erc20Transaction)
-                elif transaction['from'] == address and transaction['to'] == address:
+                if transaction['isError']:
                     if transaction['dateTime'].year == year:
-                        yield CancelFee(id, transaction['dateTime'], transaction['hash'], Ether.feeFromTransaction(transaction))
-                elif transaction['from'] == address:
-                    if transaction['dateTime'].year == year:
-                        yield WithdrawTransfer(id, transaction['dateTime'], transaction['hash'], Ether.amountFromTransaction(transaction), Ether.feeFromTransaction(transaction), transaction['to'])
-                elif transaction['to'] == address:
-                    if transaction['dateTime'].year == year:
-                        yield DepositTransfer(id, transaction['dateTime'], transaction['hash'], Ether.amountFromTransaction(transaction), Ether.zero(), transaction['from'])
+                        yield Fee(id, transaction['dateTime'], transaction['hash'], Ether.feeFromTransaction(transaction))
+                else:
+                    contract = self.__getContractByTransaction(transaction)
+                    if contract != None:
+                        erc20Transaction = EtherscanApiReader.__getErc20Transaction(erc20Transactions, transaction['hash'])
+                        yield from contract.processTransaction(address, id, year, transaction, erc20Transaction)
+                    elif transaction['from'] == address and transaction['to'] == address:
+                        if transaction['dateTime'].year == year:
+                            yield Fee(id, transaction['dateTime'], transaction['hash'], Ether.feeFromTransaction(transaction))
+                    elif transaction['from'] == address:
+                        if transaction['dateTime'].year == year:
+                            yield WithdrawTransfer(id, transaction['dateTime'], transaction['hash'], Ether.amountFromTransaction(transaction), Ether.feeFromTransaction(transaction), transaction['to'])
+                    elif transaction['to'] == address:
+                        if transaction['dateTime'].year == year:
+                            yield DepositTransfer(id, transaction['dateTime'], transaction['hash'], Ether.amountFromTransaction(transaction), Ether.zero(), transaction['from'])
 
     def __transformTransaction(self, transaction):
         transaction['dateTime'] = utc.localize(datetime.fromtimestamp(int(transaction['timeStamp'])))
+        transaction['isError'] = transaction['isError'] != '0'
         return transaction
 
     def __getContractByTransaction(self, transaction):
