@@ -32,12 +32,12 @@ class MetamaskSwapRouterContract(Contract):
             if len(swappingTransaction) > 0:
                 swapping = Ether.amountFromTransaction(swappingTransaction[0])
                 swapped = MetamaskSwapRouterContract.__tokenAmount(erc20Transaction)
-                fee = Ether.amountFromTransaction(feeTransaction)
+                fee = Ether.feeFromTransaction(transaction) + Ether.amountFromTransaction(feeTransaction)
                 yield Swap(id, transaction['dateTime'], transaction['hash'], swapping, swapped, fee, MetamaskSwapRouterContract.__publicNameTag)
             elif len(swappedTransaction) > 0:
                 swapping = MetamaskSwapRouterContract.__tokenAmount(erc20Transaction)
                 swapped = Ether.amountFromTransaction(swappedTransaction[0])
-                fee = Ether.amountFromTransaction(feeTransaction)
+                fee = Ether.feeFromTransaction(transaction) + Ether.amountFromTransaction(feeTransaction)
                 yield Swap(id, transaction['dateTime'], transaction['hash'], swapping, swapped, fee, MetamaskSwapRouterContract.__publicNameTag)
             else:
                 raise Exception(f"Unknown swapping; contract='{MetamaskSwapRouterContract.__publicNameTag}'")
