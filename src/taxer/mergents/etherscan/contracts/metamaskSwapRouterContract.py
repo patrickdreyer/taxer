@@ -30,14 +30,18 @@ class MetamaskSwapRouterContract(Contract):
             swappedTransaction = list(t for t in internalTransactions if t['to'].lower() == address.lower())
             feeTransaction = list(t for t in internalTransactions if t['to'].lower() == MetamaskSwapRouterContract.__feeAddress)[0]
             if len(swappingTransaction) > 0:
-                swapping = Ether.amountFromTransaction(swappingTransaction[0])
+                blockchainFee = Ether.feeFromTransaction(transaction)
+                metamaskFee = Ether.amountFromTransaction(feeTransaction)
+                fee = blockchainFee + metamaskFee
+                swapping = Ether.amountFromTransaction(swappingTransaction[0]) - metamaskFee
                 swapped = MetamaskSwapRouterContract.__tokenAmount(erc20Transaction)
-                fee = Ether.amountFromTransaction(feeTransaction)
                 yield Swap(id, transaction['dateTime'], transaction['hash'], swapping, swapped, fee, MetamaskSwapRouterContract.__publicNameTag)
             elif len(swappedTransaction) > 0:
+                blockchainFee = Ether.feeFromTransaction(transaction)
+                metamaskFee = Ether.amountFromTransaction(feeTransaction)
+                fee = blockchainFee + metamaskFee
                 swapping = MetamaskSwapRouterContract.__tokenAmount(erc20Transaction)
-                swapped = Ether.amountFromTransaction(swappedTransaction[0])
-                fee = Ether.amountFromTransaction(feeTransaction)
+                swapped = Ether.amountFromTransaction(swappedTransaction[0]) + metamaskFee
                 yield Swap(id, transaction['dateTime'], transaction['hash'], swapping, swapped, fee, MetamaskSwapRouterContract.__publicNameTag)
             else:
                 raise Exception(f"Unknown swapping; contract='{MetamaskSwapRouterContract.__publicNameTag}'")

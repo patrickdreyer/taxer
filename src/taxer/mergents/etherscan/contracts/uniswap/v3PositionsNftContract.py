@@ -13,6 +13,7 @@ class V3PositionsNftContract(Contract):
     __publicNameTag = 'Uniswap V3: Positions NFT'
     __address = '0xC36442b4a4522E871399CD717aBDD847Ab11FE88'
     __increaseLiquidityTopic = '0x3067048beee31b25b2f1681f88dac838c8bba36af25bfb2b7cf7473a5847e35f'
+    __decreaseLiquidityLogTopic = '0x26f6a048ee9138f2c0ce266f322cb99228e8d619ae2bff30c67f8dcf9d2377b4'
     __collectTopic = '0x40d0efd1a53d60ecbf40971b9daf7dc90178c3aadc7aab1765632738fa8b8f01'
 
     @property
@@ -35,15 +36,20 @@ class V3PositionsNftContract(Contract):
                 yield from self.__mint(id, year, transaction, args)
             elif name == 'increaseliquidity':
                 poolId = int(args['params'][0])
-                collectLog = self.__etherscanApi.getFirstLog(transaction['blockNumber'], address = V3PositionsNftContract.__address, topic0 = V3PositionsNftContract.__increaseLiquidityTopic, topic1 = Ether.toTopic(poolId))
-                output = Ether.decodeContractEventData(self.__web3Contract, 'IncreaseLiquidity', collectLog['topics'], collectLog['data'])
+                increaseliquidityLog = self.__etherscanApi.getFirstLog(transaction['blockNumber'], address = V3PositionsNftContract.__address, topic0 = V3PositionsNftContract.__increaseLiquidityTopic, topic1 = Ether.toTopic(poolId))
+                output = Ether.decodeContractEventData(self.__web3Contract, 'IncreaseLiquidity', increaseliquidityLog['topics'], increaseliquidityLog['data'])
                 (amount0, amount1) = self.__pools.increase(poolId, output['liquidity'], output['amount0'], output['amount1'])
                 if transaction['dateTime'].year == year:
                     fee = Ether.feeFromTransaction(transaction)
                     yield AddLiquidity(id, transaction['dateTime'], transaction['hash'], amount0, amount1, fee, poolId, V3PositionsNftContract.__publicNameTag)
             elif name == 'decreaseliquidity':
                 poolId = int(args['params'][0])
-                (amount0, amount1) = self.__pools.decrease(poolId, args['params'][1], args['params'][2], args['params'][3])
+                decreaseLiquidityLog = self.__etherscanApi.getFirstLog(transaction['blockNumber'], address = V3PositionsNftContract.__address, topic0 = V3PositionsNftContract.__decreaseLiquidityLogTopic, topic1 = Ether.toTopic(poolId))
+                output = Ether.decodeContractEventData(self.__web3Contract, 'DecreaseLiquidity', decreaseLiquidityLog['topics'], decreaseLiquidityLog['data'])
+                liquidity = output['liquidity']
+                collectLog = self.__etherscanApi.getFirstLog(transaction['blockNumber'], address = V3PositionsNftContract.__address, topic0 = V3PositionsNftContract.__collectTopic, topic1 = Ether.toTopic(poolId))
+                output = Ether.decodeContractEventData(self.__web3Contract, 'Collect', collectLog['topics'], collectLog['data'])
+                (amount0, amount1) = self.__pools.decrease(poolId, liquidity, output['amount0'], output['amount1'])
                 if transaction['dateTime'].year == year:
                     fee = Ether.feeFromTransaction(transaction)
                     yield RemoveLiquidity(id, transaction['dateTime'], transaction['hash'], amount0, amount1, fee, poolId, V3PositionsNftContract.__publicNameTag)

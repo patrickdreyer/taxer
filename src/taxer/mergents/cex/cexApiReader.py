@@ -27,8 +27,7 @@ class CexApiReader(Reader):
             date = parser.isoparse(order['time'])
             fee = Currency(order['symbol2'], CexApiReader.__getAmount('fa', order))
             fiat = Currency(order['symbol2'], CexApiReader.__getAmount('ta', order))
-            remains = Currency(order['symbol1'], order['remains'])
-            crypto = Currency(order['symbol1'], order['a:{}:cds'.format(order['symbol1'])]) - remains
+            crypto = Currency(order['symbol1'], order['a:{}:cds'.format(order['symbol1'])])
             if order['type'] == 'sell':
                 fiat = fiat - fee
                 yield SellTrade(self.__config['id'], date, order['id'], crypto, fiat, fee)

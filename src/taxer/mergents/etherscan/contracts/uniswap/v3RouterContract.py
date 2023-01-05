@@ -53,7 +53,9 @@ class V3RouterContract(Contract):
         yield Swap(id, transaction['dateTime'], transaction['hash'], swapping, swapped, fee, V3RouterContract.__publicNameTag)
 
     def __exactOutput(self, address, id, transaction):
-        swapping = Ether.amountFromTransaction(transaction)
+        internalTransaction = [it for it in self.__etherscanApi.getInternalTransactions(transaction['hash']) if it['to'] == address][0]
+        payback = Ether.amount(internalTransaction['value'])
+        swapping = Ether.amountFromTransaction(transaction) - payback
         swapped = self.__getSwappedAmount(address, transaction)
         fee = Ether.feeFromTransaction(transaction)
         yield Swap(id, transaction['dateTime'], transaction['hash'], swapping, swapped, fee, V3RouterContract.__publicNameTag)
