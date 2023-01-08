@@ -14,14 +14,13 @@ from ...transactions.sellTrade import SellTrade
 
 
 class CexApiReader(Reader):
-    __symbols = [ 'BTC', 'ETH', 'XRP' ]
-
-    def __init__(self, id:str, url:str, userId:str, key:str, secret:str):
+    def __init__(self, id:str, url:str, userId:str, key:str, secret:str, symbols:list[str]):
         self.__id = id
         self.__url = url
         self.__userId = userId
         self.__key = key
         self.__secret = secret.encode()
+        self.__symbols = symbols
 
     def read(self, year):
         orders = self.__fetchArchivedOrders(year)

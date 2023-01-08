@@ -11,4 +11,4 @@ class CexMergent(Mergent):
 
     def createReaders(self):
         yield CexFileReader(self.__config['id'], self.__container['config']['input'], self.__config['fileNamePattern'])
-        yield CexApiReader(self.__config['id'], self.__config['url'], self.__config['userId'], self.__config['key'], self.__config['secret'])
+        yield CexApiReader(self.__config['id'], self.__config['url'], self.__config['userId'], self.__config['key'], self.__config['secret'], self.__config['symbols'])
