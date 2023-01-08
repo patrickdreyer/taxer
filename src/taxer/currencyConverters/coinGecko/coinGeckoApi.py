@@ -8,8 +8,8 @@ from ..currencyConverterApi import CurrencyConverterApi
 class CoinGeckoApi(CurrencyConverterApi):
     __log = logging.getLogger(__name__)
 
-    def __init__(self, config):
-        self.__config = config
+    def __init__(self, url:str):
+        self.__url = url
         self.__session = requests.Session()
 
     def __del__(self):
@@ -25,6 +25,6 @@ class CoinGeckoApi(CurrencyConverterApi):
         return content['market_data']['current_price']['chf']
 
     def __get(self, query):
-        query = '{}{}'.format(self.__config['url'], query)
+        query = '{}{}'.format(self.__url, query)
         response = self.__session.get(query)
         return json.loads(response.content)

@@ -1,3 +1,4 @@
+from ..container import Container
 from ..pluginLoader import PluginLoader
 
 
@@ -5,14 +6,13 @@ class CurrencyConverterFactory:
     __fiat = ['EUR', 'USD']
 
     @staticmethod
-    def create(config, cachePath):
-        ret = CurrencyConverterFactory(config, cachePath)
+    def create(container:Container):
+        ret = CurrencyConverterFactory(container)
         ret.__createConverters()
         return ret
 
-    def __init__(self, config, cachePath):
-        self.__config = config['currencyConverters']
-        self.__cachePath = cachePath
+    def __init__(self, container:Container):
+        self.__container = container
 
     def load(self):
         for converter in self.__converters.values():
@@ -37,5 +37,5 @@ class CurrencyConverterFactory:
 
     def __createConverters(self):
         self.__converters = {}
-        for converter in PluginLoader.loadByConfig(self.__config, __package__ + '.{}.{}CurrencyConverter.{}CurrencyConverter', lambda config, clss : clss(config, self.__cachePath)):
+        for converter in PluginLoader.loadByConfig(self.__container['config']['currencyConverters'], __package__ + '.{}.{}CurrencyConverter.{}CurrencyConverter', lambda config, clss : clss(self.__container, config)):
             self.__converters[converter.id] = converter

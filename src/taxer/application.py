@@ -5,6 +5,7 @@ import os
 import pickle
 
 from .accounting.accountingfactory import AccountingFactory
+from .container import Container
 from .currencyConverters.currencyConverterFactory import CurrencyConverterFactory
 from .mergents.mergentFactory import MergentFactory
 from .transformers.transformerFactory import TransformerFactory
@@ -17,16 +18,17 @@ class Application:
         self.__initializeLogging()
 
         Application.__log.info('BEGIN')
-        self.__parseArguments()
-        self.__readConfig()
-        self.__mergents = MergentFactory.create(self.__config, self.__args.input, self.__args.cache)
-        self.__transformers = TransformerFactory.create(self.__config)
-        self.__currencyConverters = CurrencyConverterFactory.create(self.__config, self.__args.cache).load()
-        self.__accountings = AccountingFactory.create(self.__args, self.__config, self.__currencyConverters)
+        self.__container = Container()
+        self.__container['config'] = self.__parseArguments()
+        self.__container['config'] = self.__container['config'] | self.__readConfig()
+        self.__container['mergents'] = MergentFactory.create(self.__container)
+        self.__container['transformers'] = TransformerFactory.create(self.__container)
+        self.__container['currencyConverters'] = CurrencyConverterFactory.create(self.__container).load()
+        self.__container['accountings'] = AccountingFactory.create(self.__container)
 
         self.__process()
 
-        self.__currencyConverters.store()
+        self.__container['currencyConverters'].store()
         Application.__log.info('END')
 
     def __initializeLogging(self):
@@ -50,11 +52,13 @@ class Application:
         parser.add_argument('--config', type=str, help='File path to configuration')
         parser.add_argument('--year', type=str, help='Fiscal year to report')
         parser.add_argument('--transactions', type=str, help='File path to import transactions from or export transactions to')
-        self.__args = parser.parse_args()
+        namespace = parser.parse_args()
+        return vars(namespace)
 
-    def __readConfig(self):
-        with open(self.__args.config, 'r') as file:
-            self.__config = json.load(file)
+
+    def __readConfig(self) -> any:
+        with open(self.__container['config']['config'], 'r') as file:
+            return json.load(file)
 
     def __process(self):
         transactions = self.__deserializeTransactions()
@@ -62,33 +66,33 @@ class Application:
             transactions = (t for t in self.__readTransactions() if t != None)
             transactions = sorted(transactions, key=lambda t: t.dateTime)
             self.__serializeTransactions(transactions)
-        for accounting in self.__accountings:
+        for accounting in self.__container['accountings']:
             transactions = list(self.__transformTransactions(transactions))
             accounting.write(transactions)
 
     def __readTransactions(self):
-        readers = self.__mergents.createReaders()
+        readers = self.__container['mergents'].createReaders()
         for reader in readers:
-            yield from reader.read(int(self.__args.year))
+            yield from reader.read(int(self.__container['config']['year']))
 
     def __transformTransactions(self, transactions):
-        for transformer in self.__transformers:
+        for transformer in self.__container['transformers']:
             transactions = transformer.transform(transactions)
         return transactions
 
     def __serializeTransactions(self, transactions):
-        if not self.__args.transactions:
+        if not self.__container['config']['transactions']:
             return
-        Application.__log.info("Serialize transactions; filePath='%s'", self.__args.transactions)
-        if not os.path.exists(self.__args.transactions):
-            os.makedirs(self.__args.transactions)
-        with open(os.path.join(self.__args.transactions, Application.__transactionsFileName), 'wb') as file:
+        Application.__log.info("Serialize transactions; filePath='%s'", self.__container['config']['transactions'])
+        if not os.path.exists(self.__container['config']['transactions']):
+            os.makedirs(self.__container['config']['transactions'])
+        with open(os.path.join(self.__container['config']['transactions'], Application.__transactionsFileName), 'wb') as file:
             pickle.dump(transactions, file)
 
     def __deserializeTransactions(self):
-        if not self.__args.transactions:
+        if not self.__container['config']['transactions']:
             return None
-        filePath = os.path.join(self.__args.transactions, Application.__transactionsFileName)
+        filePath = os.path.join(self.__container['config']['transactions'], Application.__transactionsFileName)
         if not os.path.isfile(filePath):
             return None
         Application.__log.info("Deserialize transactions; filePath='%s'", filePath)

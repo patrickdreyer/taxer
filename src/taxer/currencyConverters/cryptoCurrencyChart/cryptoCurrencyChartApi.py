@@ -1,5 +1,3 @@
-import collections
-import datetime
 import json
 import logging
 import requests
@@ -13,10 +11,9 @@ class CryptoCurrencyChartApi(CurrencyConverterApi):
     __log = logging.getLogger(__name__)
     __throttler = Throttler(10)
 
-    def __init__(self, config):
-        self.__config = config
-        parts = urlparse(self.__config['url'])
-        self.__config['url'] = '{}://{}:{}@{}{}'.format(parts.scheme, self.__config['key'], self.__config['secret'], parts.netloc, parts.path)
+    def __init__(self, url:str, key:str, secret:str):
+        parts = urlparse(url)
+        self.__url = '{}://{}:{}@{}{}'.format(parts.scheme, key, secret, parts.netloc, parts.path)
         self.__session = requests.Session()
 
     def __del__(self):
@@ -33,6 +30,6 @@ class CryptoCurrencyChartApi(CurrencyConverterApi):
 
     def __get(self, query):
         self.__throttler.throttle()
-        query = '{}{}'.format(self.__config['url'], query)
+        query = '{}{}'.format(self.__url, query)
         response = self.__session.get(query)
         return json.loads(response.content)

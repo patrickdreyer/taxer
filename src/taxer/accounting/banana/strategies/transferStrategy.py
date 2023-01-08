@@ -2,21 +2,21 @@ from datetime import timedelta
 from decimal import Decimal
 import logging
 
+from ....container import Container
 from ....transactions.depositTransfer import DepositTransfer
 from ....transactions.payment import Payment
 from ....transactions.transfer import Transfer
 from ....transactions.withdrawTransfer import WithdrawTransfer
-from ..bananaCurrency import BananaCurrency
 from ..bananaStrategy import BananaStrategy
 
 
 class TransferStrategy(BananaStrategy):
     __log = logging.getLogger(__name__)
 
-    def __init__(self, config, accounts, currencyConverters):
-        self.__accounts = accounts
-        self.__currencyConverters = currencyConverters
-        precision = Decimal(config['transferPrecision'])
+    def __init__(self, container:Container):
+        super(TransferStrategy, self).__init__(container)
+        self.__accounts = container['banana']['accounts']
+        precision = Decimal(container['banana']['transferPrecision'])
         self.__minPrecision = 1 - precision
         self.__maxPrecision = 1 + precision
 
@@ -79,17 +79,17 @@ class TransferStrategy(BananaStrategy):
         return True
 
     def __transformSingleTransfer(self, transaction):
-        c = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.amount, transaction)
+        c = self._currency(transaction.amount, transaction)
         if isinstance(transaction, DepositTransfer):
             if c.isFiat:
                 TransferStrategy.__log.debug("%s - Deposit; %s, %s", transaction.dateTime, transaction.mergentId, c)
-                #                                                 description,  debit,     credit,                 amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
-                yield BananaStrategy._createBooking(transaction, ['Einzahlung', c.account, self.__accounts.equity, c.amount, c.unit,   c.baseCurrency.exchangeRate, c.baseCurrency.amount, '',     c.costCenter])
+                #                              description,  debit,     credit,                 amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
+                yield self._book(transaction, ['Einzahlung', c.account, self.__accounts.equity, c.amount, c.unit,   c.baseCurrency.exchangeRate, c.baseCurrency.amount, '',     c.costCenter])
             else:
                 TransferStrategy.__log.warn("%s - Transfer; ???->%s, %s, id=%s, address=%s", transaction.dateTime, transaction.mergentId, transaction.amount, transaction.id, transaction.address)
                 description = 'Transfer ? -> {}'.format(transaction.mergentId)
-                #                                                 description, debit,     credit, amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
-                yield BananaStrategy._createBooking(transaction, [description, c.account, '',     c.amount, c.unit,   c.baseCurrency.exchangeRate, c.baseCurrency.amount, '',     c.costCenter])
+                #                              description, debit,     credit, amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
+                yield self._book(transaction, [description, c.account, '',     c.amount, c.unit,   c.baseCurrency.exchangeRate, c.baseCurrency.amount, '',     c.costCenter])
         elif isinstance(transaction, WithdrawTransfer):
             if c.isFiat:
                 TransferStrategy.__log.debug("%s - Withdraw; %s, %s", transaction.dateTime, transaction.mergentId, c)
@@ -97,29 +97,29 @@ class TransferStrategy(BananaStrategy):
             else:
                 TransferStrategy.__log.warn("%s - Transfer; %s->???, %s, id=%s, address=%s", transaction.dateTime, transaction.mergentId, c, transaction.id, transaction.address)
                 description = 'Transfer {} -> ?'.format(transaction.mergentId)
-            #                                                     description, debit,                  credit,    amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
-            yield BananaStrategy._createBooking(transaction,     [description, self.__accounts.equity, c.account, c.amount, c.unit,   c.baseCurrency.exchangeRate, c.baseCurrency.amount, '',     c.costCenter.minus()])
+            #                                  description, debit,                  credit,    amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
+            yield self._book(transaction,     [description, self.__accounts.equity, c.account, c.amount, c.unit,   c.baseCurrency.exchangeRate, c.baseCurrency.amount, '',     c.costCenter.minus()])
             if transaction.fee.amount > 0:
-                f = BananaCurrency(self.__accounts, self.__currencyConverters, transaction.fee, transaction)
-                yield BananaStrategy._createBooking(transaction, [description, self.__accounts.fees,   c.account, f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, '',     c.costCenter.minus()])
+                f = self._currency(transaction.fee, transaction)
+                yield self._book(transaction, [description, self.__accounts.fees,   c.account, f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, '',     c.costCenter.minus()])
         self.__accountedIds.add(transaction.id)
 
     def __transformDoubleTransfers(self, deposit, withdrawal):
         TransferStrategy.__log.debug("%s - Transfer; %s->%s, %s", withdrawal.dateTime, withdrawal.mergentId, deposit.mergentId, deposit.amount)
         description = 'Transfer {} -> {}'.format(withdrawal.mergentId, deposit.mergentId)
-        d = BananaCurrency(self.__accounts, self.__currencyConverters, deposit.amount, deposit)
-        w = BananaCurrency(self.__accounts, self.__currencyConverters, withdrawal.amount, withdrawal)
+        d = self._currency(deposit.amount, deposit)
+        w = self._currency(withdrawal.amount, withdrawal)
         if withdrawal.fee.amount > 0 and deposit.fee.amount > 0:
             TransferStrategy.__log.warn("Double transfer fees; %s, %s - %s. %s", withdrawal.mergentId, withdrawal.fee, deposit.mergentId, deposit.fee)
-        # target                                             description, deposit,              withdrawal, amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
-        yield BananaStrategy._createBooking(deposit,        [description, d.account,            '',         d.amount, d.unit,   d.baseCurrency.exchangeRate, d.baseCurrency.amount, '',     d.costCenter])
+        # target                          description, deposit,              withdrawal, amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
+        yield self._book(deposit,        [description, d.account,            '',         d.amount, d.unit,   d.baseCurrency.exchangeRate, d.baseCurrency.amount, '',     d.costCenter])
         if deposit.fee.amount > 0:
-            f = BananaCurrency(self.__accounts, self.__currencyConverters, deposit.fee, deposit)
-            yield BananaStrategy._createBooking(withdrawal, [description, self.__accounts.fees, '',         f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, '',     f.costCenter.minus()])
+            f = self._currency(deposit.fee, deposit)
+            yield self._book(withdrawal, [description, self.__accounts.fees, '',         f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, '',     f.costCenter.minus()])
         # source
-        yield BananaStrategy._createBooking(withdrawal,     [description, '',                   w.account,  w.amount, w.unit,   w.baseCurrency.exchangeRate, w.baseCurrency.amount, '',     w.costCenter.minus()])
+        yield self._book(withdrawal,     [description, '',                   w.account,  w.amount, w.unit,   w.baseCurrency.exchangeRate, w.baseCurrency.amount, '',     w.costCenter.minus()])
         if withdrawal.fee.amount > 0:
-            f = BananaCurrency(self.__accounts, self.__currencyConverters, withdrawal.fee, withdrawal)
-            yield BananaStrategy._createBooking(withdrawal, [description, self.__accounts.fees, f.account,  f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, '',     f.costCenter.minus()])
+            f = self._currency(withdrawal.fee, withdrawal)
+            yield self._book(withdrawal, [description, self.__accounts.fees, f.account,  f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, '',     f.costCenter.minus()])
         self.__accountedIds.add(deposit.id)
         self.__accountedIds.add(withdrawal.id)

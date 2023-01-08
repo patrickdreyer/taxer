@@ -6,13 +6,15 @@ import time
 
 
 class CoinbaseProApiAuth(AuthBase):
-    def __init__(self, config):
-        self.__config = config
+    def __init__(self, key:str, secret:str, passphrase:str):
+        self.__key = key
+        self.__secret = secret
+        self.__passphrase = passphrase
 
     def __call__(self, request):
         timestamp = str(time.time())
         message = ''.join([timestamp, request.method, request.path_url, (request.body or '')])
-        request.headers.update(CoinbaseProApiAuth.__getHeaders(timestamp, message, self.__config['key'], self.__config['secret'], self.__config['passphrase']))
+        request.headers.update(CoinbaseProApiAuth.__getHeaders(timestamp, message, self.__key, self.__secret, self.__passphrase))
         return request
 
     @staticmethod

@@ -8,13 +8,8 @@ from ...transactions.withdrawTransfer import WithdrawTransfer
 
 
 class BitboxFileReader(FileReader):
-    def __init__(self, config, path):
-        super().__init__(path)
-        self.__config = config
-
-    @property
-    def filePattern(self):
-        return self.__config['fileNamePattern']
+    def __init__(self, id:str, path:str, fileNamePattern:str):
+        super().__init__(id, path, fileNamePattern)
 
     def readFile(self, filePath, year):
         self.__rows = self.__readFile(filePath)
@@ -28,11 +23,11 @@ class BitboxFileReader(FileReader):
 
             if self.__row['Type'] == 'sent':
                 f = Currency(self.__row['Unit'], self.__row['Fee'])
-                yield WithdrawTransfer(self.__config['id'], date, id, c, f, self.__row['Address'], self.__row['Note'])
+                yield WithdrawTransfer(self.id, date, id, c, f, self.__row['Address'], self.__row['Note'])
 
             elif self.__row['Type'] == 'received':
                 f = Currency(self.__row['Unit'], 0)
-                yield DepositTransfer(self.__config['id'], date, id, c, f, self.__row['Address'], self.__row['Note'])
+                yield DepositTransfer(self.id, date, id, c, f, self.__row['Address'], self.__row['Note'])
 
     def __readFile(self, filePath):
         with open(filePath) as csvFile:
