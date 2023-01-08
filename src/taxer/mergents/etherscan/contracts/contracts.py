@@ -25,3 +25,7 @@ class Contracts(dict):
         if not contract:
             self.__invalidAddresses.append(address.lower())
         return contract
+
+    def getPublicNameTagByAddress(self, address:str):
+        contract = self.getByAddress(address)
+        return contract.publicNameTag if contract != None else None

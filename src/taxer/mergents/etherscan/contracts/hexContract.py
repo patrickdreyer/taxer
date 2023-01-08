@@ -13,7 +13,6 @@ from ....transactions.startStake import StartStake
 
 class HexContract(Contract):
     __id = 'HEX'
-    __address = '0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39'
     __firstLobbyDate = datetime(2019, 12, 3).date()
     __stakeStartTopic = '0x14872dc760f33532684e68e1b6d5fd3f71ba7b07dee76bdb2b084f28b74233ef'
     __divisor = 100000000
@@ -22,17 +21,16 @@ class HexContract(Contract):
     __stakes = {}
 
     @property
-    def address(self): return HexContract.__address
-
-    @property
     def web3Contract(self): return self.__web3Contract
 
     @property
     def functions(self): return self.__web3Contract.functions
 
     def __init__(self, contracts, etherscanApi):
+        super().__init__('0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39', None)
+        self.__contracts = contracts
         self.__etherscanApi = etherscanApi
-        self.__web3Contract = etherscanApi.getContract(HexContract.__address)
+        self.__web3Contract = etherscanApi.getContract(self.address)
 
     def processTransaction(self, address, id, year, transaction, erc20Transaction):
         (name, args) = Ether.decodeContractInput(self.__web3Contract, transaction['input'])
@@ -75,12 +73,12 @@ class HexContract(Contract):
 
         elif name == 'approve':
             if transaction['dateTime'].year == year:
-                publicNameTag = self.__etherscanApi.getPublicNameTagByAddress(args['spender'])
+                publicNameTag = self.__contracts.getPublicNameTagByAddress(args['spender'])
                 yield Payment(id, transaction['dateTime'], transaction['hash'], Ether.zero(), Ether.feeFromTransaction(transaction), publicNameTag)
 
         elif name == 'transfer':
             if transaction['dateTime'].year == year:
-                publicNameTag = self.__etherscanApi.getPublicNameTagByAddress(args['recipient'])
+                publicNameTag = self.__contracts.getPublicNameTagByAddress(args['recipient'])
                 yield Payment(id, transaction['dateTime'], transaction['hash'], Ether.zero(), Ether.feeFromTransaction(transaction), publicNameTag)
 
         else:
