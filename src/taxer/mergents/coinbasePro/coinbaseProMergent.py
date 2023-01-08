@@ -7,7 +7,6 @@ from .coinbaseProApiReader import CoinbaseProApiReader
 
 class CoinbaseProMergent(Mergent):
     def __init__(self, container:Container, config):
-        self.__container = container
         self.__config = config
 
     def createReaders(self):
