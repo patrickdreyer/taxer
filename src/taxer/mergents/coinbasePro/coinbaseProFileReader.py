@@ -11,13 +11,8 @@ from ...transactions.withdrawTransfer import WithdrawTransfer
 
 
 class CoinbaseProFileReader(FileReader):
-    def __init__(self, config, path):
-        super().__init__(path)
-        self.__config = config
-
-    @property
-    def filePattern(self):
-        return self.__config['fileNamePattern']
+    def __init__(self, id:str, path:str, fileNamePattern:str):
+        super().__init__(id, path, fileNamePattern)
 
     def readFile(self, filePath, year):
         rows = self.__readFile(filePath)
@@ -33,9 +28,9 @@ class CoinbaseProFileReader(FileReader):
                 if row['side'] == 'BUY':
                     test = fiat.amount - fee.amount
                     fiat = fiat - fee
-                    yield BuyTrade(self.__config['id'], date, row['trade id'], crypto, fiat, fee)
+                    yield BuyTrade(self.id, date, row['trade id'], crypto, fiat, fee)
                 elif row['side'] == 'SELL':
-                    yield SellTrade(self.__config['id'], date, row['trade id'], crypto, fiat, fee)
+                    yield SellTrade(self.id, date, row['trade id'], crypto, fiat, fee)
             # accounts
             elif 'type' in row:
                 date = parser.isoparse(row['time'])
@@ -44,9 +39,9 @@ class CoinbaseProFileReader(FileReader):
                 amount = Currency(row['amount/balance unit'], row['amount'])
                 f = Currency(row['amount/balance unit'], 0)
                 if row['type'] == 'withdrawal':
-                    yield WithdrawTransfer(self.__config['id'], date, row['transfer id'], amount, f)
+                    yield WithdrawTransfer(self.id, date, row['transfer id'], amount, f)
                 elif row['type'] == 'deposit':
-                    yield DepositTransfer(self.__config['id'], date, row['transfer id'], amount, f)
+                    yield DepositTransfer(self.id, date, row['transfer id'], amount, f)
 
     def __readFile(self, filePath):
         with open(filePath) as csvFile:

@@ -2,14 +2,16 @@ import json
 import requests
 
 from ...throttler import Throttler
+from .coinbaseProApiAuth import CoinbaseProApiAuth
 
 
 class CoinbaseProApi:
     __limit = 1000
     __throttler = Throttler(10)
 
-    def __init__(self, config, auth):
-        self.__config = config
+    def __init__(self, url:str, symbols:list[str], auth:CoinbaseProApiAuth):
+        self.__url = url
+        self.__symbols = symbols
         self.__auth = auth
         self.__session = requests.Session()
 
@@ -25,7 +27,7 @@ class CoinbaseProApi:
 
     def getAllFills(self, profileId):
         products = self.__getItems('/products', {})
-        productIds = [p['id'] for p in products if p['base_currency'] in self.__config['symbols'] and p['quote_currency'] in self.__config['symbols']]
+        productIds = [p['id'] for p in products if p['base_currency'] in self.__symbols and p['quote_currency'] in self.__symbols]
         for productId in productIds:
             yield from self.__getPaginated('/fills', {'profile_id': profileId, 'product_id': productId})
 
@@ -47,7 +49,7 @@ class CoinbaseProApi:
 
     def __get(self, path, params):
         self.__throttler.throttle()
-        url = '{}{}'.format(self.__config['url'], path)
+        url = '{}{}'.format(self.__url, path)
         response = self.__session.get(url, params = params, auth = self.__auth)
         if (response.status_code != 200):
             raise Exception('{}: {}'.format(response.reason, json.loads(response.text)['message']))

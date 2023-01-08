@@ -16,8 +16,12 @@ from ...transactions.sellTrade import SellTrade
 class CexApiReader(Reader):
     __symbols = [ 'BTC', 'ETH', 'XRP' ]
 
-    def __init__(self, config):
-        self.__config = config
+    def __init__(self, id:str, url:str, userId:str, key:str, secret:str):
+        self.__id = id
+        self.__url = url
+        self.__userId = userId
+        self.__key = key
+        self.__secret = secret.encode()
 
     def read(self, year):
         orders = self.__fetchArchivedOrders(year)
@@ -30,9 +34,9 @@ class CexApiReader(Reader):
             crypto = Currency(order['symbol1'], order['a:{}:cds'.format(order['symbol1'])])
             if order['type'] == 'sell':
                 fiat = fiat - fee
-                yield SellTrade(self.__config['id'], date, order['id'], crypto, fiat, fee)
+                yield SellTrade(self.__id, date, order['id'], crypto, fiat, fee)
             elif order['type'] == 'buy':
-                yield BuyTrade(self.__config['id'], date, order['id'], crypto, fiat, fee)
+                yield BuyTrade(self.__id, date, order['id'], crypto, fiat, fee)
 
     def __fetchArchivedOrders(self, year):
         start = datetime(year, 1, 1, tzinfo=utc).timestamp()
@@ -46,17 +50,17 @@ class CexApiReader(Reader):
             }
             add = self.__createSignature()
             request.update(add)
-            response = requests.post('{}/archived_orders/{}/USD'.format(self.__config['apiUrl'], symbol),
+            response = requests.post('{}/archived_orders/{}/USD'.format(self.__url, symbol),
                 json = request,
                 headers = {'content-type': 'application/json'})
             yield from json.loads(response.content)
 
     def __createSignature(self):
         timestamp = int(datetime.now(utc).timestamp() * 1000)
-        message = "{}{}{}".format(timestamp, self.__config['userId'], self.__config['key'])
-        signature = hmac.new(self.__config['secret'].encode(), message.encode(), hashlib.sha256).hexdigest()
+        message = "{}{}{}".format(timestamp, self.__userId, self.__key)
+        signature = hmac.new(self.__secret, message.encode(), hashlib.sha256).hexdigest()
         return {
-            'key': self.__config['key'],
+            'key': self.__key,
             'signature': signature,
             'nonce': timestamp,
         }

@@ -2,6 +2,7 @@ import csv
 import logging
 import os
 
+from ...container import Container
 from ...pluginLoader import PluginLoader
 from ..accounting import Accounting
 from .bananaAccounts import BananaAccounts
@@ -12,14 +13,15 @@ class BananaAccounting(Accounting):
 
     __log = logging.getLogger(__name__)
 
-    def __init__(self, output, config, currencyConverters):
-        self.__output = output
-        self.__config = config
-        self.__accounts = BananaAccounts(config['accounts'])
-        self.__currencyConverters = currencyConverters
+    def __init__(self, container:Container, config):
+        self.__container = container
+        self.__container['banana'] = {
+            'transferPrecision': config['transferPrecision'],
+            'accounts': BananaAccounts(config['accounts'])
+        }
 
     def write(self, transactions):
-        outputFilePath = os.path.join(self.__output, BananaAccounting.__fileName)
+        outputFilePath = os.path.join(self.__container['config']['output'], BananaAccounting.__fileName)
         bookings = self.__transform(transactions)
         bookings = sorted(bookings, key=lambda b: b[0])
         with open(outputFilePath, 'w') as file:
@@ -29,7 +31,7 @@ class BananaAccounting(Accounting):
 
     def __transform(self, transactions):
         path = os.path.join(os.path.dirname(__file__), 'strategies')
-        strategies = PluginLoader.loadFromFiles(path, f"{__package__}.strategies", '**/*Strategy.py', lambda clss: clss(self.__config, self.__accounts, self.__currencyConverters))
+        strategies = PluginLoader.loadFromFiles(path, f"{__package__}.strategies", '**/*Strategy.py', lambda clss: clss(self.__container))
 
         for strategy in strategies:
             strategy.initialize()

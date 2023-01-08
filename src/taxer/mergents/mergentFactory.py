@@ -1,23 +1,22 @@
 from importlib import import_module
 
+from ..container import Container
 from ..pluginLoader import PluginLoader
 
 
 class MergentFactory:
     @staticmethod
-    def create(config, inputPath, cachePath):
-        ret = MergentFactory(config, inputPath, cachePath)
+    def create(container:Container):
+        ret = MergentFactory(container)
         ret.__createMergents()
         return ret
 
-    def __init__(self, config, inputPath, cachePath):
-        self.__config = config['mergents']
-        self.__inputPath = inputPath
-        self.__cachePath = cachePath
+    def __init__(self, container:Container):
+        self.__container = container
 
     def createReaders(self):
         for mergent in self.__mergents:
             yield from mergent.createReaders()
 
     def __createMergents(self):
-        self.__mergents = PluginLoader.loadByConfig(self.__config, __package__ + '.{}.{}Mergent.{}Mergent', lambda config, clss : clss(config, self.__inputPath, self.__cachePath))
+        self.__mergents = PluginLoader.loadByConfig(self.__container['config']['mergents'], __package__ + '.{}.{}Mergent.{}Mergent', lambda config, clss : clss(self.__container, config))

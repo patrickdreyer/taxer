@@ -1,26 +1,25 @@
 import json
 import os
-import requests
 
+from ...container import Container
+from ..mergent import Mergent
 from .contracts.contracts import Contracts
 from .etherscanApi import EtherscanApi
 from .etherscanApiReader import EtherscanApiReader
-from ..mergent import Mergent
 
 
 class EtherscanMergent(Mergent):
     __configFileName = 'etherscan.json'
 
-    def __init__(self, config, inputPath, cachePath):
+    def __init__(self, container:Container, config):
+        self.__container = container
         self.__config = config
-        self.__cachePath = cachePath
         self.readConfig()
 
     def createReaders(self):
-        with requests.Session() as session:
-            etherscanApi = EtherscanApi(self.__config, self.__cachePath, session)
-            contracts = Contracts(etherscanApi).initialize()
-            yield EtherscanApiReader(self.__config, etherscanApi, contracts)
+        etherscanApi = EtherscanApi(self.__config['url'], self.__config['keyToken'], self.__container['config']['cache'], self.__config['publicNameTags'])
+        contracts = Contracts(etherscanApi).initialize()
+        yield EtherscanApiReader(self.__config['accounts'], etherscanApi, contracts)
 
     def readConfig(self):
         filePath = os.path.join(os.path.dirname(__file__), EtherscanMergent.__configFileName)

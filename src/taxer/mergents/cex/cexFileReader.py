@@ -12,13 +12,8 @@ from ...transactions.reimbursement import Reimbursement
 
 
 class CexFileReader(FileReader):
-    def __init__(self, config, path):
-        super().__init__(path)
-        self.__config = config
-
-    @property
-    def filePattern(self):
-        return self.__config['fileNamePattern']
+    def __init__(self, id:str, path:str, fileNamePattern:str):
+        super().__init__(id, path, fileNamePattern)
 
     def readFile(self, filePath, year):
         self.__year = year
@@ -36,14 +31,14 @@ class CexFileReader(FileReader):
                     fee = Currency(transaction['FeeSymbol'], transaction['FeeAmount'])
                     if fee.amount > 0:
                         amount = amount - fee
-                    yield DepositTransfer(self.__config['id'], date, id, amount, fee, None)
+                    yield DepositTransfer(self.id, date, id, amount, fee, None)
                 elif type == 'withdraw':
                     fee = Currency(transaction['FeeSymbol'], transaction['FeeAmount'])
                     if fee.amount > 0:
                         amount = amount - fee
-                    yield WithdrawTransfer(self.__config['id'], date, id, amount, fee, None)
+                    yield WithdrawTransfer(self.id, date, id, amount, fee, None)
                 elif type == 'costsNothing':
-                    yield Reimbursement(self.__config['id'], date, id, amount)
+                    yield Reimbursement(self.id, date, id, amount)
 
     @staticmethod
     def __readFile(filePath):

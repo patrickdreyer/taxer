@@ -1,5 +1,6 @@
 import json
 import os
+import requests
 import web3
 
 from ...throttler import Throttler
@@ -9,21 +10,25 @@ class EtherscanApi:
     __offset = 1000
     __throttler = Throttler(5)
 
-    def __init__(self, config, cachePath, session):
-        self.__config = config
-        self.__cachePath = cachePath
-        self.__session = session
+    def __init__(self, url:str, keyToken:str, cache:str, publicNameTags:list[str]):
+        self.__url = url
+        self.__keyToken = keyToken
+        self.__cache = cache
+        self.__publicNameTags = publicNameTags
         self.__web3 = web3.Web3()
+        self.__session = requests.Session()
 
+    def __del__(self):
+        self.__session.close()
 
     def getNormalTransactions(self, address):
-        yield from self.__getTransactions(lambda page : '{}?module=account&action=txlist&address={}&startblock=0&endblock=99999999&page={}&offset={}&sort=asc&apikey={}'.format(self.__config['apiUrl'], address, page, EtherscanApi.__offset, self.__config['apiKeyToken']))
+        yield from self.__getTransactions(lambda page : '{}?module=account&action=txlist&address={}&startblock=0&endblock=99999999&page={}&offset={}&sort=asc&apikey={}'.format(self.__url, address, page, EtherscanApi.__offset, self.__keyToken))
 
     def getErc20Transactions(self, address):
-        yield from self.__getTransactions(lambda page : '{}?module=account&action=tokentx&address={}&page={}&offset={}&sort=asc&apikey={}'.format(self.__config['apiUrl'], address, page, EtherscanApi.__offset, self.__config['apiKeyToken']))
+        yield from self.__getTransactions(lambda page : '{}?module=account&action=tokentx&address={}&page={}&offset={}&sort=asc&apikey={}'.format(self.__url, address, page, EtherscanApi.__offset, self.__keyToken))
 
     def getInternalTransactions(self, transactionHash):
-        query = '{}?module=account&action=txlistinternal&txhash={}&apikey={}'.format(self.__config['apiUrl'], transactionHash, self.__config['apiKeyToken'])
+        query = '{}?module=account&action=txlistinternal&txhash={}&apikey={}'.format(self.__url, transactionHash, self.__keyToken)
         self.__throttler.throttle()
         response = self.__session.get(query)
         content = json.loads(response.content)
@@ -51,12 +56,12 @@ class EtherscanApi:
         return contract
 
     def getContractAbi(self, contractAddress):
-        filePath = os.path.join(self.__cachePath, '{}.abi'.format(contractAddress))
+        filePath = os.path.join(self.__cache, '{}.abi'.format(contractAddress))
         if os.path.isfile(filePath):
             with open(filePath, 'r') as file:
                 return file.read()
         self.__throttler.throttle()
-        response = self.__session.get('{}?module=contract&action=getabi&address={}&apikey={}'.format(self.__config['apiUrl'], contractAddress, self.__config['apiKeyToken']))
+        response = self.__session.get('{}?module=contract&action=getabi&address={}&apikey={}'.format(self.__url, contractAddress, self.__keyToken))
         content = json.loads(response.content)
         if content['message'] == 'NOTOK':
             return None
@@ -77,7 +82,7 @@ class EtherscanApi:
         if topic0 and topic1:
             params.append('topic0_1_opr=and')
         params = str.join('&', params)
-        query = f"{self.__config['apiUrl']}?module=logs&action=getLogs&fromBlock={block}&toBlock={block}&{params}&apikey={self.__config['apiKeyToken']}"
+        query = f"{self.__url}?module=logs&action=getLogs&fromBlock={block}&toBlock={block}&{params}&apikey={self.__keyToken}"
         self.__throttler.throttle()
         response = self.__session.get(query)
         content = json.loads(response.content)
@@ -90,4 +95,4 @@ class EtherscanApi:
         return logs[0]
 
     def getPublicNameTagByAddress(self, address):
-        return self.__config['publicNameTags'][address] if address in self.__config['publicNameTags'] else None
+        return self.__publicNameTags[address] if address in self.__publicNameTags else None

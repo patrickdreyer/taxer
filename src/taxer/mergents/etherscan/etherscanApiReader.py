@@ -9,14 +9,13 @@ from ...transactions.withdrawTransfer import WithdrawTransfer
 
 
 class EtherscanApiReader(Reader):
-    def __init__(self, config, etherscanApi, contracts):
-        config['accounts'] = {k.lower():v for k,v in config['accounts'].items()}
-        self.__config = config
+    def __init__(self, accounts:list[str], etherscanApi, contracts):
+        self.__accounts = {k.lower():v for k,v in accounts.items()}
         self.__etherscanApi = etherscanApi
         self.__contracts = contracts
 
     def read(self, year):
-        for address,id in self.__config['accounts'].items():
+        for address,id in self.__accounts.items():
             erc20Transactions = list(self.__etherscanApi.getErc20Transactions(address))
             transactions = self.__etherscanApi.getNormalTransactions(address)
             transactions = (self.__transformTransaction(t) for t in iter(transactions))

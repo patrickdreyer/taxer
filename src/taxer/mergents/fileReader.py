@@ -5,11 +5,17 @@ from .reader import Reader
 
 
 class FileReader(Reader):
-    def __init__(self, path):
+    def __init__(self, id:str, path:str, fileNamePattern:str):
+        self.__id = id
         self.__path = path
+        self.__fileNamePattern = fileNamePattern
 
     @property
-    def filePattern(self): pass
+    def id(self) -> str: return self.__id
+
+    @property
+    def filePattern(self) -> str: return self.__fileNamePattern
+    
     def readFile(self, filePath, year): pass
 
     def read(self, year):

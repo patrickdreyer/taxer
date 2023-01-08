@@ -9,13 +9,8 @@ from ...transactions.marginTrade import MarginTrade
 
 
 class PrimeXBTMarginFileReader(FileReader):
-    def __init__(self, config, path):
-        super().__init__(path)
-        self.__config = config
-
-    @property
-    def filePattern(self):
-        return self.__config['fileNamePatterns']['margin']
+    def __init__(self, id:str, path:str, fileNamePattern:str):
+        super().__init__(id, path, fileNamePattern)
 
     def readFile(self, filePath, year):
         self.__year = year
@@ -32,7 +27,7 @@ class PrimeXBTMarginFileReader(FileReader):
             amount = Currency(symbol, sortedPositionGroup[2][9])
             entryFee = Currency(symbol, sortedPositionGroup[0][9])
             exitFee = Currency(symbol, sortedPositionGroup[1][9])
-            yield MarginTrade(self.__config['id'], sortedPositionGroup[0][3], positionId, amount, entryFee, exitFee)
+            yield MarginTrade(self.id, sortedPositionGroup[0][3], positionId, amount, entryFee, exitFee)
 
     @staticmethod
     def __readFile(filePath):

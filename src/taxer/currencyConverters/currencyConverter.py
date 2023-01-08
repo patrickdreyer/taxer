@@ -2,16 +2,17 @@ from decimal import Decimal
 import logging
 import os
 
+from ..container import Container
 from .csvFileDict import CsvFileDict
 
 
 class CurrencyConverter:
-    def __init__(self, config, cachePath, api, symbolMapper):
+    def __init__(self, container:Container, config, api, symbolMapper):
         self.__log = logging.getLogger('%s.%s' % (self.__class__.__module__, self.__class__.__name__))
-        self.__config = config
+        self.__id = config['id']
         self.__api = api
-        self.__ids = symbolMapper(self.__log, os.path.join(cachePath, config['idsFileName']), api)
-        self.__rates = CsvFileDict(self.__log, os.path.join(cachePath, config['ratesFileName']), ['key', 'rate'])
+        self.__ids = symbolMapper(self.__log, os.path.join(container['config']['cache'], config['idsFileName']), api)
+        self.__rates = CsvFileDict(self.__log, os.path.join(container['config']['cache'], config['ratesFileName']), ['key', 'rate'])
 
     def load(self):
         self.__ids.load()
@@ -23,7 +24,7 @@ class CurrencyConverter:
 
     @property
     def id(self):
-        return self.__config['id']
+        return self.__id
 
     @property
     def symbols(self):

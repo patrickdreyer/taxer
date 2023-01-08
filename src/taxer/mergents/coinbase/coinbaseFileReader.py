@@ -12,12 +12,8 @@ class CoinbaseFileReader(FileReader):
     __id = 'CB'
     __fileNamePattern = r'.*Coinbase(?!Pro).*\.csv'
 
-    def __init__(self, path):
-        super().__init__(path)
-
-    @property
-    def filePattern(self):
-        return CoinbaseFileReader.__fileNamePattern
+    def __init__(self, path:str):
+        super().__init__(CoinbaseFileReader.__id, path, CoinbaseFileReader.__fileNamePattern)
 
     def readFile(self, filePath, year):
         rows = CoinbaseFileReader.__readFile(filePath)
@@ -29,9 +25,9 @@ class CoinbaseFileReader(FileReader):
             amount = Currency(row[2], row[3])
             f = Currency(row[2], 0)
             if row[1] == 'Send':
-                yield WithdrawTransfer(CoinbaseFileReader.__id, date, '', amount, f)
+                yield WithdrawTransfer(self.id, date, '', amount, f)
             elif row[1] == 'Receive':
-                yield DepositTransfer(CoinbaseFileReader.__id, date, '', amount, f)
+                yield DepositTransfer(self.id, date, '', amount, f)
 
     @staticmethod
     def __readFile(filePath):

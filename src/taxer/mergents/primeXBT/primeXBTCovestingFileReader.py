@@ -13,13 +13,8 @@ class PrimeXBTCovestingFileReader(FileReader):
     __startEntryFee = datetime(2020, 12, 1, tzinfo=utc)
     __entryFeePercentage = Decimal(0.01)
 
-    def __init__(self, config, path):
-        super().__init__(path)
-        self.__config = config
-
-    @property
-    def filePattern(self):
-        return self.__config['fileNamePatterns']['covesting']
+    def __init__(self, id:str, path:str, fileNamePattern:str):
+        super().__init__(id, path, fileNamePattern)
 
     def readFile(self, filePath, year):
         self.__year = year
@@ -32,7 +27,7 @@ class PrimeXBTCovestingFileReader(FileReader):
             amount = Currency(symbol, row['Total profit'].split()[0].replace('−','-'))
             entryFee = Currency(symbol, Decimal(row['Initial equity'].split()[0]) * PrimeXBTCovestingFileReader.__entryFeePercentage if date >= PrimeXBTCovestingFileReader.__startEntryFee else 0)
             exitFee = Currency(symbol, row['Commission'].split()[0])
-            yield Covesting(self.__config['id'], date, '', row['Name'], amount, entryFee, exitFee)
+            yield Covesting(self.id, date, '', row['Name'], amount, entryFee, exitFee)
 
     @staticmethod
     def __readFile(filePath):

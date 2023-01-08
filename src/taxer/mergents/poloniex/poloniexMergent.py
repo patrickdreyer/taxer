@@ -1,11 +1,12 @@
 import ccxt
 
-from .poloniexApiReader import PoloniexApiReader
+from ...container import Container
 from ..mergent import Mergent
+from .poloniexApiReader import PoloniexApiReader
 
 
 class PoloniexMergent(Mergent):
-    def __init__(self, config, inputPath, cachePath):
+    def __init__(self, container:Container, config):
         self.__config = config
 
     def createReaders(self):

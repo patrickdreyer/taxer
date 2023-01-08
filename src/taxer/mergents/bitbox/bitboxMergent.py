@@ -1,11 +1,12 @@
+from ...container import Container
 from ..mergent import Mergent
 from .bitboxFileReader import BitboxFileReader
 
 
 class BitboxMergent(Mergent):
-    def __init__(self, config, inputPath, cachePath):
+    def __init__(self, container:Container, config):
+        self.__container = container
         self.__config = config
-        self.__inputPath = inputPath
 
     def createReaders(self):
-        yield BitboxFileReader(self.__config, self.__inputPath)
+        yield BitboxFileReader(self.__config['id'], self.__container['config']['input'], self.__config['fileNamePattern'])

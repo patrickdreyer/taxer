@@ -61,14 +61,9 @@ class RowParser2020(RowParser):
 
 
 class PrimeXBTTransferFileReader(FileReader):
-    def __init__(self, config, path):
-        super().__init__(path)
-        self.__config = config
-        self.__infoPattern = re.compile(r'address (.*)$') # 'Blockchain withdrawal: e55d9cf348daaee9983305d368cf11268ff7a9b22062a56de791e6b6c7b19bc4, address 37Dm4VhGAyCbfpVXuh837K2yNXEaAUg2Zs'
-
-    @property
-    def filePattern(self):
-        return self.__config['fileNamePatterns']['transfer']
+    def __init__(self, id:str, path:str, fileNamePattern:str):
+        super().__init__(id, path, fileNamePattern)
+        self.__infoPattern = re.compile(r'address (.*)$')
 
     def readFile(self, filePath, year):
         rowParser = None
@@ -84,9 +79,9 @@ class PrimeXBTTransferFileReader(FileReader):
             f = Currency(symbol, 0)
             address = self.__infoPattern.search(rowParser.info).group(1)
             if rowParser.frm.find('Blockchain') != -1:
-                yield DepositTransfer(self.__config['id'], date, rowParser.id, amount, f, address)
+                yield DepositTransfer(self.id, date, rowParser.id, amount, f, address)
             elif rowParser.to.find('Blockchain') != -1:
-                yield WithdrawTransfer(self.__config['id'], date, rowParser.id, amount, f, address)
+                yield WithdrawTransfer(self.id, date, rowParser.id, amount, f, address)
 
     @staticmethod
     def __readFile(filePath):

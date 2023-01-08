@@ -2,17 +2,18 @@ from datetime import datetime
 from dateutil import parser
 from pytz import utc
 
-from ..reader import Reader
 from ...transactions.buyTrade import BuyTrade
 from ...transactions.currency import Currency
 from ...transactions.sellTrade import SellTrade
 from ...transactions.depositTransfer import DepositTransfer
 from ...transactions.withdrawTransfer import WithdrawTransfer
+from ..reader import Reader
+from .coinbaseProApi import CoinbaseProApi
 
 
 class CoinbaseProApiReader(Reader):
-    def __init__(self, config, api):
-        self.__config = config
+    def __init__(self, id:str, api:CoinbaseProApi):
+        self.__id = id
         self.__api = api
 
     def read(self, year):
@@ -35,14 +36,14 @@ class CoinbaseProApiReader(Reader):
                 # even if fee is given in transfer, CBP does not deduce it
                 # if 'fee' in transfer['details']:
                 #     fee = Currency(transfer['currency'], transfer['details']['fee'])
-                yield WithdrawTransfer(self.__config['id'], transfer['dateTime'], transfer['id'], Currency(transfer['currency'], transfer['amount']), fee, None)
+                yield WithdrawTransfer(self.__id, transfer['dateTime'], transfer['id'], Currency(transfer['currency'], transfer['amount']), fee, None)
             elif transfer['type'] == 'deposit':
                 if transfer['dateTime'].year != year:
                     continue
                 fee = Currency(transfer['currency'], 0)
                 if 'fee' in transfer['details']:
                     fee = Currency(transfer['currency'], transfer['details']['fee'])
-                yield DepositTransfer(self.__config['id'], transfer['dateTime'], transfer['id'], Currency(transfer['currency'], transfer['amount']), fee, None)
+                yield DepositTransfer(self.__id, transfer['dateTime'], transfer['id'], Currency(transfer['currency'], transfer['amount']), fee, None)
 
     def __fetchFills(self, profileId, accounts, year):
         fills = self.__api.getAllFills(profileId)
@@ -57,9 +58,9 @@ class CoinbaseProApiReader(Reader):
             symbol2 = Currency(symbols[1], symbol1.amount * price.amount)
             if fill['side'] == 'sell':
                 symbol2 -= fee
-                yield SellTrade(self.__config['id'], date, fill['order_id'], symbol1, symbol2, fee)
+                yield SellTrade(self.__id, date, fill['order_id'], symbol1, symbol2, fee)
             elif fill['side'] == 'buy':
-                yield BuyTrade(self.__config['id'], date, fill['order_id'], symbol1, symbol2, fee)
+                yield BuyTrade(self.__id, date, fill['order_id'], symbol1, symbol2, fee)
 
     def __transformTransfers(self, accounts, transfer):
         transfer['currency'] = [a['currency'] for a in accounts if a['id'] == transfer['account_id']][0]
