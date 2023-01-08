@@ -18,4 +18,6 @@ class UsdcContract(Contract):
         raise NotImplementedError(f"Not implemented contact; id={UsdcContract.__id}")
 
     def amount(self, value):
+        if value != 0:
+            raise NotImplementedError('Please define divisor properly')
         return Currency(UsdcContract.__id, Decimal(value) / UsdcContract.__divisor)
