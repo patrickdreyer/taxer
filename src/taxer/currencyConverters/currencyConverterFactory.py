@@ -3,8 +3,6 @@ from ..pluginLoader import PluginLoader
 
 
 class CurrencyConverterFactory:
-    __fiat = ['EUR', 'USD']
-
     @staticmethod
     def create(container:Container):
         ret = CurrencyConverterFactory(container)
@@ -29,11 +27,6 @@ class CurrencyConverterFactory:
                 rate = converter.exchangeRate(symbol, date)
                 return rate
         raise KeyError("Symbol not supported by currency converters; symbol='{}'".format(symbol))
-
-    @staticmethod
-    def isFiat(unit):
-        isFiat = unit in CurrencyConverterFactory.__fiat
-        return isFiat
 
     def __createConverters(self):
         self.__converters = {}
