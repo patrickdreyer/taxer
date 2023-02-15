@@ -9,8 +9,6 @@ from .bananaAccounts import BananaAccounts
 
 
 class BananaAccounting(Accounting):
-    __fileName = 'banana.csv'
-
     __log = logging.getLogger(__name__)
 
     def __init__(self, container:Container, config):
@@ -19,9 +17,10 @@ class BananaAccounting(Accounting):
             'transferPrecision': config['transferPrecision'],
             'accounts': BananaAccounts(config['accounts'])
         }
+        self.__fileName = config['fileName']
 
     def write(self, transactions):
-        outputFilePath = os.path.join(self.__container['config']['output'], BananaAccounting.__fileName)
+        outputFilePath = os.path.join(self.__container['config']['output'], self.__fileName)
         bookings = self.__transform(transactions)
         bookings = sorted(bookings, key=lambda b: b[0])
         with open(outputFilePath, 'w') as file:

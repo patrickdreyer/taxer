@@ -8,14 +8,10 @@ from ....transactions.swap import Swap
 
 
 class MetamaskSwapRouterContract(Contract):
-    __publicNameTag = 'Metamask: Swap Router'
-    __address = '0x881D40237659C251811CEC9c364ef91dC08D300C'
     __feeAddress = "0x11ededebf63bef0ea2d2d071bdf88f71543ec6fb"
 
-    @property
-    def address(self): return MetamaskSwapRouterContract.__address
-
     def __init__(self, contracts, etherscanApi):
+        super().__init__('0x881D40237659C251811CEC9c364ef91dC08D300C', 'Metamask: Swap Router')
         self.__etherscanApi = etherscanApi
 
     def processTransaction(self, address, id, year, transaction, erc20Transaction):
@@ -26,7 +22,7 @@ class MetamaskSwapRouterContract(Contract):
 
         if name == 'swap':
             internalTransactions = self.__etherscanApi.getInternalTransactions(transaction['hash'])
-            swappingTransaction = list(t for t in internalTransactions if t['from'].lower() == self.__address.lower())
+            swappingTransaction = list(t for t in internalTransactions if t['from'].lower() == self.address.lower())
             swappedTransaction = list(t for t in internalTransactions if t['to'].lower() == address.lower())
             feeTransaction = list(t for t in internalTransactions if t['to'].lower() == MetamaskSwapRouterContract.__feeAddress)[0]
             if len(swappingTransaction) > 0:
@@ -35,18 +31,18 @@ class MetamaskSwapRouterContract(Contract):
                 fee = blockchainFee + metamaskFee
                 swapping = Ether.amountFromTransaction(swappingTransaction[0]) - metamaskFee
                 swapped = MetamaskSwapRouterContract.__tokenAmount(erc20Transaction)
-                yield Swap(id, transaction['dateTime'], transaction['hash'], swapping, swapped, fee, MetamaskSwapRouterContract.__publicNameTag)
+                yield Swap(id, transaction['dateTime'], transaction['hash'], swapping, swapped, fee, self.publicNameTag)
             elif len(swappedTransaction) > 0:
                 blockchainFee = Ether.feeFromTransaction(transaction)
                 metamaskFee = Ether.amountFromTransaction(feeTransaction)
                 fee = blockchainFee + metamaskFee
                 swapping = MetamaskSwapRouterContract.__tokenAmount(erc20Transaction)
                 swapped = Ether.amountFromTransaction(swappedTransaction[0]) + metamaskFee
-                yield Swap(id, transaction['dateTime'], transaction['hash'], swapping, swapped, fee, MetamaskSwapRouterContract.__publicNameTag)
+                yield Swap(id, transaction['dateTime'], transaction['hash'], swapping, swapped, fee, self.publicNameTag)
             else:
-                raise Exception(f"Unknown swapping; contract='{MetamaskSwapRouterContract.__publicNameTag}'")
+                raise Exception(f"Unknown swapping; contract='{self.publicNameTag}'")
         else:
-            raise KeyError(f"Unknown contract function; contract='{MetamaskSwapRouterContract.__publicNameTag}', functionName='{name}'")
+            raise KeyError(f"Unknown contract function; contract='{self.publicNameTag}', functionName='{name}'")
 
     @staticmethod
     def __getFunction(functionName):

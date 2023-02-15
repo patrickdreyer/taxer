@@ -9,11 +9,8 @@ from ...transactions.withdrawTransfer import WithdrawTransfer
 
 
 class CoinbaseFileReader(FileReader):
-    __id = 'CB'
-    __fileNamePattern = r'.*Coinbase(?!Pro).*\.csv'
-
-    def __init__(self, path:str):
-        super().__init__(CoinbaseFileReader.__id, path, CoinbaseFileReader.__fileNamePattern)
+    def __init__(self, id:str, path:str, fileNamePattern:str):
+        super().__init__(id, path, fileNamePattern)
 
     def readFile(self, filePath, year):
         rows = CoinbaseFileReader.__readFile(filePath)

@@ -4,19 +4,14 @@ from .....transactions.swap import Swap
 
 
 class V3RouterContract(Contract):
-    __publicNameTag = 'Uniswap V3: Router'
-    __address = '0xE592427A0AEce92De3Edee1F18E0157C05861564'
-
-    @property
-    def address(self): return V3RouterContract.__address
-
     @property
     def web3Contract(self): return self.__web3Contract
 
     def __init__(self, contracts, etherscanApi):
+        super().__init__('0xE592427A0AEce92De3Edee1F18E0157C05861564', 'Uniswap V3: Router')
         self.__etherscanApi = etherscanApi
         self.__contracts = contracts
-        self.__web3Contract = etherscanApi.getContract(V3RouterContract.__address)
+        self.__web3Contract = etherscanApi.getContract(self.address)
 
     def processTransaction(self, address, id, year, transaction, erc20Transaction):
         if transaction['dateTime'].year != year:
@@ -32,7 +27,7 @@ class V3RouterContract(Contract):
         elif name == 'exactinput':
             yield from self.__exactInput(address, id, transaction)
         else:
-            raise KeyError(f"Unknown contract function; contract='{V3RouterContract.__publicNameTag}', functionName='{name}'")
+            raise KeyError(f"Unknown contract function; contract='{self.publicNameTag}', functionName='{name}'")
 
     def __exactInput(self, address, id, transaction):
         swapping = Ether.amountFromTransaction(transaction)
@@ -50,7 +45,7 @@ class V3RouterContract(Contract):
         #TODO Token -> Token
 
         fee = Ether.feeFromTransaction(transaction)
-        yield Swap(id, transaction['dateTime'], transaction['hash'], swapping, swapped, fee, V3RouterContract.__publicNameTag)
+        yield Swap(id, transaction['dateTime'], transaction['hash'], swapping, swapped, fee, self.publicNameTag)
 
     def __exactOutput(self, address, id, transaction):
         internalTransaction = [it for it in self.__etherscanApi.getInternalTransactions(transaction['hash']) if it['to'] == address][0]
@@ -58,7 +53,7 @@ class V3RouterContract(Contract):
         swapping = Ether.amountFromTransaction(transaction) - payback
         swapped = self.__getSwappedAmount(address, transaction)
         fee = Ether.feeFromTransaction(transaction)
-        yield Swap(id, transaction['dateTime'], transaction['hash'], swapping, swapped, fee, V3RouterContract.__publicNameTag)
+        yield Swap(id, transaction['dateTime'], transaction['hash'], swapping, swapped, fee, self.publicNameTag)
 
     def __getSwappedAmount(self, address, transaction):
         swappedTransferLog = self.__etherscanApi.getFirstLog(transaction['blockNumber'], topic2 = Ether.toTopic(address))

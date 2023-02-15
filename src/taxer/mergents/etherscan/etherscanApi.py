@@ -10,11 +10,10 @@ class EtherscanApi:
     __offset = 1000
     __throttler = Throttler(5)
 
-    def __init__(self, url:str, keyToken:str, cache:str, publicNameTags:list[str]):
+    def __init__(self, url:str, keyToken:str, cache:str):
         self.__url = url
         self.__keyToken = keyToken
         self.__cache = cache
-        self.__publicNameTags = publicNameTags
         self.__web3 = web3.Web3()
         self.__session = requests.Session()
 
@@ -93,6 +92,3 @@ class EtherscanApi:
     def getFirstLog(self, block, *, address = None, topic0 = None, topic1 = None, topic2 = None):
         logs = self.getLogs(block, address = address, topic0 = topic0, topic1 = topic1, topic2 = topic2)
         return logs[0]
-
-    def getPublicNameTagByAddress(self, address):
-        return self.__publicNameTags[address] if address in self.__publicNameTags else None

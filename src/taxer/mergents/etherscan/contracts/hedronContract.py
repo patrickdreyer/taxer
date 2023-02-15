@@ -11,16 +11,13 @@ from ....transactions.withdrawTransfer import WithdrawTransfer
 # https://hedron.pro/#/guide
 class HedronContract(Contract):
     __id = 'HDRN'
-    __address = '0x3819f64f282bf135d62168C1e513280dAF905e06'
-
-    @property
-    def address(self): return HedronContract.__address
 
     @property
     def web3Contract(self): return self.__web3Contract
 
     def __init__(self, contracts, etherscanApi):
-        self.__web3Contract = etherscanApi.getContract(HedronContract.__address)
+        super().__init__('0x3819f64f282bf135d62168C1e513280dAF905e06', None)
+        self.__web3Contract = etherscanApi.getContract(self.address)
 
     def processTransaction(self, address, id, year, transaction, erc20Transaction):
         if transaction['dateTime'].year != year:
