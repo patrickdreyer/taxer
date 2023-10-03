@@ -30,3 +30,6 @@ class EndStakeStrategy(BananaStrategy):
         yield self._book(transaction, [description, '',                   self.__accounts.equity, i.amount, i.unit,   i.baseCurrency.exchangeRate, i.baseCurrency.amount, '',     ''])
         # fee
         yield self._book(transaction, [description, self.__accounts.fees, f.account,              f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, '',     f.costCenter.minus()])
+
+        # interest                    description, amount,   currency, exchangeRate,                baseCurrencyAmount
+        self._interest(transaction, ['Staking',    i.amount, i.unit,   i.baseCurrency.exchangeRate, i.baseCurrency.amount])

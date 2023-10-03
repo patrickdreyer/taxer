@@ -75,6 +75,10 @@ class LiquidityPoolStrategy(BananaStrategy):
         # fee
         yield self._book(transaction, [description, self.__accounts.fees, f.account,              f.amount,  f.unit,   f.baseCurrency.exchangeRate,  f.baseCurrency.amount,  '',     f.costCenter.minus()])
 
+        # interest                    description,     amount,    currency, exchangeRate,                 baseCurrencyAmount
+        self._interest(transaction, ['Liquidity Pool', l0.amount, l0.unit,  l0.baseCurrency.exchangeRate, l0.baseCurrency.amount])
+        self._interest(transaction, ['Liquidity Pool', l1.amount, l1.unit,  l1.baseCurrency.exchangeRate, l1.baseCurrency.amount])
+
     def __transformRemoveLiquidity(self, transaction, a0, l0, a1, l1, f):
         LiquidityPoolStrategy.__log.debug("%s - Remove liquidity; %s, %s/%s", transaction.dateTime, transaction.poolId, a0, a1)
         description = f"Liquidität auflösen; {transaction.poolId}: {transaction.amount0.unit}/{transaction.amount1.unit}"
