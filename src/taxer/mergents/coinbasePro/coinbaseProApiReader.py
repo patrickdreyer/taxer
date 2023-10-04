@@ -29,6 +29,9 @@ class CoinbaseProApiReader(Reader):
         transfers = self.__api.getAllTransfers(profileId)
         transfers = (self.__transformTransfers(accounts, t) for t in iter(transfers))
         for transfer in transfers:
+            if transfer['dateTime'].year > year:
+                continue
+
             if transfer['type'] == 'withdraw':
                 if transfer['dateTime'].year != year:
                     continue
