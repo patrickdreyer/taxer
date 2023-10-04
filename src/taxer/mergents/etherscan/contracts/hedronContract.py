@@ -27,9 +27,9 @@ class HedronContract(Contract):
 
         if name == 'transfer':
             if transaction['from'] == address:
-                yield WithdrawTransfer(id, transaction['dateTime'], transaction['hash'], HedronContract.__amount(args['amount']), Ether.feeFromTransaction(transaction))
+                yield WithdrawTransfer(id, transaction['dateTime'], transaction['hash'], HedronContract.__amount(args['amount']), Ether.feeFromTransaction(transaction), address)
             elif transaction['to'] == address:
-                yield DepositTransfer(id, transaction['dateTime'], transaction['hash'], HedronContract.__amount(args['amount']), Ether.zero())
+                yield DepositTransfer(id, transaction['dateTime'], transaction['hash'], HedronContract.__amount(args['amount']), Ether.zero(), address)
 
         elif name == 'claimnative':
             # see mintNative as claimed tokens are given with the first minting
