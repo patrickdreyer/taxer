@@ -20,6 +20,9 @@ class EtherscanApiReader(Reader):
             transactions = self.__etherscanApi.getNormalTransactions(address)
             transactions = (self.__transformTransaction(t) for t in iter(transactions))
             for transaction in transactions:
+                if transaction['dateTime'].year > year:
+                    continue
+
                 if transaction['isError']:
                     if transaction['dateTime'].year == year:
                         yield Fee(id, transaction['dateTime'], transaction['hash'], Ether.feeFromTransaction(transaction))
