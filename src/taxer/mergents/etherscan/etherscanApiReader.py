@@ -42,7 +42,7 @@ class EtherscanApiReader(Reader):
                             yield DepositTransfer(id, transaction['dateTime'], transaction['hash'], Ether.amountFromTransaction(transaction), Ether.zero(), transaction['from'])
 
     def __transformTransaction(self, transaction):
-        transaction['dateTime'] = utc.localize(datetime.fromtimestamp(int(transaction['timeStamp'])))
+        transaction['dateTime'] = utc.localize(datetime.utcfromtimestamp(int(transaction['timeStamp'])))
         transaction['isError'] = transaction['isError'] != '0'
         return transaction
 
