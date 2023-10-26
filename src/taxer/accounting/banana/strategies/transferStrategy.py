@@ -101,7 +101,7 @@ class TransferStrategy(BananaStrategy):
             yield self._book(transaction,     [description, self.__accounts.equity, c.account, c.amount, c.unit,   c.baseCurrency.exchangeRate, c.baseCurrency.amount, '',     c.costCenter.minus()])
             if transaction.fee.amount > 0:
                 f = self._currency(transaction.fee, transaction)
-                yield self._book(transaction, [description, self.__accounts.fees,   c.account, f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, '',     c.costCenter.minus()])
+                yield self._book(transaction, [description, self.__accounts.fees,   f.account, f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, '',     c.costCenter.minus()])
         self.__accountedIds.add(transaction.id)
 
     def __transformDoubleTransfers(self, deposit, withdrawal):
