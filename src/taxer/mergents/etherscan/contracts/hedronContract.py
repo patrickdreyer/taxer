@@ -3,6 +3,7 @@ from decimal import Decimal
 from .contract import Contract
 from ..ether import Ether
 from ....transactions.currency import Currency
+from ....transactions.fee import Fee
 from ....transactions.depositTransfer import DepositTransfer
 from ....transactions.mint import Mint
 from ....transactions.withdrawTransfer import WithdrawTransfer
@@ -32,8 +33,8 @@ class HedronContract(Contract):
                 yield DepositTransfer(id, transaction['dateTime'], transaction['hash'], HedronContract.__amount(args['amount']), Ether.zero(), address)
 
         elif name == 'claimnative':
-            # see mintNative as claimed tokens are given with the first minting
-            return
+            yield Fee(id, transaction['dateTime'], transaction['hash'], Ether.feeFromTransaction(transaction))
+            # Process fee only as claimed tokens are given with the first minting, see mintnative
 
         elif name == 'mintnative':
             yield Mint(id, transaction['dateTime'], transaction['hash'], HedronContract.__amountFromTransaction(erc20Transaction), Ether.feeFromTransaction(transaction))
