@@ -40,40 +40,40 @@ class LiquidityPoolStrategy(BananaStrategy):
     def __transformCreateLiquidityPool(self, transaction, a0, l0, a1, l1, f):
         LiquidityPoolStrategy.__log.debug("%s - Provide liquidity; %s, %s/%s", transaction.dateTime, transaction.poolId, a0, a1)
         description = f"Liquidität bereit stellen; {transaction.poolId}: {transaction.amount0.unit}/{transaction.amount1.unit}"
-        # withdrawal0                  description, debit,                credit,     amount,    currency, exchangeRate,                 baseCurrencyAmount,     shares, costCenter1
-        yield self._book(transaction, [description, '',                   a0.account, a0.amount, a0.unit,  a0.baseCurrency.exchangeRate, a0.baseCurrency.amount, '',     a0.costCenter.minus()])
+        # withdrawal0                  description, debit,                credit,     amount,    currency, exchangeRate,                 baseCurrencyAmount,     shares
+        yield self._book(transaction, [description, '',                   a0.account, a0.amount, a0.unit,  a0.baseCurrency.exchangeRate, a0.baseCurrency.amount, ''])
         # liquidity0
-        yield self._book(transaction, [description, l0.account,           '',         l0.amount, l0.unit,  l0.baseCurrency.exchangeRate, a0.baseCurrency.amount, '',     l0.costCenter])
+        yield self._book(transaction, [description, l0.account,           '',         l0.amount, l0.unit,  l0.baseCurrency.exchangeRate, a0.baseCurrency.amount, ''])
         # withdrawal1
-        yield self._book(transaction, [description, '',                   a1.account, a1.amount, a1.unit,  a1.baseCurrency.exchangeRate, a1.baseCurrency.amount, '',     l1.costCenter.minus()])
+        yield self._book(transaction, [description, '',                   a1.account, a1.amount, a1.unit,  a1.baseCurrency.exchangeRate, a1.baseCurrency.amount, ''])
         # liquidity1
-        yield self._book(transaction, [description, l1.account,           '',         l1.amount, l1.unit,  l1.baseCurrency.exchangeRate, a1.baseCurrency.amount, '',     l1.costCenter])
+        yield self._book(transaction, [description, l1.account,           '',         l1.amount, l1.unit,  l1.baseCurrency.exchangeRate, a1.baseCurrency.amount, ''])
         # fee
-        yield self._book(transaction, [description, self.__accounts.fees, f.account,  f.amount,  f.unit,   f.baseCurrency.exchangeRate,  f.baseCurrency.amount,  '',     f.costCenter.minus()])
+        yield self._book(transaction, [description, self.__accounts.fees, f.account,  f.amount,  f.unit,   f.baseCurrency.exchangeRate,  f.baseCurrency.amount,  ''])
 
     def __transformAddLiquidity(self, transaction, a0, l0, a1, l1, f):
         LiquidityPoolStrategy.__log.debug("%s - Add liquidity; %s, %s/%s", transaction.dateTime, transaction.poolId, a0, a1)
         description = f"Liquidität erhöhen; {transaction.poolId}: {transaction.amount0.unit}/{transaction.amount1.unit}"
-        # withdrawal0                  description, debit,                credit,     amount,    currency, exchangeRate,                 baseCurrencyAmount,     shares, costCenter1
-        yield self._book(transaction, [description, '',                   a0.account, a0.amount, a0.unit,  a0.baseCurrency.exchangeRate, a0.baseCurrency.amount, '',     a0.costCenter.minus()])
+        # withdrawal0                  description, debit,                credit,     amount,    currency, exchangeRate,                 baseCurrencyAmount,     shares
+        yield self._book(transaction, [description, '',                   a0.account, a0.amount, a0.unit,  a0.baseCurrency.exchangeRate, a0.baseCurrency.amount, ''])
         # liquidity0
-        yield self._book(transaction, [description, l0.account,           '',         l0.amount, l0.unit,  l0.baseCurrency.exchangeRate, a0.baseCurrency.amount, '',     l0.costCenter])
+        yield self._book(transaction, [description, l0.account,           '',         l0.amount, l0.unit,  l0.baseCurrency.exchangeRate, a0.baseCurrency.amount, ''])
         # withdrawal1
-        yield self._book(transaction, [description, '',                   a1.account, a1.amount, a1.unit,  a1.baseCurrency.exchangeRate, a1.baseCurrency.amount, '',     l1.costCenter.minus()])
+        yield self._book(transaction, [description, '',                   a1.account, a1.amount, a1.unit,  a1.baseCurrency.exchangeRate, a1.baseCurrency.amount, ''])
         # liquidity1
-        yield self._book(transaction, [description, l1.account,           '',         l1.amount, l1.unit,  l1.baseCurrency.exchangeRate, a1.baseCurrency.amount, '',     l1.costCenter])
+        yield self._book(transaction, [description, l1.account,           '',         l1.amount, l1.unit,  l1.baseCurrency.exchangeRate, a1.baseCurrency.amount, ''])
         # fee
-        yield self._book(transaction, [description, self.__accounts.fees, f.account,  f.amount,  f.unit,   f.baseCurrency.exchangeRate,  f.baseCurrency.amount,  '',     f.costCenter.minus()])
+        yield self._book(transaction, [description, self.__accounts.fees, f.account,  f.amount,  f.unit,   f.baseCurrency.exchangeRate,  f.baseCurrency.amount,  ''])
 
     def __transformClaimLiquidityFees(self, transaction, a0, l0, a1, l1, f):
         LiquidityPoolStrategy.__log.debug("%s - Claim liquidity fees; %s, %s/%s", transaction.dateTime, transaction.poolId, a0, a1)
         description = f"Liquiditätsgebühren einziehen; {transaction.poolId}: {transaction.amount0.unit}/{transaction.amount1.unit}"
-        # amount0                      description, debit,                credit,                 amount,    currency, exchangeRate,                 baseCurrencyAmount,     shares, costCenter1
-        yield self._book(transaction, [description, a0.account,           self.__accounts.equity, a0.amount, a0.unit,  a0.baseCurrency.exchangeRate, a0.baseCurrency.amount, '',     a0.costCenter])
+        # amount0                      description, debit,                credit,                 amount,    currency, exchangeRate,                 baseCurrencyAmount,     shares
+        yield self._book(transaction, [description, a0.account,           self.__accounts.equity, a0.amount, a0.unit,  a0.baseCurrency.exchangeRate, a0.baseCurrency.amount, ''])
         # amount1
-        yield self._book(transaction, [description, a1.account,           self.__accounts.equity, a1.amount, a1.unit,  a1.baseCurrency.exchangeRate, a1.baseCurrency.amount, '',     a1.costCenter])
+        yield self._book(transaction, [description, a1.account,           self.__accounts.equity, a1.amount, a1.unit,  a1.baseCurrency.exchangeRate, a1.baseCurrency.amount, ''])
         # fee
-        yield self._book(transaction, [description, self.__accounts.fees, f.account,              f.amount,  f.unit,   f.baseCurrency.exchangeRate,  f.baseCurrency.amount,  '',     f.costCenter.minus()])
+        yield self._book(transaction, [description, self.__accounts.fees, f.account,              f.amount,  f.unit,   f.baseCurrency.exchangeRate,  f.baseCurrency.amount,  ''])
 
         # interest                    description,     amount,    currency, exchangeRate,                 baseCurrencyAmount
         self._interest(transaction, ['Liquidity Pool', l0.amount, l0.unit,  l0.baseCurrency.exchangeRate, l0.baseCurrency.amount])
@@ -82,13 +82,13 @@ class LiquidityPoolStrategy(BananaStrategy):
     def __transformRemoveLiquidity(self, transaction, a0, l0, a1, l1, f):
         LiquidityPoolStrategy.__log.debug("%s - Remove liquidity; %s, %s/%s", transaction.dateTime, transaction.poolId, a0, a1)
         description = f"Liquidität auflösen; {transaction.poolId}: {transaction.amount0.unit}/{transaction.amount1.unit}"
-        # deposit0                     description, debit,                credit,     amount,    currency, exchangeRate,                 baseCurrencyAmount,     shares, costCenter1
-        yield self._book(transaction, [description, a0.account,           '',         a0.amount, a0.unit,  a0.baseCurrency.exchangeRate, a0.baseCurrency.amount, '',     a0.costCenter])
+        # deposit0                     description, debit,                credit,     amount,    currency, exchangeRate,                 baseCurrencyAmount,     shares
+        yield self._book(transaction, [description, a0.account,           '',         a0.amount, a0.unit,  a0.baseCurrency.exchangeRate, a0.baseCurrency.amount, ''])
         # liquidity0
-        yield self._book(transaction, [description, '',                   l0.account, l0.amount, l0.unit,  l0.baseCurrency.exchangeRate, a0.baseCurrency.amount, '',     l0.costCenter.minus()])
+        yield self._book(transaction, [description, '',                   l0.account, l0.amount, l0.unit,  l0.baseCurrency.exchangeRate, a0.baseCurrency.amount, ''])
         # deposit1
-        yield self._book(transaction, [description, a1.account,           '',         a1.amount, a1.unit,  a1.baseCurrency.exchangeRate, a1.baseCurrency.amount, '',     l1.costCenter])
+        yield self._book(transaction, [description, a1.account,           '',         a1.amount, a1.unit,  a1.baseCurrency.exchangeRate, a1.baseCurrency.amount, ''])
         # liquidity1
-        yield self._book(transaction, [description, '',                   l1.account, l1.amount, l1.unit,  l1.baseCurrency.exchangeRate, a1.baseCurrency.amount, '',     l1.costCenter.minus()])
+        yield self._book(transaction, [description, '',                   l1.account, l1.amount, l1.unit,  l1.baseCurrency.exchangeRate, a1.baseCurrency.amount, ''])
         # fee
-        yield self._book(transaction, [description, self.__accounts.fees, f.account,  f.amount,  f.unit,   f.baseCurrency.exchangeRate,  f.baseCurrency.amount,  '',     f.costCenter.minus()])
+        yield self._book(transaction, [description, self.__accounts.fees, f.account,  f.amount,  f.unit,   f.baseCurrency.exchangeRate,  f.baseCurrency.amount,  ''])

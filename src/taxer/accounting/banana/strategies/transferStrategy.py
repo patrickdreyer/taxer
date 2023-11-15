@@ -97,13 +97,13 @@ class TransferStrategy(BananaStrategy):
         if isinstance(transaction, DepositTransfer):
             if c.isFiat:
                 TransferStrategy.__log.debug("%s - Deposit; %s, %s", transaction.dateTime, transaction.mergentId, c)
-                #                              description,  debit,     credit,                 amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
-                yield self._book(transaction, ['Einzahlung', c.account, self.__accounts.equity, c.amount, c.unit,   c.baseCurrency.exchangeRate, c.baseCurrency.amount, '',     c.costCenter])
+                #                              description,  debit,     credit,                 amount,   currency, exchangeRate,                baseCurrencyAmount,    shares
+                yield self._book(transaction, ['Einzahlung', c.account, self.__accounts.equity, c.amount, c.unit,   c.baseCurrency.exchangeRate, c.baseCurrency.amount, ''])
             else:
                 TransferStrategy.__log.warn("%s - Transfer; ???->%s, %s, id=%s, address=%s", transaction.dateTime, transaction.mergentId, transaction.amount, transaction.id, transaction.address)
                 description = 'Transfer ? -> {}'.format(transaction.mergentId)
-                #                              description, debit,     credit, amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
-                yield self._book(transaction, [description, c.account, '',     c.amount, c.unit,   c.baseCurrency.exchangeRate, c.baseCurrency.amount, '',     c.costCenter])
+                #                              description, debit,     credit, amount,   currency, exchangeRate,                baseCurrencyAmount,    shares
+                yield self._book(transaction, [description, c.account, '',     c.amount, c.unit,   c.baseCurrency.exchangeRate, c.baseCurrency.amount, ''])
         elif isinstance(transaction, WithdrawTransfer):
             if c.isFiat:
                 TransferStrategy.__log.debug("%s - Withdraw; %s, %s", transaction.dateTime, transaction.mergentId, c)
@@ -111,11 +111,11 @@ class TransferStrategy(BananaStrategy):
             else:
                 TransferStrategy.__log.warn("%s - Transfer; %s->???, %s, id=%s, address=%s", transaction.dateTime, transaction.mergentId, c, transaction.id, transaction.address)
                 description = 'Transfer {} -> ?'.format(transaction.mergentId)
-            #                                  description, debit,                  credit,    amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
-            yield self._book(transaction,     [description, self.__accounts.equity, c.account, c.amount, c.unit,   c.baseCurrency.exchangeRate, c.baseCurrency.amount, '',     c.costCenter.minus()])
+            #                                  description, debit,                  credit,    amount,   currency, exchangeRate,                baseCurrencyAmount,    shares
+            yield self._book(transaction,     [description, self.__accounts.equity, c.account, c.amount, c.unit,   c.baseCurrency.exchangeRate, c.baseCurrency.amount, ''])
             if transaction.fee.amount > 0:
                 f = self._currency(transaction.fee, transaction)
-                yield self._book(transaction, [description, self.__accounts.fees,   f.account, f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, '',     c.costCenter.minus()])
+                yield self._book(transaction, [description, self.__accounts.fees,   f.account, f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, ''])
         self.__accountedIds.add(transaction.id)
 
     def __transformDoubleTransfers(self, deposit, withdrawal):
@@ -125,15 +125,15 @@ class TransferStrategy(BananaStrategy):
         w = self._currency(withdrawal.amount, withdrawal)
         if withdrawal.fee.amount > 0 and deposit.fee.amount > 0:
             TransferStrategy.__log.warn("Double transfer fees; %s, %s - %s. %s", withdrawal.mergentId, withdrawal.fee, deposit.mergentId, deposit.fee)
-        # target                          description, deposit,              withdrawal, amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
-        yield self._book(deposit,        [description, d.account,            '',         d.amount, d.unit,   d.baseCurrency.exchangeRate, d.baseCurrency.amount, '',     d.costCenter])
+        # target                          description, deposit,              withdrawal, amount,   currency, exchangeRate,                baseCurrencyAmount,    shares
+        yield self._book(deposit,        [description, d.account,            '',         d.amount, d.unit,   d.baseCurrency.exchangeRate, d.baseCurrency.amount, ''])
         if deposit.fee.amount > 0:
             f = self._currency(deposit.fee, deposit)
-            yield self._book(withdrawal, [description, self.__accounts.fees, '',         f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, '',     f.costCenter.minus()])
+            yield self._book(withdrawal, [description, self.__accounts.fees, '',         f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, ''])
         # source
-        yield self._book(withdrawal,     [description, '',                   w.account,  w.amount, w.unit,   w.baseCurrency.exchangeRate, w.baseCurrency.amount, '',     w.costCenter.minus()])
+        yield self._book(withdrawal,     [description, '',                   w.account,  w.amount, w.unit,   w.baseCurrency.exchangeRate, w.baseCurrency.amount, ''])
         if withdrawal.fee.amount > 0:
             f = self._currency(withdrawal.fee, withdrawal)
-            yield self._book(withdrawal, [description, self.__accounts.fees, f.account,  f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, '',     f.costCenter.minus()])
+            yield self._book(withdrawal, [description, self.__accounts.fees, f.account,  f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, ''])
         self.__accountedIds.add(deposit.id)
         self.__accountedIds.add(withdrawal.id)

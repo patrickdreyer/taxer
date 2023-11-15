@@ -21,9 +21,9 @@ class SwapStrategy(BananaStrategy):
         st = self._currency(transaction.destinationAmount, transaction)
         f = self._currency(transaction.fee, transaction)
         SwapStrategy.__log.debug("%s - Swap; %s->%s", transaction.dateTime, transaction.sourceAmount, transaction.destinationAmount)
-        # swapTo,                      description, deposit,              withdrawal, amount,    currency, exchangeRate,                 baseCurrencyAmount,     shares, costCenter1
-        yield self._book(transaction, [description, st.account,           '',         st.amount, st.unit,  st.baseCurrency.exchangeRate, st.baseCurrency.amount, '',     st.costCenter])
+        # swapTo,                      description, deposit,              withdrawal, amount,    currency, exchangeRate,                 baseCurrencyAmount,     shares
+        yield self._book(transaction, [description, st.account,           '',         st.amount, st.unit,  st.baseCurrency.exchangeRate, st.baseCurrency.amount, ''])
         # swapFrom
-        yield self._book(transaction, [description, '',                   sf.account, sf.amount, sf.unit,  sf.baseCurrency.exchangeRate, sf.baseCurrency.amount, '',     sf.costCenter.minus()])
+        yield self._book(transaction, [description, '',                   sf.account, sf.amount, sf.unit,  sf.baseCurrency.exchangeRate, sf.baseCurrency.amount, ''])
         # fee
-        yield self._book(transaction, [description, self.__accounts.fees, f.account,  f.amount,  f.unit,   f.baseCurrency.exchangeRate,  f.baseCurrency.amount,  '',     f.costCenter.minus()])
+        yield self._book(transaction, [description, self.__accounts.fees, f.account,  f.amount,  f.unit,   f.baseCurrency.exchangeRate,  f.baseCurrency.amount,  ''])

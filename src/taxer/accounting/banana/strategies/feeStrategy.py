@@ -18,5 +18,5 @@ class FeeStrategy(BananaStrategy):
     def transform(self, transaction):
         FeeStrategy.__log.debug("%s - Fee; %s, %s", transaction.dateTime, transaction.mergentId, transaction.amount)
         c = self._currency(transaction.amount, transaction)
-        #                              description,     deposit,              withdrawal, amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
-        yield self._book(transaction, ['Gebühr', self.__accounts.fees, c.account,  c.amount, c.unit,   c.baseCurrency.exchangeRate, c.baseCurrency.amount, '',     c.costCenter.minus()])
+        #                              description,     deposit,              withdrawal, amount,   currency, exchangeRate,         baseCurrencyAmount,    shares
+        yield self._book(transaction, ['Gebühr', self.__accounts.fees, c.account,  c.amount, c.unit,   c.baseCurrency.exchangeRate, c.baseCurrency.amount, ''])
