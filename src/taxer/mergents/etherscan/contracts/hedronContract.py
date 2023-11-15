@@ -28,10 +28,16 @@ class HedronContract(Contract):
         (name, args) = Ether.decodeContractInput(self.__web3Contract, transaction['input'])
 
         if name == 'transfer':
-            if transaction['from'] == address:
-                yield WithdrawTransfer(id, transaction['dateTime'], transaction['hash'], self.amount(args['amount']), Ether.feeFromTransaction(transaction), address)
-            elif transaction['to'] == address:
-                yield DepositTransfer(id, transaction['dateTime'], transaction['hash'], self.amount(args['amount']), Ether.zero(), address)
+            recipientId  = self.getMergendIdByAddress(args['recipient'])
+            amount = self.amount(args['amount'])
+            if transaction['to'].lower() == self.address.lower():
+                yield WithdrawTransfer(id, transaction['dateTime'], transaction['hash'], amount, Ether.feeFromTransaction(transaction), transaction['from'])
+                if recipientId != None:
+                    yield DepositTransfer(recipientId, transaction['dateTime'], transaction['hash'], amount, Ether.zero(), args['recipient'])
+            elif transaction['from'].lower() == self.address.lower():
+                if recipientId != None:
+                    yield WithdrawTransfer(recipientId, transaction['dateTime'], transaction['hash'], amount, Ether.feeFromTransaction(transaction), args['recipient'])
+                yield DepositTransfer(id, transaction['dateTime'], transaction['hash'], amount, Ether.zero(), transaction['to'])
 
         elif name == 'claimnative':
             yield Fee(id, transaction['dateTime'], transaction['hash'], Ether.feeFromTransaction(transaction))
