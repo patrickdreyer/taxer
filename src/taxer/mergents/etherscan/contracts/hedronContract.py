@@ -12,6 +12,7 @@ from ....transactions.withdrawTransfer import WithdrawTransfer
 # https://hedron.pro/#/guide
 class HedronContract(Contract):
     __id = 'HDRN'
+    __divisor = 1000000000
 
     @property
     def web3Contract(self): return self.__web3Contract
@@ -43,8 +44,8 @@ class HedronContract(Contract):
             raise KeyError("Unknown token function; token='{}', functionName='{}'".format(HedronContract.__id, name))
 
     @staticmethod
-    def __amount(amount):
-        return Currency(HedronContract.__id, amount)
+    def __amount(value):
+        return Currency(HedronContract.__id, Decimal(value) / HedronContract.__divisor)
 
     @staticmethod
     def __amountFromTransaction(transaction):
