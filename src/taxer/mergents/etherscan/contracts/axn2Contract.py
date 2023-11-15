@@ -1,4 +1,5 @@
 from .contract import Contract
+from ....transactions.currency import Currency
 
 
 class Axn2Contract(Contract):
@@ -8,3 +9,6 @@ class Axn2Contract(Contract):
     def processTransaction(self, address, id, year, transaction, erc20Transaction):
         # we simply ignore any Axion transactions
         yield
+
+    def amount(self, value) -> Currency:
+        raise NotImplementedError('Axn2Contract.amount() not supported')

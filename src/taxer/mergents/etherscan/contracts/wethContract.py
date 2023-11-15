@@ -15,5 +15,5 @@ class WethContract(Contract):
     def processTransaction(self, address, id, year, transaction, erc20Transaction):
         raise NotImplementedError(f"Not implemented contact; id={WethContract.__id}")
 
-    def amount(self, value):
+    def amount(self, value) -> Currency:
         return Currency(WethContract.__id, Decimal(value) / WethContract.__divisor)

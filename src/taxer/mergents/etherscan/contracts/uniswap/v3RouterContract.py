@@ -1,5 +1,6 @@
 from ..contract import Contract
 from ...ether import Ether
+from .....transactions.currency import Currency
 from .....transactions.swap import Swap
 
 
@@ -28,6 +29,9 @@ class V3RouterContract(Contract):
             yield from self.__exactInput(address, id, transaction)
         else:
             raise KeyError(f"Unknown contract function; contract='{self.publicNameTag}', functionName='{name}'")
+
+    def amount(self, value) -> Currency:
+        raise NotImplementedError('V3RouterContract.amount() not supported')
 
     def __exactInput(self, address, id, transaction):
         swapping = Ether.amountFromTransaction(transaction)

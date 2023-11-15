@@ -29,5 +29,5 @@ class UsdcContract(Contract):
         else:
             raise KeyError("Unknown token function; token='{}', functionName='{}'".format(UsdcContract.__id, name))
 
-    def amount(self, value):
+    def amount(self, value) -> Currency:
         return Currency(UsdcContract.__id, Decimal(value) / UsdcContract.__divisor)

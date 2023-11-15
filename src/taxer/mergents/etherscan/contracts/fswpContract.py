@@ -1,4 +1,5 @@
 from .contract import Contract
+from ....transactions.currency import Currency
 
 
 class FswpContract(Contract):
@@ -8,3 +9,6 @@ class FswpContract(Contract):
     def processTransaction(self, address, id, year, transaction, erc20Transaction):
         # we simply ignore any Axion transactions
         yield
+
+    def amount(self, value) -> Currency:
+        raise NotImplementedError('FswpContract.amount() not supported')

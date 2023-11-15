@@ -29,9 +29,9 @@ class HedronContract(Contract):
 
         if name == 'transfer':
             if transaction['from'] == address:
-                yield WithdrawTransfer(id, transaction['dateTime'], transaction['hash'], HedronContract.__amount(args['amount']), Ether.feeFromTransaction(transaction), address)
+                yield WithdrawTransfer(id, transaction['dateTime'], transaction['hash'], self.amount(args['amount']), Ether.feeFromTransaction(transaction), address)
             elif transaction['to'] == address:
-                yield DepositTransfer(id, transaction['dateTime'], transaction['hash'], HedronContract.__amount(args['amount']), Ether.zero(), address)
+                yield DepositTransfer(id, transaction['dateTime'], transaction['hash'], self.amount(args['amount']), Ether.zero(), address)
 
         elif name == 'claimnative':
             yield Fee(id, transaction['dateTime'], transaction['hash'], Ether.feeFromTransaction(transaction))
@@ -43,8 +43,7 @@ class HedronContract(Contract):
         else:
             raise KeyError("Unknown token function; token='{}', functionName='{}'".format(HedronContract.__id, name))
 
-    @staticmethod
-    def __amount(value):
+    def amount(self, value) -> Currency:
         return Currency(HedronContract.__id, Decimal(value) / HedronContract.__divisor)
 
     @staticmethod

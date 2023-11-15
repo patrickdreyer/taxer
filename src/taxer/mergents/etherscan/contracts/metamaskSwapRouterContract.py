@@ -44,6 +44,9 @@ class MetamaskSwapRouterContract(Contract):
         else:
             raise KeyError(f"Unknown contract function; contract='{self.publicNameTag}', functionName='{name}'")
 
+    def amount(self, value) -> Currency:
+        raise NotImplementedError('MetamaskSwapRouterContract.amount() not supported')
+
     @staticmethod
     def __getFunction(functionName):
         try:

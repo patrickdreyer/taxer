@@ -1,3 +1,6 @@
+from ....transactions.currency import Currency
+
+
 class Contract:
     def __init__(self, address:str, publicNameTag:str, accounts:list[str], ):
         self.__address = address
@@ -20,3 +23,4 @@ class Contract:
         return self.__accounts[address];
     
     def processTransaction(self, id, year, transaction, erc20Transaction): pass
+    def amount(self, value) -> Currency: pass

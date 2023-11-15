@@ -71,6 +71,9 @@ class V3PositionsNftContract(Contract):
         else:
             raise KeyError(f"Unknown contract function; contract='{self.publicNameTag}', functionName='{name}'")
 
+    def amount(self, value) -> Currency:
+        raise NotImplementedError('V3PositionsNftContract.amount() not supported')
+
     def __mint(self, id, year, transaction, args):
         contract0 = self.__contracts.getByAddress(args['params'][0])
         contract1 = self.__contracts.getByAddress(args['params'][1])

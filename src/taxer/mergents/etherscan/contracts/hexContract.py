@@ -94,8 +94,7 @@ class HexContract(Contract):
         else:
             raise KeyError("Unknown token function; token='{}', functionName='{}'".format(HexContract.__id, name))
 
-    @staticmethod
-    def amount(value):
+    def amount(self, value) -> Currency:
         return Currency(HexContract.__id, Decimal(value) / HexContract.__divisor)
 
     @staticmethod
