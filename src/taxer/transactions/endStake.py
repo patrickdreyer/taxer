@@ -2,8 +2,8 @@ from .stake import Stake
 
 
 class EndStake(Stake):
-    def __init__(self, mergentId, dateTime, id, principal, interest, total, fee):
-        super().__init__(mergentId, dateTime, id, principal, fee)
+    def __init__(self, mergentId, dateTime, id, stakeId, principal, interest, total, fee):
+        super().__init__(mergentId, dateTime, id, stakeId, principal, fee)
         self.__interest = interest
         self.__total = total
 

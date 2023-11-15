@@ -16,11 +16,11 @@ class StartStakeStrategy(BananaStrategy):
         return isinstance(transaction, StartStake)
 
     def transform(self, transaction):
-        description = '{} Stake; Start'.format(transaction.amount.unit)
+        description = '{} Stake; Start {}'.format(transaction.amount.unit, transaction.stakeId)
         w = self._currency(transaction.amount, transaction)
         s = self._currency(transaction.amount, self.__accounts.staked, transaction.dateTime)
         f = self._currency(transaction.fee, transaction)
-        StartStakeStrategy.__log.debug("%s - Stake start; %s", transaction.dateTime, transaction.amount)
+        StartStakeStrategy.__log.debug("%s - Stake start; %s, %s", transaction.stakeId, transaction.dateTime, transaction.amount)
         # withdrawal                   description, deposit,              withdrawal, amount,   currency, exchangeRate,                baseCurrencyAmount,    shares
         yield self._book(transaction, [description, '',                   w.account,  w.amount, w.unit,   w.baseCurrency.exchangeRate, w.baseCurrency.amount, ''])
         # stake

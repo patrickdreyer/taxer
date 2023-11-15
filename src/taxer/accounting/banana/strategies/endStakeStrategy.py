@@ -16,12 +16,12 @@ class EndStakeStrategy(BananaStrategy):
         return isinstance(transaction, EndStake)
 
     def transform(self, transaction):
-        description = '{} Stake; End'.format(transaction.amount.unit)
+        description = '{} Stake; End {}'.format(transaction.amount.unit, transaction.stakeId)
         u = self._currency(transaction.amount, self.__accounts.staked, transaction.dateTime)
         d = self._currency(transaction.total, transaction)
         i = self._currency(transaction.interest, transaction)
         f = self._currency(transaction.fee, transaction)
-        EndStakeStrategy.__log.debug("%s - Stake end; %s", transaction.dateTime, transaction.amount)
+        EndStakeStrategy.__log.debug("%s - Stake end; %s, %s", transaction.stakeId, transaction.dateTime, transaction.amount)
         # deposit                      description, deposit,              withdrawal,             amount,   currency, exchangeRate,                baseCurrencyAmount,    shares
         yield self._book(transaction, [description, d.account,            '',                     d.amount, d.unit,   d.baseCurrency.exchangeRate, d.baseCurrency.amount, ''])
         # unstake
