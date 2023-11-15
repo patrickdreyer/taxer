@@ -16,8 +16,8 @@ class HedronContract(Contract):
     @property
     def web3Contract(self): return self.__web3Contract
 
-    def __init__(self, contracts, etherscanApi):
-        super().__init__('0x3819f64f282bf135d62168C1e513280dAF905e06', None)
+    def __init__(self, contracts, accounts:list[str], etherscanApi):
+        super().__init__('0x3819f64f282bf135d62168C1e513280dAF905e06', None, accounts)
         self.__web3Contract = etherscanApi.getContract(self.address)
 
     def processTransaction(self, address, id, year, transaction, erc20Transaction):

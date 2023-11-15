@@ -10,8 +10,8 @@ from ....transactions.swap import Swap
 class MetamaskSwapRouterContract(Contract):
     __feeAddress = "0x11ededebf63bef0ea2d2d071bdf88f71543ec6fb"
 
-    def __init__(self, contracts, etherscanApi):
-        super().__init__('0x881D40237659C251811CEC9c364ef91dC08D300C', 'Metamask: Swap Router')
+    def __init__(self, contracts, accounts:list[str], etherscanApi):
+        super().__init__('0x881D40237659C251811CEC9c364ef91dC08D300C', 'Metamask: Swap Router', accounts)
         self.__etherscanApi = etherscanApi
 
     def processTransaction(self, address, id, year, transaction, erc20Transaction):

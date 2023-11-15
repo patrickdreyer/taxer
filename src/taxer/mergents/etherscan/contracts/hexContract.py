@@ -4,11 +4,13 @@ from decimal import Decimal
 from .contract import Contract
 from ..ether import Ether
 from ....transactions.currency import Currency
+from ....transactions.depositTransfer import DepositTransfer
 from ....transactions.enterLobby import EnterLobby
 from ....transactions.endStake import EndStake
 from ....transactions.exitLobby import ExitLobby
 from ....transactions.payment import Payment
 from ....transactions.startStake import StartStake
+from ....transactions.withdrawTransfer import WithdrawTransfer
 
 
 class HexContract(Contract):
@@ -26,8 +28,8 @@ class HexContract(Contract):
     @property
     def functions(self): return self.__web3Contract.functions
 
-    def __init__(self, contracts, etherscanApi):
-        super().__init__('0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39', None)
+    def __init__(self, contracts, accounts:list[str], etherscanApi):
+        super().__init__('0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39', None, accounts)
         self.__contracts = contracts
         self.__etherscanApi = etherscanApi
         self.__web3Contract = etherscanApi.getContract(self.address)
@@ -78,8 +80,16 @@ class HexContract(Contract):
 
         elif name == 'transfer':
             if transaction['dateTime'].year == year:
-                publicNameTag = self.__contracts.getPublicNameTagByAddress(args['recipient'])
-                yield Payment(id, transaction['dateTime'], transaction['hash'], Ether.zero(), Ether.feeFromTransaction(transaction), publicNameTag)
+                recipientId  = self.getMergendIdByAddress(args['recipient'])
+                amount = self.amount(args['amount'])
+                if transaction['to'].lower() == self.address.lower():
+                    yield WithdrawTransfer(id, transaction['dateTime'], transaction['hash'], amount, Ether.feeFromTransaction(transaction), transaction['from'])
+                    if recipientId != None:
+                        yield DepositTransfer(recipientId, transaction['dateTime'], transaction['hash'], amount, Ether.zero(), args['recipient'])
+                elif transaction['from'].lower() == self.address.lower():
+                    if recipientId != None:
+                        yield WithdrawTransfer(recipientId, transaction['dateTime'], transaction['hash'], amount, Ether.feeFromTransaction(transaction), args['recipient'])
+                    yield DepositTransfer(id, transaction['dateTime'], transaction['hash'], amount, Ether.zero(), transaction['to'])
 
         else:
             raise KeyError("Unknown token function; token='{}', functionName='{}'".format(HexContract.__id, name))

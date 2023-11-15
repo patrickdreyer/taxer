@@ -18,8 +18,8 @@ class V3PositionsNftContract(Contract):
     @property
     def web3Contract(self): return self.__web3Contract
 
-    def __init__(self, contracts, etherscanApi):
-        super().__init__('0xC36442b4a4522E871399CD717aBDD847Ab11FE88', 'Uniswap V3: Positions NFT')
+    def __init__(self, contracts, accounts:list[str], etherscanApi):
+        super().__init__('0xC36442b4a4522E871399CD717aBDD847Ab11FE88', 'Uniswap V3: Positions NFT', accounts)
         self.__etherscanApi = etherscanApi
         self.__contracts = contracts
         self.__pools = V3Pools()

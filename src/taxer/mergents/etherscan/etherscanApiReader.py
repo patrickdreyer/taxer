@@ -10,7 +10,7 @@ from ...transactions.withdrawTransfer import WithdrawTransfer
 
 class EtherscanApiReader(Reader):
     def __init__(self, accounts:list[str], etherscanApi, contracts):
-        self.__accounts = {k.lower():v for k,v in accounts.items()}
+        self.__accounts = accounts
         self.__etherscanApi = etherscanApi
         self.__contracts = contracts
 

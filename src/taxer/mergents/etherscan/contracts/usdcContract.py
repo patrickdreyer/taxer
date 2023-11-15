@@ -11,8 +11,8 @@ class UsdcContract(Contract):
     __id = 'USDC'
     __divisor = 1000000
 
-    def __init__(self, contracts, etherscanApi):
-        super().__init__('0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', None)
+    def __init__(self, contracts, accounts:list[str], etherscanApi):
+        super().__init__('0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', None, accounts)
 
     def processTransaction(self, address, id, year, transaction, erc20Transaction):
         if transaction['dateTime'].year != year:
