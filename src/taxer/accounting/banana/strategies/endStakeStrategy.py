@@ -22,14 +22,14 @@ class EndStakeStrategy(BananaStrategy):
         i = self._currency(transaction.interest, transaction)
         f = self._currency(transaction.fee, transaction)
         EndStakeStrategy.__log.debug("%s - Stake end; %s", transaction.dateTime, transaction.amount)
-        # deposit                      description, deposit,              withdrawal,             amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
-        yield self._book(transaction, [description, d.account,            '',                     d.amount, d.unit,   d.baseCurrency.exchangeRate, d.baseCurrency.amount, '',     d.costCenter])
+        # deposit                      description, deposit,              withdrawal,             amount,   currency, exchangeRate,                baseCurrencyAmount,    shares
+        yield self._book(transaction, [description, d.account,            '',                     d.amount, d.unit,   d.baseCurrency.exchangeRate, d.baseCurrency.amount, ''])
         # unstake
-        yield self._book(transaction, [description, '',                   u.account,              u.amount, u.unit,   u.baseCurrency.exchangeRate, u.baseCurrency.amount, '',     u.costCenter.minus()])
+        yield self._book(transaction, [description, '',                   u.account,              u.amount, u.unit,   u.baseCurrency.exchangeRate, u.baseCurrency.amount, ''])
         # interest
-        yield self._book(transaction, [description, '',                   self.__accounts.equity, i.amount, i.unit,   i.baseCurrency.exchangeRate, i.baseCurrency.amount, '',     ''])
+        yield self._book(transaction, [description, '',                   self.__accounts.equity, i.amount, i.unit,   i.baseCurrency.exchangeRate, i.baseCurrency.amount, ''])
         # fee
-        yield self._book(transaction, [description, self.__accounts.fees, f.account,              f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, '',     f.costCenter.minus()])
+        yield self._book(transaction, [description, self.__accounts.fees, f.account,              f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, ''])
 
         # interest                    description, amount,   currency, exchangeRate,                baseCurrencyAmount
         self._interest(transaction, ['Staking',    i.amount, i.unit,   i.baseCurrency.exchangeRate, i.baseCurrency.amount])

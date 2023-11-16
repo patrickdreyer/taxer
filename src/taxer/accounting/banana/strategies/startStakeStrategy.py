@@ -21,9 +21,9 @@ class StartStakeStrategy(BananaStrategy):
         s = self._currency(transaction.amount, self.__accounts.staked, transaction.dateTime)
         f = self._currency(transaction.fee, transaction)
         StartStakeStrategy.__log.debug("%s - Stake start; %s", transaction.dateTime, transaction.amount)
-        # withdrawal                   description, deposit,              withdrawal, amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
-        yield self._book(transaction, [description, '',                   w.account,  w.amount, w.unit,   w.baseCurrency.exchangeRate, w.baseCurrency.amount, '',     w.costCenter.minus()])
+        # withdrawal                   description, deposit,              withdrawal, amount,   currency, exchangeRate,                baseCurrencyAmount,    shares
+        yield self._book(transaction, [description, '',                   w.account,  w.amount, w.unit,   w.baseCurrency.exchangeRate, w.baseCurrency.amount, ''])
         # stake
-        yield self._book(transaction, [description, s.account,            '',         s.amount, s.unit,   s.baseCurrency.exchangeRate, s.baseCurrency.amount, '',     s.costCenter])
+        yield self._book(transaction, [description, s.account,            '',         s.amount, s.unit,   s.baseCurrency.exchangeRate, s.baseCurrency.amount, ''])
         # fee
-        yield self._book(transaction, [description, self.__accounts.fees, f.account,  f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, '',     f.costCenter.minus()])
+        yield self._book(transaction, [description, self.__accounts.fees, f.account,  f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, ''])

@@ -20,9 +20,9 @@ class MintStrategy(BananaStrategy):
         c = self._currency(transaction.amount, transaction)
         f = self._currency(transaction.fee, transaction)
         MintStrategy.__log.debug("%s - Mint; %s", transaction.dateTime, transaction.amount)
-        # deposit                      description, deposit,              withdrawal,             amount,   currency, exchangeRate,                baseCurrencyAmount,    shares, costCenter1
-        yield self._book(transaction, [description, c.account,            '',                     c.amount, c.unit,   c.baseCurrency.exchangeRate, c.baseCurrency.amount, '',     c.costCenter])
+        # deposit                      description, deposit,              withdrawal,             amount,   currency, exchangeRate,                baseCurrencyAmount,    shares
+        yield self._book(transaction, [description, c.account,            '',                     c.amount, c.unit,   c.baseCurrency.exchangeRate, c.baseCurrency.amount, ''])
         # claim
-        yield self._book(transaction, [description, '',                   self.__accounts.equity, c.amount, c.unit,   c.baseCurrency.exchangeRate, c.baseCurrency.amount, '',     ''])
+        yield self._book(transaction, [description, '',                   self.__accounts.equity, c.amount, c.unit,   c.baseCurrency.exchangeRate, c.baseCurrency.amount, ''])
         # fee
-        yield self._book(transaction, [description, self.__accounts.fees, f.account,              f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, '',     f.costCenter.minus()])
+        yield self._book(transaction, [description, self.__accounts.fees, f.account,              f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, ''])

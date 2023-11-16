@@ -32,7 +32,7 @@ class BananaAccounting(Accounting):
         bookings = sorted(bookings, key=lambda b: b[0])
         with open(outputFilePath, 'w') as file:
             writer = csv.writer(file, dialect='unix')
-            writer.writerow(['Datum', 'Beleg', 'Beschreibung', 'KtSoll', 'KtHaben', 'Betr.Währung', 'Währung', 'Wechselkurs', 'Betrag CHF', 'Anteile', 'KS1', 'Bemerkungen'])
+            writer.writerow(['Datum', 'Beleg', 'Beschreibung', 'KtSoll', 'KtHaben', 'Betr.Währung', 'Währung', 'Wechselkurs', 'Betrag CHF', 'Anteile', 'Bemerkungen'])
             writer.writerows(booking[1] for booking in bookings)
 
     def __transform(self, transactions):

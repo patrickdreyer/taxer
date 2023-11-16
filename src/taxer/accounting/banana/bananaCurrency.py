@@ -2,7 +2,6 @@ from ...container import Container
 from ...currencyConverters.currencyConverterFactory import CurrencyConverterFactory
 from ...transactions.currency import Currency
 from ..baseCurrency import BaseCurrency
-from ..costCenter import CostCenter
 
 
 class BananaCurrency(Currency):
@@ -13,7 +12,6 @@ class BananaCurrency(Currency):
             super().__init__(currency.unit, currency.amountRaw)
             self.__account = container['banana']['accounts'].get(currency.unit, mergentId)
             self.__baseCurrency = BaseCurrency(container, currency, dateTime)
-            self.__costCenter = CostCenter(mergentId, currency)
             self.__isFiat = self.unit in container['config']['fiat']
 
     @property
@@ -23,10 +21,6 @@ class BananaCurrency(Currency):
     @property
     def baseCurrency(self):
         return self.__baseCurrency
-
-    @property
-    def costCenter(self):
-        return self.__costCenter
 
     @property
     def isFiat(self):
