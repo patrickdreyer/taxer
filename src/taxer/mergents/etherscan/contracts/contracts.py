@@ -5,14 +5,15 @@ from ....pluginLoader import PluginLoader
 
 
 class Contracts(dict):
-    def __init__(self, etherscanApi):
+    def __init__(self, accounts:list[str], etherscanApi):
         self.__log = logging.getLogger('%s.%s' % (self.__class__.__module__, self.__class__.__name__))
         self.__invalidAddresses = []
+        self.__accounts = accounts
         self.__etherscanApi = etherscanApi
 
     def initialize(self):
         path = os.path.dirname(__file__)
-        contracts = PluginLoader.loadFromFiles(path, __package__, '**/*Contract.py', lambda clss: clss(self, self.__etherscanApi))
+        contracts = PluginLoader.loadFromFiles(path, __package__, '**/*Contract.py', lambda clss: clss(self, self.__accounts, self.__etherscanApi))
         for contract in contracts:
             self[contract.address.lower()] = contract
         return self

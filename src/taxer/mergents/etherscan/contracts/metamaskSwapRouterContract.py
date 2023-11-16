@@ -10,8 +10,8 @@ from ....transactions.swap import Swap
 class MetamaskSwapRouterContract(Contract):
     __feeAddress = "0x11ededebf63bef0ea2d2d071bdf88f71543ec6fb"
 
-    def __init__(self, contracts, etherscanApi):
-        super().__init__('0x881D40237659C251811CEC9c364ef91dC08D300C', 'Metamask: Swap Router')
+    def __init__(self, contracts, accounts:list[str], etherscanApi):
+        super().__init__('0x881D40237659C251811CEC9c364ef91dC08D300C', 'Metamask: Swap Router', accounts)
         self.__etherscanApi = etherscanApi
 
     def processTransaction(self, address, id, year, transaction, erc20Transaction):
@@ -43,6 +43,12 @@ class MetamaskSwapRouterContract(Contract):
                 raise Exception(f"Unknown swapping; contract='{self.publicNameTag}'")
         else:
             raise KeyError(f"Unknown contract function; contract='{self.publicNameTag}', functionName='{name}'")
+
+    def processErc20Transfer(self, address, id, year, erc20Transaction):
+        raise NotImplementedError('Metamask Swap Router Erc20 transfers not implemented')
+
+    def amount(self, value) -> Currency:
+        raise NotImplementedError('MetamaskSwapRouterContract.amount() not supported')
 
     @staticmethod
     def __getFunction(functionName):

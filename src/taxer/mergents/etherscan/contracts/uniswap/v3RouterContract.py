@@ -1,5 +1,6 @@
 from ..contract import Contract
 from ...ether import Ether
+from .....transactions.currency import Currency
 from .....transactions.swap import Swap
 
 
@@ -7,8 +8,8 @@ class V3RouterContract(Contract):
     @property
     def web3Contract(self): return self.__web3Contract
 
-    def __init__(self, contracts, etherscanApi):
-        super().__init__('0xE592427A0AEce92De3Edee1F18E0157C05861564', 'Uniswap V3: Router')
+    def __init__(self, contracts, accounts:list[str], etherscanApi):
+        super().__init__('0xE592427A0AEce92De3Edee1F18E0157C05861564', 'Uniswap V3: Router', accounts)
         self.__etherscanApi = etherscanApi
         self.__contracts = contracts
         self.__web3Contract = etherscanApi.getContract(self.address)
@@ -28,6 +29,9 @@ class V3RouterContract(Contract):
             yield from self.__exactInput(address, id, transaction)
         else:
             raise KeyError(f"Unknown contract function; contract='{self.publicNameTag}', functionName='{name}'")
+
+    def amount(self, value) -> Currency:
+        raise NotImplementedError('V3RouterContract.amount() not supported')
 
     def __exactInput(self, address, id, transaction):
         swapping = Ether.amountFromTransaction(transaction)

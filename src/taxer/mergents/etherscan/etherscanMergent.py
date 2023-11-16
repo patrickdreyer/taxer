@@ -11,6 +11,7 @@ class EtherscanMergent(Mergent):
         self.__config = config
 
     def createReaders(self):
+        accounts = {k.lower():v for k,v in self.__config['accounts'].items()}
         etherscanApi = EtherscanApi(self.__config['url'], self.__config['keyToken'], self.__container['config']['cache'])
-        contracts = Contracts(etherscanApi).initialize()
-        yield EtherscanApiReader(self.__config['accounts'], etherscanApi, contracts)
+        contracts = Contracts(accounts, etherscanApi).initialize()
+        yield EtherscanApiReader(accounts, etherscanApi, contracts)

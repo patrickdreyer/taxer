@@ -21,9 +21,9 @@ class LiquidityPoolStrategy(BananaStrategy):
 
     def transform(self, transaction):
         a0 = self._currency(transaction.amount0, transaction)
-        l0 = self._currency(transaction.amount0, self.__accounts.liquidity, transaction.dateTime)
+        l0 = self._currency(transaction.amount0Wrapped, self.__accounts.liquidity, transaction.dateTime)
         a1 = self._currency(transaction.amount1, transaction)
-        l1 = self._currency(transaction.amount1, self.__accounts.liquidity, transaction.dateTime)
+        l1 = self._currency(transaction.amount1Wrapped, self.__accounts.liquidity, transaction.dateTime)
         f = self._currency(transaction.fee, transaction)
         if isinstance(transaction, CreateLiquidityPool):
             yield from self.__transformCreateLiquidityPool(transaction, a0, l0, a1, l1, f)
