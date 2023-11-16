@@ -60,7 +60,7 @@ class HexContract(Contract):
                 'startDate': transaction['dateTime'].date()
             }
             if transaction['dateTime'].year == year:
-                yield StartStake(id, transaction['dateTime'], transaction['hash'], HexContract.__amount(erc20Transaction), Ether.feeFromTransaction(transaction))
+                yield StartStake(id, transaction['dateTime'], transaction['hash'], stakeId, HexContract.__amount(erc20Transaction), Ether.feeFromTransaction(transaction))
 
         elif name == 'stakeend':
             if transaction['dateTime'].year == year:
@@ -71,7 +71,7 @@ class HexContract(Contract):
                 tokenAmountStaked = self.__stakes[stakeId]['amount']
                 tokenAmountUnstaked = HexContract.__amount(erc20Transaction)
                 tokenInterest = tokenAmountUnstaked - tokenAmountStaked
-                yield EndStake(id, transaction['dateTime'], transaction['hash'], tokenAmountStaked, tokenInterest, tokenAmountUnstaked, Ether.feeFromTransaction(transaction))
+                yield EndStake(id, transaction['dateTime'], transaction['hash'], stakeId, tokenAmountStaked, tokenInterest, tokenAmountUnstaked, Ether.feeFromTransaction(transaction))
 
         elif name == 'approve':
             if transaction['dateTime'].year == year:
