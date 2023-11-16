@@ -41,9 +41,17 @@ class EtherscanApiReader(Reader):
                         if transaction['dateTime'].year == year:
                             yield DepositTransfer(id, transaction['dateTime'], transaction['hash'], Ether.amountFromTransaction(transaction), Ether.zero(), transaction['from'])
 
+            for erc20Transaction in [self.__transformTransaction(t) for t in erc20Transactions if not 'processed' in t]:
+                if erc20Transaction['dateTime'].year > year:
+                    continue
+                contract = self.__contracts.getByAddress(erc20Transaction['contractAddress'])
+                if contract == None:
+                    continue
+                yield from contract.processErc20Transfer(address, id, year, erc20Transaction)
+
     def __transformTransaction(self, transaction):
         transaction['dateTime'] = utc.localize(datetime.utcfromtimestamp(int(transaction['timeStamp'])))
-        transaction['isError'] = transaction['isError'] != '0'
+        transaction['isError'] = 'isError' in transaction and transaction['isError'] != '0'
         return transaction
 
     def __getContractByTransaction(self, transaction):
@@ -56,4 +64,8 @@ class EtherscanApiReader(Reader):
     @staticmethod
     def __getErc20Transaction(transactions, hash):
         transaction = [t for t in transactions if t['hash'] == hash]
-        return transaction[0] if len(transaction) > 0 else None
+        if len(transaction) == 0:
+            return None
+        transaction = transaction[0]
+        transaction['processed'] = True
+        return transaction

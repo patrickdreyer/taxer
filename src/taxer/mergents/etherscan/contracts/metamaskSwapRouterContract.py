@@ -44,6 +44,9 @@ class MetamaskSwapRouterContract(Contract):
         else:
             raise KeyError(f"Unknown contract function; contract='{self.publicNameTag}', functionName='{name}'")
 
+    def processErc20Transfer(self, address, id, year, erc20Transaction):
+        raise NotImplementedError('Metamask Swap Router Erc20 transfers not implemented')
+
     def amount(self, value) -> Currency:
         raise NotImplementedError('MetamaskSwapRouterContract.amount() not supported')
 

@@ -10,5 +10,9 @@ class Axn2Contract(Contract):
         # we simply ignore any Axion transactions
         yield
 
+    def processErc20Transfer(self, address, id, year, erc20Transaction):
+        # we simply ignore any Axion transactions
+        yield
+
     def amount(self, value) -> Currency:
         raise NotImplementedError('Axn2Contract.amount() not supported')
