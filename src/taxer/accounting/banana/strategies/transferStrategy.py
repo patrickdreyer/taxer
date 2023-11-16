@@ -16,6 +16,7 @@ class TransferStrategy(BananaStrategy):
     def __init__(self, container:Container):
         super(TransferStrategy, self).__init__(container)
         self.__accounts = container['banana']['accounts']
+        self.__manualTransfers = container['config']['transfers']
         precision = Decimal(container['banana']['transferPrecision'])
         self.__minPrecision = 1 - precision
         self.__maxPrecision = 1 + precision
@@ -38,14 +39,14 @@ class TransferStrategy(BananaStrategy):
 
                 if isinstance(transfer, DepositTransfer):
                     nonAccountedPastWithdraws = [t for t in self.__transfers if self.__nonAccounted(WithdrawTransfer, transfer.dateTime - timedelta(days=1), transfer.dateTime + timedelta(hours=1), t)]
-                    matches = [w for w in nonAccountedPastWithdraws if self.__matchingTransfers(w, transfer)]
+                    matches = [withdrawal for withdrawal in nonAccountedPastWithdraws if self.__matchingTransfers(withdrawal, transfer)]
                     if len(matches) == 0:
                         yield from self.__transformSingleTransfer(transfer)
                     else:
                         yield from self.__transformDoubleTransfers(transfer, matches[0])
                 elif isinstance(transfer, WithdrawTransfer):
                     nonAccountedFutureDeposits = [t for t in self.__transfers if self.__nonAccounted(DepositTransfer, transfer.dateTime - timedelta(hours=1), transfer.dateTime + timedelta(days=1), t)]
-                    matches = [deposit for deposit in nonAccountedFutureDeposits if self.__matchingTransfers(deposit, transfer)]
+                    matches = [deposit for deposit in nonAccountedFutureDeposits if self.__matchingTransfers(transfer, deposit)]
                     if len(matches) == 0:
                         yield from self.__transformSingleTransfer(transfer)
                     else:
@@ -67,6 +68,8 @@ class TransferStrategy(BananaStrategy):
                 and earlierstDateTime <= transfer.dateTime and transfer.dateTime <= latestDateTime
 
     def __matchingTransfers(self, withdrawal, deposit):
+        if self.__isManualTransfer(withdrawal, deposit):
+            return True
         if withdrawal.mergentId == deposit.mergentId:
             return False
         depositTotal = deposit.amount + deposit.fee
@@ -76,6 +79,17 @@ class TransferStrategy(BananaStrategy):
             return False
         if max <= withdrawal.amount.amount:
             return False
+        return True
+
+    def __isManualTransfer(self, withdrawal, deposit):
+        fromTransfer = [self.__manualTransfers[key] for key in self.__manualTransfers if self.__manualTransfers[key]['from']['transaction'] == withdrawal.id]
+        if not fromTransfer:
+            return False
+        fromTransfer = fromTransfer[0]['from']
+        toTransfer = [self.__manualTransfers[key] for key in self.__manualTransfers if self.__manualTransfers[key]['to']['transaction'] == deposit.id]
+        if not toTransfer:
+            return False
+        toTransfer = toTransfer[0]['to']
         return True
 
     def __transformSingleTransfer(self, transaction):
