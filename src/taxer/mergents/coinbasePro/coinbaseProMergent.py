@@ -1,4 +1,3 @@
-from ...container import Container
 from ..mergent import Mergent
 from .coinbaseProApi import CoinbaseProApi
 from .coinbaseProApiAuth import CoinbaseProApiAuth
@@ -6,7 +5,7 @@ from .coinbaseProApiReader import CoinbaseProApiReader
 
 
 class CoinbaseProMergent(Mergent):
-    def __init__(self, container:Container, config):
+    def __init__(self, config):
         self.__config = config
 
     def createReaders(self):

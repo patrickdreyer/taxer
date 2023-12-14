@@ -1,8 +1,8 @@
-from ..container import Container
+from ..container import container
 
 
 class BaseCurrency:
-    def __init__(self, container:Container, currency, dateTime):
+    def __init__(self, currency, dateTime):
         self.__exchangeRate = container['currencyConverters'].exchangeRate(currency.unit, dateTime.date())
         self.__amount = round(currency.amount * self.__exchangeRate, 16)
 

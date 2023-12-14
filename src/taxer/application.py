@@ -2,8 +2,8 @@ import argparse
 import json
 import logging
 
+from .container import container
 from .accounting.accountingfactory import AccountingFactory
-from .container import Container
 from .currencyConverters.currencyConverterFactory import CurrencyConverterFactory
 from .mergents.mergentFactory import MergentFactory
 from .processors.processorFactory import ProcessorFactory
@@ -17,19 +17,18 @@ class Application:
         self.__initializeLogging()
 
         Application.__log.info('BEGIN')
-        self.__container = Container()
-        self.__container['config'] = self.__parseArguments()
-        self.__container['config'] = self.__container['config'] | self.__readConfig()
-        self.__container['processors'] = ProcessorFactory.create(self.__container)
-        self.__container['mergents'] = MergentFactory.create(self.__container)
-        self.__container['transformers'] = TransformerFactory.create(self.__container)
-        self.__container['currencyConverters'] = CurrencyConverterFactory.create(self.__container).load()
-        self.__container['accountings'] = AccountingFactory.create(self.__container)
-        self.__container['mergentReaders'] = lambda container: list(container['mergents'].createReaders())
+        container['config'] = self.__parseArguments()
+        container['config'] = container['config'] | self.__readConfig()
+        container['processors'] = ProcessorFactory.create()
+        container['mergents'] = MergentFactory.create()
+        container['transformers'] = TransformerFactory.create()
+        container['currencyConverters'] = CurrencyConverterFactory.create().load()
+        container['accountings'] = AccountingFactory.create()
+        container['mergentReaders'] = lambda container: list(container['mergents'].createReaders())
 
         self.__process()
 
-        self.__container['currencyConverters'].store()
+        container['currencyConverters'].store()
         Application.__log.info('END')
 
     def __initializeLogging(self):
@@ -57,10 +56,10 @@ class Application:
         return vars(namespace)
 
     def __readConfig(self) -> any:
-        with open(self.__container['config']['config'], 'r') as file:
+        with open(container['config']['config'], 'r') as file:
             return json.load(file)
 
     def __process(self):
-        year = int(self.__container['config']['year'])
-        for processor in self.__container['processors']:
+        year = int(container['config']['year'])
+        for processor in container['processors']:
             processor.process(year)
