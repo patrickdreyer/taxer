@@ -1,16 +1,13 @@
-from ..container import Container
+from ..container import container
 from ..pluginLoader import PluginLoader
 
 
 class CurrencyConverterFactory:
     @staticmethod
-    def create(container:Container):
-        ret = CurrencyConverterFactory(container)
+    def create():
+        ret = CurrencyConverterFactory()
         ret.__createConverters()
         return ret
-
-    def __init__(self, container:Container):
-        self.__container = container
 
     def load(self):
         for converter in self.__converters.values():
@@ -30,5 +27,5 @@ class CurrencyConverterFactory:
 
     def __createConverters(self):
         self.__converters = {}
-        for converter in PluginLoader.loadByConfig(self.__container['config']['currencyConverters'], __package__ + '.{}.{}CurrencyConverter.{}CurrencyConverter', lambda config, clss : clss(self.__container, config)):
+        for converter in PluginLoader.loadByConfig(container['config']['currencyConverters'], __package__ + '.{}.{}CurrencyConverter.{}CurrencyConverter', lambda config, clss : clss(config)):
             self.__converters[converter.id] = converter

@@ -2,7 +2,7 @@ from datetime import timedelta
 from decimal import Decimal
 import logging
 
-from ....container import Container
+from ....container import container
 from ....transactions.depositTransfer import DepositTransfer
 from ....transactions.payment import Payment
 from ....transactions.transfer import Transfer
@@ -13,9 +13,8 @@ from ..bananaStrategy import BananaStrategy
 class TransferStrategy(BananaStrategy):
     __log = logging.getLogger(__name__)
 
-    def __init__(self, container:Container):
-        super(TransferStrategy, self).__init__(container)
-        self.__accounts = container['banana']['accounts']
+    def __init__(self):
+        super().__init__()
         self.__manualTransfers = container['config']['transfers']
         precision = Decimal(container['banana']['transferPrecision'])
         self.__minPrecision = 1 - precision
@@ -98,7 +97,7 @@ class TransferStrategy(BananaStrategy):
             if c.isFiat:
                 TransferStrategy.__log.debug("%s - Deposit; %s, %s", transaction.dateTime, transaction.mergentId, c)
                 #                              description,  debit,     credit,                 amount,   currency, exchangeRate,                baseCurrencyAmount,    shares
-                yield self._book(transaction, ['Einzahlung', c.account, self.__accounts.equity, c.amount, c.unit,   c.baseCurrency.exchangeRate, c.baseCurrency.amount, ''])
+                yield self._book(transaction, ['Einzahlung', c.account, self._accounts.equity, c.amount, c.unit,   c.baseCurrency.exchangeRate, c.baseCurrency.amount, ''])
             else:
                 TransferStrategy.__log.warn("%s - Transfer; ???->%s, %s, id=%s, address=%s", transaction.dateTime, transaction.mergentId, transaction.amount, transaction.id, transaction.address)
                 description = 'Transfer ? -> {}'.format(transaction.mergentId)
@@ -111,11 +110,11 @@ class TransferStrategy(BananaStrategy):
             else:
                 TransferStrategy.__log.warn("%s - Transfer; %s->???, %s, id=%s, address=%s", transaction.dateTime, transaction.mergentId, c, transaction.id, transaction.address)
                 description = 'Transfer {} -> ?'.format(transaction.mergentId)
-            #                                  description, debit,                  credit,    amount,   currency, exchangeRate,                baseCurrencyAmount,    shares
-            yield self._book(transaction,     [description, self.__accounts.equity, c.account, c.amount, c.unit,   c.baseCurrency.exchangeRate, c.baseCurrency.amount, ''])
+            #                                  description, debit,                 credit,    amount,   currency, exchangeRate,                baseCurrencyAmount,    shares
+            yield self._book(transaction,     [description, self._accounts.equity, c.account, c.amount, c.unit,   c.baseCurrency.exchangeRate, c.baseCurrency.amount, ''])
             if transaction.fee.amount > 0:
                 f = self._currency(transaction.fee, transaction)
-                yield self._book(transaction, [description, self.__accounts.fees,   f.account, f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, ''])
+                yield self._book(transaction, [description, self._accounts.fees,   f.account, f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, ''])
         self.__accountedIds.add(transaction.id)
 
     def __transformDoubleTransfers(self, deposit, withdrawal):
@@ -125,15 +124,15 @@ class TransferStrategy(BananaStrategy):
         w = self._currency(withdrawal.amount, withdrawal)
         if withdrawal.fee.amount > 0 and deposit.fee.amount > 0:
             TransferStrategy.__log.warn("Double transfer fees; %s, %s - %s. %s", withdrawal.mergentId, withdrawal.fee, deposit.mergentId, deposit.fee)
-        # target                          description, deposit,              withdrawal, amount,   currency, exchangeRate,                baseCurrencyAmount,    shares
-        yield self._book(deposit,        [description, d.account,            '',         d.amount, d.unit,   d.baseCurrency.exchangeRate, d.baseCurrency.amount, ''])
+        # target                          description, deposit,             withdrawal, amount,   currency, exchangeRate,                baseCurrencyAmount,    shares
+        yield self._book(deposit,        [description, d.account,           '',         d.amount, d.unit,   d.baseCurrency.exchangeRate, d.baseCurrency.amount, ''])
         if deposit.fee.amount > 0:
             f = self._currency(deposit.fee, deposit)
-            yield self._book(withdrawal, [description, self.__accounts.fees, '',         f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, ''])
+            yield self._book(withdrawal, [description, self._accounts.fees, '',         f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, ''])
         # source
-        yield self._book(withdrawal,     [description, '',                   w.account,  w.amount, w.unit,   w.baseCurrency.exchangeRate, w.baseCurrency.amount, ''])
+        yield self._book(withdrawal,     [description, '',                  w.account,  w.amount, w.unit,   w.baseCurrency.exchangeRate, w.baseCurrency.amount, ''])
         if withdrawal.fee.amount > 0:
             f = self._currency(withdrawal.fee, withdrawal)
-            yield self._book(withdrawal, [description, self.__accounts.fees, f.account,  f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, ''])
+            yield self._book(withdrawal, [description, self._accounts.fees, f.account,  f.amount, f.unit,   f.baseCurrency.exchangeRate, f.baseCurrency.amount, ''])
         self.__accountedIds.add(deposit.id)
         self.__accountedIds.add(withdrawal.id)

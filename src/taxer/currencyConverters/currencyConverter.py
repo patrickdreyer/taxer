@@ -2,12 +2,12 @@ from decimal import Decimal
 import logging
 import os
 
-from ..container import Container
+from ..container import container
 from .csvFileDict import CsvFileDict
 
 
 class CurrencyConverter:
-    def __init__(self, container:Container, config, api, symbolMapper):
+    def __init__(self, config, api, symbolMapper):
         self.__log = logging.getLogger('%s.%s' % (self.__class__.__module__, self.__class__.__name__))
         self.__id = config['id']
         self.__api = api

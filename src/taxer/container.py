@@ -14,3 +14,6 @@ class Container():
             value = self.__dict[key](self)
             self.__dict[key] = value
         return value
+
+
+container = Container()

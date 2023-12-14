@@ -2,7 +2,7 @@ import csv
 import logging
 import os
 
-from ...container import Container
+from ...container import container
 from ...pluginLoader import PluginLoader
 from ..accounting import Accounting
 from .bananaAccounts import BananaAccounts
@@ -11,9 +11,8 @@ from .bananaAccounts import BananaAccounts
 class BananaAccounting(Accounting):
     __log = logging.getLogger(__name__)
 
-    def __init__(self, container:Container, config):
-        self.__container = container
-        self.__container['banana'] = {
+    def __init__(self, config):
+        container['banana'] = {
             'transferPrecision': config['transferPrecision'],
             'accounts': BananaAccounts(config['accounts'])
         }
@@ -22,12 +21,12 @@ class BananaAccounting(Accounting):
 
     def write(self, transactions):
         path = os.path.join(os.path.dirname(__file__), 'strategies')
-        self.__strategies = PluginLoader.loadFromFiles(path, f"{__package__}.strategies", '**/*Strategy.py', lambda clss: clss(self.__container))
+        self.__strategies = PluginLoader.loadFromFiles(path, f"{__package__}.strategies", '**/*Strategy.py', lambda clss: clss())
         self.__writeBookings(transactions)
         self.__writeInterests()
 
     def __writeBookings(self, transactions):
-        outputFilePath = os.path.join(self.__container['config']['output'], self.__fileNameBookings)
+        outputFilePath = os.path.join(container['config']['output'], self.__fileNameBookings)
         bookings = self.__transform(transactions)
         bookings = sorted(bookings, key=lambda b: b[0])
         with open(outputFilePath, 'w') as file:
@@ -51,7 +50,7 @@ class BananaAccounting(Accounting):
             yield from strategy.finalize()
 
     def __writeInterests(self):
-        outputFilePath = os.path.join(self.__container['config']['output'], self.__fileNameInterests)
+        outputFilePath = os.path.join(container['config']['output'], self.__fileNameInterests)
         interests = self.__collectInterests()
         with open(outputFilePath, 'w') as file:
             writer = csv.writer(file, dialect='unix')
