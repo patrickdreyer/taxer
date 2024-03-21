@@ -28,11 +28,11 @@ class HexContract(Contract):
     @property
     def functions(self): return self.__web3Contract.functions
 
-    def __init__(self, contracts, accounts:list[str], etherscanApi):
+    def __init__(self, contracts, accounts:list[str], api):
         super().__init__('0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39', None, accounts)
         self.__contracts = contracts
-        self.__etherscanApi = etherscanApi
-        self.__web3Contract = etherscanApi.getContract(self.address)
+        self.__api = api
+        self.__web3Contract = api.getContract(self.address)
 
     def processTransaction(self, address, id, year, transaction, erc20Transaction):
         (name, args) = Ether.decodeContractInput(self.__web3Contract, transaction['input'])
@@ -50,7 +50,7 @@ class HexContract(Contract):
                 yield ExitLobby(id, transaction['dateTime'], transaction['hash'], Ether.amountFromTransaction(lobbyEnterTransaction), HexContract.__amount(erc20Transaction), Ether.feeFromTransaction(transaction))
 
         elif name == 'stakestart':
-            logs = self.__etherscanApi.getLogs(transaction['blockNumber'], address = transaction['to'], topic0 = HexContract.__stakeStartTopic, topic1 = Ether.toTopic(transaction['from']))
+            logs = self.__api.getLogs(transaction['blockNumber'], address = transaction['to'], topic0 = HexContract.__stakeStartTopic, topic1 = Ether.toTopic(transaction['from']))
             logs = [l for l in logs if l['transactionHash'] == transaction['hash']]
             stakeId = int(logs[0]['topics'][2], 16)
             self.__stakes[stakeId] = {
