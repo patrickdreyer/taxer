@@ -42,7 +42,8 @@ class Application:
         logging.getLogger('').addHandler(console)
 
         Application.__log = logging.getLogger(__name__)
-        Application.__log.setLevel(logging.DEBUG)  
+        Application.__log.setLevel(logging.DEBUG)
+        logging.getLogger("urllib3").setLevel(logging.WARNING)
 
     def __parseArguments(self):
         parser = argparse.ArgumentParser(description='Creates a CSV file ready to import into accounting from exchange reports')
