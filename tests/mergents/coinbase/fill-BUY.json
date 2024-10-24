@@ -1,0 +1,18 @@
+{
+  "entry_id": "09a516741a47d6a07c369eec7344d5c23d22e63351eacb79188a6e7839af5d09",
+  "trade_id": "01e9de75-8061-44c1-9f68-368d71fe23ca",
+  "order_id": "87887fde-6f2f-4a83-b5ae-ae27427ff5a4",
+  "trade_time": "2024-10-24T22:37:27.272277Z",
+  "trade_type": "FILL",
+  "price": "68247.15",
+  "size": "0.00014082",
+  "commission": "0.0720792274725",
+  "product_id": "BTC-USDC",
+  "sequence_timestamp": "2024-10-24T22:37:27.276158Z",
+  "liquidity_indicator": "TAKER",
+  "size_in_quote": false,
+  "user_id": "87fe772c-ba38-562d-92c3-ea18e84ebce6",
+  "side": "BUY",
+  "retail_portfolio_id": "87fe772c-ba38-562d-92c3-ea18e84ebce6",
+  "dateTime": "2024-10-24 22:37:27.272277+00:00"
+}

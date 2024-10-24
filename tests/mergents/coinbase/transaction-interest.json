@@ -1,0 +1,17 @@
+{
+  "amount": {
+    "amount": "199.324084",
+    "currency": "USDC"
+  },
+  "created_at": "2024-11-04T20:57:41Z",
+  "id": "690d27c7-a6c3-5f9e-bba0-bb031c6e233b",
+  "native_amount": {
+    "amount": "199.31",
+    "currency": "USD"
+  },
+  "resource": "transaction",
+  "resource_path": "/v2/accounts/229d3d7e-9848-5651-a955-463296936544/transactions/690d27c7-a6c3-5f9e-bba0-bb031c6e233b",
+  "status": "completed",
+  "type": "interest",
+  "dateTime": "2024-11-04 20:57:41+00:00"
+}

@@ -1,0 +1,17 @@
+{
+  "amount": {
+    "amount": "-1411.490000",
+    "currency": "ADA"
+  },
+  "created_at": "2024-07-11T20:06:45Z",
+  "id": "008021e0-0ba6-5c2c-b4c7-0efc721f0b38",
+  "native_amount": {
+    "amount": "-559.17",
+    "currency": "USD"
+  },
+  "resource": "transaction",
+  "resource_path": "/v2/accounts/35f45567-1530-5046-a53b-e47528c45406/transactions/008021e0-0ba6-5c2c-b4c7-0efc721f0b38",
+  "status": "completed",
+  "type": "staking_transfer",
+  "dateTime": "2024-07-11 20:06:45+00:00"
+}
