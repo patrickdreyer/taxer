@@ -26,6 +26,8 @@ class CryptoCurrencyChartApi(CurrencyConverterApi):
 
     def getRate(self, symbol, date):
         content = self.__get('/coin/view/{}/{}/CHF'.format(symbol, date.strftime('%Y-%m-%d')))
+        if 'error' in content and content['error']:
+            raise KeyError(f"Symbol not supported; symbol='{symbol}'")
         return content['coin']['price']
 
     def __get(self, query):

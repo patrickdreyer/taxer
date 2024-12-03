@@ -20,9 +20,12 @@ class CurrencyConverterFactory:
 
     def exchangeRate(self, symbol, date):
         for converter in  self.__converters.values():
-            if symbol in converter.symbols:
-                rate = converter.exchangeRate(symbol, date)
-                return rate
+            try:
+                if symbol in converter.symbols:
+                    rate = converter.exchangeRate(symbol, date)
+                    return rate
+            except KeyError:
+                pass
         raise KeyError("Symbol not supported by currency converters; symbol='{}'".format(symbol))
 
     def __createConverters(self):
