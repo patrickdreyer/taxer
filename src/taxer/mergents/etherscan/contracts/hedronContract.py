@@ -1,7 +1,9 @@
 from decimal import Decimal
 
+
 from .contract import Contract
 from ..ether import Ether
+from ....transactions.approval import Approval
 from ....transactions.currency import Currency
 from ....transactions.fee import Fee
 from ....transactions.depositTransfer import DepositTransfer
@@ -46,8 +48,14 @@ class HedronContract(Contract):
         elif name == 'mintnative':
             yield Mint(id, transaction['dateTime'], transaction['hash'], HedronContract.__amountFromTransaction(erc20Transaction), Ether.feeFromTransaction(transaction))
 
+        elif name == 'approve':
+            yield from self.__processApprove(id, transaction, args)
+
         else:
             raise KeyError("Unknown token function; token='{}', functionName='{}'".format(HedronContract.__id, name))
+
+    def __processApprove(self, id, transaction, args):
+        yield Approval(id, transaction['dateTime'], transaction['hash'], Ether.feeFromTransaction(transaction))
 
     def amount(self, value) -> Currency:
         return Currency(HedronContract.__id, Decimal(value) / HedronContract.__divisor)
