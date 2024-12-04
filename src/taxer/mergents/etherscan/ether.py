@@ -21,7 +21,7 @@ class Ether:
         function = contract.get_function_by_name(name)
         outputs = function.abi['outputs']
         types = [o['type'] for o in outputs]
-        dataBytes = web3.Web3.toBytes(hexstr=data)
+        dataBytes = web3.Web3.to_bytes(hexstr=data)
         values = decode(types, dataBytes)
         return {outputs[i]['name']:value for i, value in enumerate(values)}
 
@@ -39,7 +39,7 @@ class Ether:
 
         dataInputs = [i for i in inputs if not i['indexed']]
         dataTypes = [i['type'] for i in dataInputs]
-        dataBytes = web3.Web3.toBytes(hexstr=data)
+        dataBytes = web3.Web3.to_bytes(hexstr=data)
         values = decode(dataTypes, dataBytes)
         for i, value in enumerate(values):
             ret[dataInputs[i]['name']] = value
