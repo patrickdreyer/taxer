@@ -26,7 +26,7 @@ class CurrencyConverterFactory:
                     return rate
             except KeyError:
                 pass
-        raise KeyError("Symbol not supported by currency converters; symbol='{}'".format(symbol))
+        raise KeyError(f"Symbol not supported by currency converters; symbol='{symbol}', date='{date}'")
 
     def __createConverters(self):
         self.__converters = {}
