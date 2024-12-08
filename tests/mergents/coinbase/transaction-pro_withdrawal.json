@@ -1,0 +1,17 @@
+{
+  "amount": {
+    "amount": "1000.000000",
+    "currency": "XRP"
+  },
+  "created_at": "2021-02-04T15:42:11Z",
+  "id": "2ce2874b-32fa-51db-b515-866c6684c689",
+  "native_amount": {
+    "amount": "399.02",
+    "currency": "USD"
+  },
+  "resource": "transaction",
+  "resource_path": "/v2/accounts/86cb23fa-de06-5540-8f2e-6ee30f4c350a/transactions/2ce2874b-32fa-51db-b515-866c6684c689",
+  "status": "completed",
+  "type": "pro_withdrawal",
+  "dateTime": "2021-02-04 15:42:11+00:00"
+}

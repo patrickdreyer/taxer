@@ -1,0 +1,17 @@
+{
+  "amount": {
+    "amount": "1414.288637",
+    "currency": "ADA"
+  },
+  "created_at": "2024-09-04T14:00:41Z",
+  "id": "7aba20b6-c84b-5143-9c6c-72ec5ff47c78",
+  "native_amount": {
+    "amount": "448.16",
+    "currency": "USD"
+  },
+  "resource": "transaction",
+  "resource_path": "/v2/accounts/35f45567-1530-5046-a53b-e47528c45406/transactions/7aba20b6-c84b-5143-9c6c-72ec5ff47c78",
+  "status": "completed",
+  "type": "unstaking_transfer",
+  "dateTime": "2024-09-04 14:00:41+00:00"
+}

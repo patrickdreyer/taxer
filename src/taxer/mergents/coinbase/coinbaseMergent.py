@@ -1,6 +1,8 @@
-from ...container import container
 from ..mergent import Mergent
-from .coinbaseFileReader import CoinbaseFileReader
+from .coinbaseApiAuth import CoinbaseApiAuth
+from .coinbaseCoinbaseAppApi import CoinbaseCoinbaseAppApi
+from .coinbaseAdvancedTradeApi import CoinbaseAdvancedTradeApi
+from .coinbaseApiReader import CoinbaseApiReader
 
 
 class CoinbaseMergent(Mergent):
@@ -8,4 +10,9 @@ class CoinbaseMergent(Mergent):
         self.__config = config
 
     def createReaders(self):
-        yield CoinbaseFileReader(self.__config['id'], container['config']['input'], self.__config['fileNamePattern'])
+        if 'ETH' in self.__config['symbols']:
+            self.__config['symbols'].append('ETH2')
+        auth = CoinbaseApiAuth(self.__config['keyName'], self.__config['keySecret'])
+        coinbaseAppApi = CoinbaseCoinbaseAppApi(self.__config['url'], self.__config['symbols'], auth)
+        advancedTradeApi = CoinbaseAdvancedTradeApi(self.__config['symbols'], self.__config['keyName'], self.__config['keySecret'])
+        yield CoinbaseApiReader(self.__config['id'], coinbaseAppApi, advancedTradeApi)

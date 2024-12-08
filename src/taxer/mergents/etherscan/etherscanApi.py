@@ -51,7 +51,7 @@ class EtherscanApi:
         abi = self.getContractAbi(address)
         if abi == None:
             return None
-        contract = self.__web3.eth.contract(address=self.__web3.toChecksumAddress(address), abi=abi)
+        contract = self.__web3.eth.contract(address=self.__web3.to_checksum_address(address), abi=abi)
         return contract
 
     def getContractAbi(self, contractAddress):

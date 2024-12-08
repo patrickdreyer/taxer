@@ -1,0 +1,17 @@
+{
+  "amount": {
+    "amount": "0.354330",
+    "currency": "ADA"
+  },
+  "created_at": "2024-07-30T23:45:58Z",
+  "id": "24c29ca8-af6a-5d4b-87ed-bac5a68cb178",
+  "native_amount": {
+    "amount": "0.14",
+    "currency": "USD"
+  },
+  "resource": "transaction",
+  "resource_path": "/v2/accounts/7408b86d-2885-55c7-80e1-1eae0ca45b66/transactions/24c29ca8-af6a-5d4b-87ed-bac5a68cb178",
+  "status": "completed",
+  "type": "staking_reward",
+  "dateTime": "2024-07-30 23:45:58+00:00"
+}

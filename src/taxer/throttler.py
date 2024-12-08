@@ -8,7 +8,7 @@ from pytz import utc
 class Throttler:
     __unit = timedelta(seconds=1)
 
-    def __init__(self, callsPerSecond):
+    def __init__(self, callsPerSecond: int):
         self.__calls = collections.deque(maxlen=callsPerSecond)
 
     def throttle(self):
