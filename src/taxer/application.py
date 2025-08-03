@@ -1,17 +1,19 @@
 import argparse
 import json
 import logging
+import os
+import pickle
 
 from .container import container
 from .accounting.accountingfactory import AccountingFactory
 from .currencyConverters.currencyConverterFactory import CurrencyConverterFactory
 from .mergents.mergentFactory import MergentFactory
-from .processors.processorFactory import ProcessorFactory
 from .transformers.transformerFactory import TransformerFactory
 
 
 class Application:
     __log = None
+    __transactionsFileName = 'transactions.json'
 
     def main(self):
         self.__initializeLogging()
@@ -19,7 +21,6 @@ class Application:
         Application.__log.info('BEGIN')
         container['config'] = self.__parseArguments()
         container['config'] = container['config'] | self.__readConfig()
-        container['processors'] = ProcessorFactory.create()
         container['mergents'] = MergentFactory.create()
         container['transformers'] = TransformerFactory.create()
         container['currencyConverters'] = CurrencyConverterFactory.create().load()
@@ -61,6 +62,44 @@ class Application:
             return json.load(file)
 
     def __process(self):
+        transactions = self.__readTransactions()
+        transactions = list(self.__transform(transactions))
+        for accounting in container['accountings']:
+            accounting.write(transactions)
+
+    def __readTransactions(self):
+        transactions = self.__deserializeTransactions()
+        if transactions == None:
+            transactions = (t for t in self.__readFromMergenReaders() if t != None)
+            transactions = sorted(transactions, key=lambda t: t.dateTime)
+            self.__serializeTransactions(transactions)
+
+    def __serializeTransactions(self, transactions):
+        if not container['config']['transactions']:
+            return
+        Application.__log.info("Serialize transactions; filePath='%s'", container['config']['transactions'])
+        if not os.path.exists(container['config']['transactions']):
+            os.makedirs(container['config']['transactions'])
+        with open(os.path.join(container['config']['transactions'], Application.__transactionsFileName), 'wb') as file:
+            pickle.dump(transactions, file)
+
+    def __deserializeTransactions(self):
+        if not container['config']['transactions']:
+            return None
+        filePath = os.path.join(container['config']['transactions'], Application.__transactionsFileName)
+        if not os.path.isfile(filePath):
+            return None
+        Application.__log.info("Deserialize transactions; filePath='%s'", filePath)
+        with open(filePath, 'rb') as file:
+            return pickle.load(file)
+
+    def __readFromMergenReaders(self):
+        readers = container['mergentReaders']
         year = int(container['config']['year'])
-        for processor in container['processors']:
-            processor.process(year)
+        for reader in readers:
+            yield from reader.read(year)
+
+    def __transform(self, transactions):
+        for transformer in container['transformers']:
+            transactions = transformer.transform(transactions)
+        return transactions
