@@ -75,3 +75,4 @@ nav:
   - 'Requirements':
       - 'Overview': 'requirements/index.md'
       - 'Product Requirements': 'requirements/product/'
+      - 'Customer Requirements': 'requirements/customer/'
