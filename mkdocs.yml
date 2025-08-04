@@ -76,3 +76,20 @@ nav:
       - 'Overview': 'requirements/index.md'
       - 'Product Requirements': 'requirements/product/'
       - 'Customer Requirements': 'requirements/customer/'
+  - 'Software Architecture':
+    - 'Introduction':
+      - 'softwareArchitectureDocument/introduction/index.md'
+      - 'Goals & Constraints': 'softwareArchitectureDocument/introduction/goalsAndConstraints.md'
+    - 'Logical View':
+      - 'softwareArchitectureDocument/logicalView/index.md'
+      - 'Data Model': 'softwareArchitectureDocument/logicalView/dataModel.md'
+    - 'Process View':
+      - 'softwareArchitectureDocument/processView/index.md'
+    - 'Development View':
+      - 'softwareArchitectureDocument/developmentView/index.md'
+      - 'API Specification': 'softwareArchitectureDocument/developmentView/apiSpecification.md'
+    - 'Physical View':
+      - 'softwareArchitectureDocument/physicalView/index.md'
+    - 'Cross-Cutting Concerns':
+      - 'Security': 'softwareArchitectureDocument/crossCuttingConcerns/security.md'
+      - 'Error Handling & Logging': 'softwareArchitectureDocument/crossCuttingConcerns/errorHandlingAndLogging.md'
