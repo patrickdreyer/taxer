@@ -1,0 +1,74 @@
+# squidfunk/mkdocs-material mkdocs.yml
+# https://github.com/squidfunk/mkdocs-material/blob/master/mkdocs.yml
+
+# Project information
+site_name: Swiss Crypto Tax Helper
+site_description: 'Architecture and requirements documentation for the Swiss Crypto Tax Helper application.'
+site_author: Patrick Dreyer
+site_url: https://patrickdreyer.github.io/taxer/
+
+# Repository
+repo_name: patrickdreyer/taxer
+repo_url: https://github.com/patrickdreyer/taxer
+
+# Directory configuration
+docs_dir: 'doc'
+
+# Theme Configuration (using Material for MkDocs)
+theme:
+  name: material
+  palette:
+    # Light mode
+    - scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Dark mode
+    - scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - toc.integrate
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+
+# Plugins
+plugins:
+  - search # Built-in search plugin
+  - minify:
+      minify_html: true
+
+# Markdown Extensions for extra features
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - toc:
+      permalink: true
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+  - pymdownx.keys
+  - pymdownx.magiclink:
+      normalize_issue_symbols: true
+      repo_url_shorthand: true
+      user: patrickdreyer
+      repo: taxer
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tilde
+
+# Navigation Structure
+nav:
+  - 'Home': 'index.md'
