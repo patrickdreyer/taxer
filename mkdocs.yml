@@ -72,3 +72,6 @@ markdown_extensions:
 # Navigation Structure
 nav:
   - 'Home': 'index.md'
+  - 'Requirements':
+      - 'Overview': 'requirements/index.md'
+      - 'Product Requirements': 'requirements/product/'
