@@ -42,6 +42,7 @@ plugins:
   - search # Built-in search plugin
   - minify:
       minify_html: true
+  - include_dir_to_nav
 
 # Markdown Extensions for extra features
 markdown_extensions:
@@ -77,6 +78,7 @@ nav:
       - 'Traceability': 'requirements/traceability.md'
       - 'Product Requirements': 'requirements/product/'
       - 'Customer Requirements': 'requirements/customer/'
+      - 'Technical Requirements': 'requirements/technical/'
   - 'Software Architecture':
     - 'Introduction':
       - 'softwareArchitectureDocument/introduction/index.md'
