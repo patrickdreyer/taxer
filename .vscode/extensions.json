@@ -1,0 +1,16 @@
+{
+    "recommendations": [
+        "mhutchie.git-graph",
+        "shd101wyy.markdown-preview-enhanced",
+        "spmeesseman.vscode-taskexplorer",
+        "github.copilot-chat",
+        "github.copilot",
+        "ms-python.vscode-pylance",
+        "ms-python.python",
+        "ms-python.debugpy",
+        "ms-python.vscode-python-envs",
+        "mtxr.sqltools",
+        "ms-vscode.test-adapter-converter",
+        "hbenl.vscode-test-explorer"
+    ]
+}
