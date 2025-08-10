@@ -73,7 +73,7 @@ markdown_extensions:
 nav:
   - 'Home': 'index.md'
   - 'Requirements':
-      - 'Overview': 'requirements/index.md'
+      - 'Guidelines': 'requirements/guidelines.md'
       - 'Product Requirements': 'requirements/product/'
       - 'Customer Requirements': 'requirements/customer/'
   - 'Software Architecture':
