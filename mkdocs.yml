@@ -74,6 +74,7 @@ nav:
   - 'Home': 'index.md'
   - 'Requirements':
       - 'Guidelines': 'requirements/guidelines.md'
+      - 'Traceability': 'requirements/traceability.md'
       - 'Product Requirements': 'requirements/product/'
       - 'Customer Requirements': 'requirements/customer/'
   - 'Software Architecture':
