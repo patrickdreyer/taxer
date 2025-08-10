@@ -11,6 +11,7 @@
 - Keep this context file (ai.md) up-to-date with relevant, confirmed changes.
 - When the user refers to "context", they mean this ai.md file.
 - When the user types "load ai.md", read this file and follow all rules within as if they would have requested them to you.
+- When adapting the context, apply changes first, then refactor if needed to better reflect the actual meaning.
 
 ## Project Context Summary
 - **Objective:** A local, single-user desktop application for Swiss crypto tax reporting.
@@ -39,7 +40,7 @@
 ### Requirements Structure
 - A three-tier structure must be followed: **Product (PRQ)** -> **Customer (CRQ)** -> **Technical (TRQ)**.
 - Full traceability must be maintained via `Up-stream` and `Down-stream` references in each requirement file.
-- The `doc/requirements/traceability.md` file must be updated whenever `Up-stream` or `Down-stream` references are changed.
+- The `doc/requirements/traceability.md` file is automatically updated via MkDocs hook when PRQ downstream references change.
 
 ### File Naming Schemas
 - **PRQ:** `prqXX-titleInCamelCase.md` (e.g., `prq01-singleUserOperation.md`)
@@ -64,6 +65,18 @@
 - Errors are communicated via standard HTTP status codes with a `{"detail": "..."}` JSON body.
 - No authentication is required for the local API.
 - Endpoints are versioned under a base path (e.g., `/api/v1`).
+
+### Python Code Standards
+- All function names, variable names, and file names must use `camelCase`.
+- Follow the established naming conventions consistently across all Python files.
+- Do not use docstrings. When code needs explanation, extract it into a well-named method instead.
+- Do not use comments. When code needs explanation, extract it into a well-named method instead.
+
+### Documentation Automation
+- The requirements traceability matrix is automatically generated via MkDocs hook (`scripts/generateTraceability.py`).
+- The hook uses `on_pre_build` to read PRQ downstream references and updates `doc/requirements/traceability.md` only when content changes.
+- This prevents infinite loops during MkDocs serve mode while keeping traceability current.
+- Log output is integrated with MkDocs logging system for proper visibility.
 
 ## Interaction Style
 - Provide short and concise answers.

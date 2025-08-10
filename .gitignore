@@ -14,6 +14,9 @@ initialize
 post*
 pre*
 
+# doc
+traceability.md
+
 
 ###############################################################################
 # https://github.com/github/gitignore/blob/main/Python.gitignore

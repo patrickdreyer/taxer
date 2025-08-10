@@ -42,6 +42,7 @@ This section details why **DuckDB** was choosen as the technology for the **Data
 
 ### Decision Criteria
 The database choice is driven by the application's nature as a local, single-user desktop tool. The most important criteria are:
+
 - **Serverless (Embedded):** The database must not require a separate server process or any configuration by the end-user. It must be a library that the Python backend uses directly.
 - **Performance at Scale:** It must easily handle and perform fast queries over tens or even hundreds of thousands of transaction records without noticeable delay.
 - **Python Ecosystem:** It must have mature, well-documented, and easy-to-use support in Python.
@@ -57,6 +58,7 @@ The database choice is driven by the application's nature as a local, single-use
 
 ### Recommendation and Justification
 While SQLite is a safe default, DuckDB is the optimal choice for this application's specific needs based on the following criteria:
+
 - **Analytical Performance:** The application's most intensive task is generating tax reports, which requires fast aggregation and analysis of thousands of transactions. DuckDB is an embedded database specifically optimized for these analytical queries (OLAP) and will significantly outperform general-purpose alternatives as the dataset grows.
 - **Serverless and Portable:** Like SQLite, DuckDB is serverless and stores the entire database in a single file. This requires zero configuration from the end-user and makes backing up data trivial.
 - **Deep Python Integration:** DuckDB's first-class support for direct, zero-copy operations on Pandas DataFrames is a major advantage. Since the backend will heavily use Pandas for data manipulation, this simplifies code and boosts performance.

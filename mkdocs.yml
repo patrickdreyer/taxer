@@ -44,6 +44,10 @@ plugins:
       minify_html: true
   - include_dir_to_nav
 
+# Hooks
+hooks:
+  - scripts/generateTraceability.py
+
 # Markdown Extensions for extra features
 markdown_extensions:
   - admonition
