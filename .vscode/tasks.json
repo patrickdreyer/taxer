@@ -1,14 +1,63 @@
 {
-    "version": "2.0.0",
-    "type": "shell",
-    "command": "tox",
-    "args": [],
-    "isBackground": false,
-    "options": {"cwd": "${workspaceFolder}"},
-    "label": "Run tox",
-    "group": {
+  // See https://go.microsoft.com/fwlink/?LinkId=733558
+  // for the documentation about the tasks.json format
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Run tox",
+      "detail": "Runs all tests and linting using tox.",
+      "type": "shell",
+      "command": "tox",
+      "group": {
         "kind": "test",
         "isDefault": true
+      },
+      "args": [],
+      "isBackground": false,
+      "options": {"cwd": "${workspaceFolder}"}
+    },
+    {
+      "label": "Doc: Serve",
+      "detail": "Runs the live-reloading MkDocs server at http://localhost:8000 using a raw podman command.",
+      "type": "shell",
+      "command": "podman run --rm -it --name ${config:mkdocs.container} --entrypoint sh -p 8000:8000 -v .:/docs:Z -v ./mkdocs-requirements.txt:/docs/requirements.txt:ro,Z ${config:mkdocs.image} -c 'pip install -r requirements.txt && mkdocs serve --dev-addr 0.0.0.0:8000'",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "isBackground": true,
+      "problemMatcher": [],
+    },
+    {
+      "label": "Doc: Build",
+      "detail": "Builds the static HTML site into the ./site directory using a raw podman command.",
+      "type": "shell",
+      "command": "podman run --rm -it -v .:/docs:Z -v ./mkdocs-requirements.txt:/docs/requirements.txt:ro,Z ${config:mkdocs.image} build",
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": [],
+    },
+    {
+      "label": "Doc: Stop",
+      "detail": "Stops the running 'mkdocs-server' container.",
+      "type": "shell",
+      "command": "podman stop ${config:mkdocs.container}",
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": [],
     }
-  }
-  
+  ]
+}

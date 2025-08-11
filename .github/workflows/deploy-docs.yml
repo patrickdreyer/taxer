@@ -1,0 +1,29 @@
+name: Deploy Documentation
+
+on:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: write # Needed to push the gh-pages branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.x
+
+      - name: Install dependencies
+        run: |
+          pip install --no-cache-dir mkdocs-material
+          pip install -U -r mkdocs-requirements.txt
+
+      - name: Deploy documentation
+        run: mkdocs gh-deploy --force --clean
