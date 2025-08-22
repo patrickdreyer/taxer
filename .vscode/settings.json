@@ -1,12 +1,9 @@
 {
-    "python.envFile": "${workspaceFolder}/.env",
-    
-    "python.testing.unittestEnabled": false,
-    "python.testing.pytestEnabled": true,
-    "python.testing.pytestArgs": [
-        "tests"
-    ],
+    // dev containers with podman
+    "dev.containers.dockerPath": "podman",
+    "dev.containers.dockerComposePath": "podman-compose",
 
+    // mkdocs
     "mkdocs.image": "squidfunk/mkdocs-material",
     "mkdocs.container": "taxer-docs"
 }
