@@ -1,0 +1,37 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+{
+	"name": "Python 3",
+	"image": "python:3.13-bookworm",
+
+	// Features to add to the dev container. More info: https://containers.dev/features.
+	// "features": {},
+
+	"forwardPorts": [8000],
+	"portsAttributes": {
+		"8000": {
+			"label": "docs"
+		}
+	},
+
+	"postCreateCommand": ".devcontainer/install.sh",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"mhutchie.git-graph",
+				"spmeesseman.vscode-taskexplorer",
+				"ms-vscode.test-adapter-converter",
+				"hbenl.vscode-test-explorer",
+				"ms-python.python",
+				"yzhang.markdown-all-in-one",
+				"TakumiI.markdowntable",
+				"bierner.markdown-mermaid"
+			]
+		}
+	}
+
+	// Configure tool-specific properties.
+	// "customizations": {},
+
+	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+	// "remoteUser": "root"
+}

@@ -1,2 +1,5 @@
+mkdocs
+mkdocs-material
 mkdocs-include-dir-to-nav
 mkdocs-section-index
+mkdocs-minify-plugin
