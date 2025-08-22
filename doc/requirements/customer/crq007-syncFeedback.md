@@ -1,6 +1,6 @@
 # CRQ-007: Synchronization Feedback
-In order to know the application is working correctly
-As a user
+In order to know the application is working correctly  
+As a user  
 I want to see visible feedback about the sync process as it happens.
 
 ## Description

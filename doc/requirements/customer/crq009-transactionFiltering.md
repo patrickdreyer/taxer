@@ -1,6 +1,6 @@
 # CRQ-009: Filter and Search Transactions
-In order to find specific transactions quickly
-As a user
+In order to find specific transactions quickly  
+As a user  
 I want to be able to filter my transaction list by asset, type, or date range.
 
 ## Description

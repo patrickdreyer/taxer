@@ -1,6 +1,6 @@
 # CRQ-006: Initiate Data Synchronization
-In order to keep my financial data up-to-date
-As a user
+In order to keep my financial data up-to-date  
+As a user  
 I want to press a single button to fetch all the latest transactions from my connected sources.
 
 ## Description

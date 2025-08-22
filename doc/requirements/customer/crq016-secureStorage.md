@@ -1,6 +1,6 @@
 # CRQ-016: Secure Credential Storage
-In order to trust the application with my API keys
-As a user
+In order to trust the application with my API keys  
+As a user  
 I want to know that my credentials are stored in an encrypted format on my computer.
 
 ## Description

@@ -1,6 +1,6 @@
 # CRQ-008: Unified Transaction View
-In order to get a complete overview of my activity
-As a user
+In order to get a complete overview of my activity  
+As a user  
 I want to see all my transactions from every source in a single, chronological list.
 
 ## Description

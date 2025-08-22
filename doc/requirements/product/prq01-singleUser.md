@@ -1,6 +1,6 @@
 # PRQ-01: Single-User Operation
-In order to simplify application setup and usage on my local machine
-As a user running this application for my own tax purposes
+In order to simplify application setup and usage on my local machine  
+As a user running this application for my own tax purposes  
 I want to run the application without needing to create an account or log in
 
 ## Description

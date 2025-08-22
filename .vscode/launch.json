@@ -9,7 +9,7 @@
             "name": "Main",
             "type": "debugpy",
             "request": "launch",
-            "program": "src/__main__.py",
+            "program": "v1/src/__main__.py",
             "console": "integratedTerminal",
             "args": [
                 "--input", "~/Dropbox/4-Buchhaltung/2023/Kryptos/reports",

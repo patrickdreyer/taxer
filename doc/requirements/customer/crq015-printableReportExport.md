@@ -1,6 +1,6 @@
 # CRQ-015: Printable Report Export
-In order to have a clean, non-editable copy for my official records
-As a user
+In order to have a clean, non-editable copy for my official records  
+As a user  
 I want to download a printable, read-only version of my tax report, like a PDF.
 
 ## Description

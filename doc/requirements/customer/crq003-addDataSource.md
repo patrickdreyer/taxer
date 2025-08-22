@@ -1,6 +1,6 @@
 # CRQ-003: Add a New Data Source
-In order to connect the application to my accounts
-As a user
+In order to connect the application to my accounts  
+As a user  
 I want to fill out a simple form to add a new exchange API key or a public wallet address.
 
 ## Description

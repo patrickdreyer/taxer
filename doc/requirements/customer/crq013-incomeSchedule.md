@@ -1,6 +1,6 @@
 # CRQ-013: Understandable Income Schedule
-In order to declare my crypto income correctly
-As a user
+In order to declare my crypto income correctly  
+As a user  
 I want the income report to show a simple list of all my taxable events with their respective values at the time I received them.
 
 ## Description

@@ -1,6 +1,6 @@
 # CRQ-001: Frictionless Startup
-In order to get started quickly without any hassle
-As the sole user of this application on my computer
+In order to get started quickly without any hassle    
+As the sole user of this application on my computer    
 I want to open the app and immediately see the main screen without needing to log in.
 
 ## Description

@@ -1,6 +1,6 @@
 # CRQ-017: Secure Communication with Exchanges
-In order to protect my data when it's sent over the internet
-As a user
+In order to protect my data when it's sent over the internet  
+As a user  
 I want the application to use secure, encrypted connections when communicating with external exchanges and services.
 
 ## Description

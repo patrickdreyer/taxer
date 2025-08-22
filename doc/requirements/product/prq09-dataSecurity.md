@@ -1,6 +1,6 @@
 # PRQ-09: Data Security
-In order to protect my sensitive financial information on my computer
-As a user
+In order to protect my sensitive financial information on my computer  
+As a user  
 I want the application to store my API keys securely and communicate with external services safely
 
 ## Description

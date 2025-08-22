@@ -15,8 +15,8 @@
     ```markdown
     # PRQ-XXX: <Title>
 
-    **In order to** <Why we are doing this>
-    **As** <Who wants this>
+    **In order to** <Why we are doing this>  
+    **As** <Who wants this>  
     **I want to** <What I want to do>
 
     ## Description
@@ -51,8 +51,8 @@
     ```markdown
     # CRQ-XXX: <Title>
 
-    **In order to** <Why we are doing this>
-    **As** <Who wants this>
+    **In order to** <Why we are doing this>  
+    **As** <Who wants this>  
     **I want to** <What I want to do>
 
     ## Description
@@ -87,8 +87,8 @@
     ```markdown
     # TRQ-XXX: <Title>
 
-    **In order to** <Why we are doing this>
-    **As** <Who wants this (e.g., a developer)>
+    **In order to** <Why we are doing this>  
+    **As** <Who wants this (e.g., a developer)>  
     **I want to** <What I want to do>
 
     ## Description

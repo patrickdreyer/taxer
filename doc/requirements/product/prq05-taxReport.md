@@ -1,6 +1,6 @@
 # PRQ-05: Tax Report Generation
-In order to understand my tax obligations for a specific year
-As a user
+In order to understand my tax obligations for a specific year  
+As a user  
 I want to generate a tax report that is displayed within the application
 
 ## Description

@@ -1,6 +1,6 @@
 # CRQ-018: Compliant Swiss Valuation
-In order to file a fully compliant tax return
-As a Swiss taxpayer
+In order to file a fully compliant tax return  
+As a Swiss taxpayer  
 I want the application to automatically use the official ESTV end-of-year prices for my crypto assets.
 
 ## Description

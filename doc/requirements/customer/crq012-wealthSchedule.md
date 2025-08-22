@@ -1,6 +1,6 @@
 # CRQ-012: Understandable Wealth Schedule
-In order to fill out my tax forms easily and accurately
-As a user
+In order to fill out my tax forms easily and accurately  
+As a user  
 I want the wealth report to be presented as a clear schedule, matching the format of my official tax forms.
 
 ## Description

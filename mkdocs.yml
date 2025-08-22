@@ -42,12 +42,11 @@ plugins:
   - search # Built-in search plugin
   - minify:
       minify_html: true
-  - include_dir_to_nav
   - section-index
 
 # Hooks
 hooks:
-  - scripts/generateTraceability.py
+  - scripts/generateRequirementsTraceabilityMatrix.py
 
 # Markdown Extensions for extra features
 markdown_extensions:
@@ -79,10 +78,38 @@ markdown_extensions:
 nav:
   - 'Home': 'index.md'
   - 'Requirements':
+      - 'requirements/index.md'
       - 'Guidelines': 'requirements/guidelines.md'
-      - 'Traceability': 'requirements/traceability.md'
-      - 'Product Requirements': 'requirements/product/'
-      - 'Customer Requirements': 'requirements/customer/'
+      - 'Product Requirements':
+          - 'PRQ-01: Single-User Operation': 'requirements/product/prq01-singleUser.md'
+          - 'PRQ-02: Data Sources': 'requirements/product/prq02-dataSources.md'
+          - 'PRQ-03: Data Ingestion': 'requirements/product/prq03-dataIngestion.md'
+          - 'PRQ-04: Transaction History': 'requirements/product/prq04-transactionHistory.md'
+          - 'PRQ-05: Tax Report': 'requirements/product/prq05-taxReport.md'
+          - 'PRQ-06: Wealth Report': 'requirements/product/prq06-wealthReport.md'
+          - 'PRQ-07: Income Report': 'requirements/product/prq07-incomeReport.md'
+          - 'PRQ-08: Report Export': 'requirements/product/prq08-reportExport.md'
+          - 'PRQ-09: Data Security': 'requirements/product/prq09-dataSecurity.md'
+          - 'PRQ-10: Swiss Tax': 'requirements/product/prq10-swissTax.md'
+      - 'Customer Requirements':
+          - 'CRQ-001: Frictionless Startup': 'requirements/customer/crq001-frictionlessStartup.md'
+          - 'CRQ-002: Data Persistence': 'requirements/customer/crq002-dataPersistence.md'
+          - 'CRQ-003: Add Data Source': 'requirements/customer/crq003-addDataSource.md'
+          - 'CRQ-004: Manage Data Sources': 'requirements/customer/crq004-manageDataSources.md'
+          - 'CRQ-005: Secure Credential Input': 'requirements/customer/crq005-secureCredentialInput.md'
+          - 'CRQ-006: Initiate Data Sync': 'requirements/customer/crq006-initiateDataSync.md'
+          - 'CRQ-007: Sync Feedback': 'requirements/customer/crq007-syncFeedback.md'
+          - 'CRQ-008: Unified Transaction View': 'requirements/customer/crq008-unifiedTransactionView.md'
+          - 'CRQ-009: Transaction Filtering': 'requirements/customer/crq009-transactionFiltering.md'
+          - 'CRQ-010: Generate Tax Report': 'requirements/customer/crq010-generateTaxReport.md'
+          - 'CRQ-011: View Tax Report': 'requirements/customer/crq011-viewTaxReport.md'
+          - 'CRQ-012: Wealth Schedule': 'requirements/customer/crq012-wealthSchedule.md'
+          - 'CRQ-013: Income Schedule': 'requirements/customer/crq013-incomeSchedule.md'
+          - 'CRQ-014: Report Export': 'requirements/customer/crq014-reportExport.md'
+          - 'CRQ-015: Printable Report Export': 'requirements/customer/crq015-printableReportExport.md'
+          - 'CRQ-016: Secure Storage': 'requirements/customer/crq016-secureStorage.md'
+          - 'CRQ-017: Secure Communication': 'requirements/customer/crq017-secureCommunication.md'
+          - 'CRQ-018: Swiss Valuation': 'requirements/customer/crq018-swissValuation.md'
       - 'Technical Requirements': 'requirements/technical/'
   - 'Software Architecture':
     - 'Introduction':
@@ -101,3 +128,5 @@ nav:
     - 'Cross-Cutting Concerns':
       - 'Security': 'softwareArchitectureDocument/crossCuttingConcerns/security.md'
       - 'Error Handling & Logging': 'softwareArchitectureDocument/crossCuttingConcerns/errorHandlingAndLogging.md'
+  - 'Traceability':
+    - 'Requirements Traceability Matrix': 'traceability/requirements.md'

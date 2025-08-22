@@ -1,6 +1,6 @@
 # PRQ-06: Wealth Report Content
-In order to fill out my official tax forms correctly
-As a user
+In order to fill out my official tax forms correctly  
+As a user  
 I want the wealth portion of the report to contain all the specific details required for my annual securities schedule.
 
 ## Description

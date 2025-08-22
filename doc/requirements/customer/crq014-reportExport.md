@@ -1,6 +1,6 @@
 # CRQ-014: Report Export for Record-Keeping
-In order to keep my tax data for my records or share it
-As a user
+In order to keep my tax data for my records or share it  
+As a user  
 I want to download my complete tax report as a CSV file.
 
 ## Description

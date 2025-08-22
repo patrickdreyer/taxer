@@ -1,6 +1,6 @@
 # CRQ-010: Simple Tax Report Generation
-In order to get the final figures for my tax declaration
-As a user
+In order to get the final figures for my tax declaration  
+As a user  
 I want to select a tax year and click a single button to generate my complete tax report.
 
 ## Description

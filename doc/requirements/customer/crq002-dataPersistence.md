@@ -1,6 +1,6 @@
 # CRQ-002: Automatic Data Persistence
-In order to continue my work between sessions without losing progress
-As a user
+In order to continue my work between sessions without losing progress  
+As a user  
 I want the application to automatically save all my settings and transaction data so that everything is there when I reopen it.
 
 ## Description

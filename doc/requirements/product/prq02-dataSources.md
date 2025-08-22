@@ -1,6 +1,6 @@
 # PRQ 02: Data Source Management
-In order to connect the application to my financial accounts
-As a user
+In order to connect the application to my financial accounts  
+As a user  
 I want to securely add, view, update, and remove my exchange API keys and public wallet addresses through the user interface
 
 ### Description

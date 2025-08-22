@@ -1,6 +1,6 @@
 # PRQ-07: Income Report Content
-In order to declare my asset-related income accurately
-As a user
+In order to declare my asset-related income accurately  
+As a user  
 I want the income portion of the report to detail every taxable event and its value.
 
 ## Description

@@ -1,6 +1,6 @@
 # PRQ-10: Swiss Tax Rules & Valuation
-In order to get an accurate and compliant report for Switzerland
-As a Swiss user
+In order to get an accurate and compliant report for Switzerland  
+As a Swiss user  
 I want the application to automatically apply Swiss-specific tax rules and valuations to my report.
 
 ## Description

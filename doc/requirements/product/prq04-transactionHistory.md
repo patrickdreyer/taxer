@@ -1,6 +1,6 @@
 # PRQ-04: Transaction History
-In order to review and verify my complete transaction history
-As a user
+In order to review and verify my complete transaction history  
+As a user  
 I want to see all my consolidated transactions from every source in a single, unified history
 
 ## Description

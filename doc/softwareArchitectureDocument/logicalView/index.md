@@ -27,15 +27,54 @@ graph TD
     style D fill:#cde,stroke:#333,stroke-width:2px
 ```
 
-| Component | Responsibility | Key Technology / Pattern |
-| :--- | :--- | :--- |
-| **Browser-based UI** | Renders UI, captures user input, communicates with the backend API. | Single Page Application (SPA) |
-| **API Layer** | Exposes a local REST API for the frontend, routes requests. | FastAPI / Flask |
-| **Data Ingestion Orchestrator**| Manages and calls the appropriate data source plugin to fetch data. | Strategy Design Pattern |
-| **Data Source Plugins** | **(Pluggable)** Connects to a specific external API, fetches raw data, and normalizes it into the standard application format. | Strategy Design Pattern |
-| **Reporting Service** | Calculates balances and generates final wealth/income reports from the standardized data. | Business Logic |
-| **Valuation Service** | **(Pluggable)** Provides asset prices based on country-specific rules. | Strategy Design Pattern |
-| **Data Persistence Layer** | Manages reading/writing all application data to local storage. | SQLite / Encrypted File |
+| Component                       | Responsibility                                                                                                                 | Key Technology / Pattern      |
+| :------------------------------ | :----------------------------------------------------------------------------------------------------------------------------- | :---------------------------- |
+| **Browser-based UI**            | Renders UI, captures user input, communicates with the backend API.                                                            | React + TypeScript SPA        |
+| **API Layer**                   | Exposes a local REST API for the frontend, routes requests.                                                                    | FastAPI                       |
+| **Data Ingestion Orchestrator** | Manages and calls the appropriate data source plugin to fetch data.                                                            | Strategy Design Pattern       |
+| **Data Source Plugins**         | **(Pluggable)** Connects to a specific external API, fetches raw data, and normalizes it into the standard application format. | Strategy Design Pattern       |
+| **Reporting Service**           | Calculates balances and generates final wealth/income reports from the standardized data.                                      | Business Logic                |
+| **Valuation Service**           | **(Pluggable)** Provides asset prices based on country-specific rules.                                                         | Strategy Design Pattern       |
+| **Data Persistence Layer**      | Manages reading/writing all application data to local storage.                                                                 | DuckDB                        |
+
+## Frontend Architecture
+
+The frontend follows a modern React architecture with clear separation of concerns:
+
+```mermaid
+graph TD
+    subgraph "React Frontend"
+        A[App Component]
+        B[Page Components]
+        C[UI Components]
+        D[Custom Hooks]
+        E[API Services]
+        F[State Management]
+        G[Type Definitions]
+    end
+
+    A --> B
+    B --> C
+    D --> F
+    E --> F
+    B --> D
+    C --> D
+    E --> API[Backend API]
+    
+    style E fill:#e1f5fe
+    style F fill:#f3e5f5
+    style G fill:#e8f5e8
+```
+
+| Frontend Component     | Responsibility                                                          | Technology                    |
+| :--------------------- | :---------------------------------------------------------------------- | :---------------------------- |
+| **App Component**      | Root component, routing, global layout                                 | React Router                  |
+| **Page Components**    | Top-level views (Dashboard, Data Sources, Reports, etc.)               | React Functional Components   |
+| **UI Components**      | Reusable components (buttons, forms, charts, tables)                   | React + Tailwind CSS          |
+| **Custom Hooks**       | Reusable stateful logic for data fetching and UI state                 | React Hooks + TanStack Query  |
+| **API Services**       | HTTP client for backend communication                                   | Fetch API + TypeScript        |
+| **State Management**   | Client-side state for UI and server state caching                      | TanStack Query + useState     |
+| **Type Definitions**   | TypeScript interfaces for type safety across the application           | TypeScript interfaces         |
 
 ## Data Persistence Technology
 This section details why **DuckDB** was choosen as the technology for the **Data Persistence Layer**.
@@ -50,11 +89,11 @@ The database choice is driven by the application's nature as a local, single-use
 
 ### Database Options Considered
 
-| Database | How it Works | Pros | Cons |
-| :--- | :--- | :--- | :--- |
-| **SQLite** | A self-contained, serverless SQL database engine. It reads and writes directly to a single disk file. | **Extremely stable** and reliable. Built into Python's standard library (`sqlite3`), so no extra installation is needed. Excellent for general-purpose storage. | While fast, it's not specifically optimized for the complex analytical queries (e.g., `SUM`, `GROUP BY` over large datasets) needed for reporting. |
-| **DuckDB** | A serverless, embedded SQL database engine specifically designed for fast analytical queries (OLAP). | **Exceptional performance** for data analysis and aggregation, often significantly faster than SQLite for reporting queries. Has first-class integration with Pandas DataFrames. | Requires an external library (`pip install duckdb`). It is a newer project than SQLite, though very mature and widely trusted in the data science community. |
-| **TinyDB** | A lightweight, document-oriented database written in pure Python. Stores data in a simple JSON file. | Very simple, Pythonic query API. No SQL required. | **Poor performance at scale**. As a plain text file, it becomes very slow to query as the number of transactions grows, as the entire file must be read and parsed for most queries. |
+| Database   | How it Works                                                                                          | Pros                                                                                                                                                                             | Cons                                                                                                                                                                                 |
+| :--------- | :---------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **SQLite** | A self-contained, serverless SQL database engine. It reads and writes directly to a single disk file. | **Extremely stable** and reliable. Built into Python's standard library (`sqlite3`), so no extra installation is needed. Excellent for general-purpose storage.                  | While fast, it's not specifically optimized for the complex analytical queries (e.g., `SUM`, `GROUP BY` over large datasets) needed for reporting.                                   |
+| **DuckDB** | A serverless, embedded SQL database engine specifically designed for fast analytical queries (OLAP).  | **Exceptional performance** for data analysis and aggregation, often significantly faster than SQLite for reporting queries. Has first-class integration with Pandas DataFrames. | Requires an external library (`pip install duckdb`). It is a newer project than SQLite, though very mature and widely trusted in the data science community.                         |
+| **TinyDB** | A lightweight, document-oriented database written in pure Python. Stores data in a simple JSON file.  | Very simple, Pythonic query API. No SQL required.                                                                                                                                | **Poor performance at scale**. As a plain text file, it becomes very slow to query as the number of transactions grows, as the entire file must be read and parsed for most queries. |
 
 ### Recommendation and Justification
 While SQLite is a safe default, DuckDB is the optimal choice for this application's specific needs based on the following criteria:

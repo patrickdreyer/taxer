@@ -9,7 +9,7 @@ log = logging.getLogger('mkdocs.plugins')
 
 def on_pre_build(config, **kwargs):
     docsDir = Path(config['docs_dir'])
-    traceabilityFile = docsDir / "requirements" / "traceability.md"
+    traceabilityFile = docsDir / "traceability" / "requirements.md"
     
     try:
         log.info("Checking requirements traceability matrix...")
@@ -114,21 +114,21 @@ def buildTraceabilityRowsWithRefs(prqTitle: str, prqFilename: str, downstreamRef
     for i, (crqTitle, crqPath) in enumerate(downstreamRefs):
         if i == 0:
             rows.append((
-                f"**[{prqTitle}](product/{prqFilename})**",
-                f"[{crqTitle}]({crqPath})",
+                f"**[{prqTitle}](../requirements/product/{prqFilename})**",
+                f"[{crqTitle}](../requirements/{crqPath})",
                 "*TBD*"
             ))
         else:
             rows.append((
                 "",
-                f"[{crqTitle}]({crqPath})",
+                f"[{crqTitle}](../requirements/{crqPath})",
                 "*TBD*"
             ))
     return rows
 
 def buildTraceabilityRowWithoutRefs(prqTitle: str, prqFilename: str) -> Tuple[str, str, str]:
     return (
-        f"**[{prqTitle}](product/{prqFilename})**",
+        f"**[{prqTitle}](../requirements/product/{prqFilename})**",
         "*No downstream requirements*",
         "*TBD*"
     )

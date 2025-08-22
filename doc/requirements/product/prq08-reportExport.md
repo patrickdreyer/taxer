@@ -1,6 +1,6 @@
 # PRQ-08: Report Export
-In order to save a copy of my tax data for my personal records or to share with a tax advisor
-As a user
+In order to save a copy of my tax data for my personal records or to share with a tax advisor  
+As a user  
 I want to download the complete generated tax report as a single CSV file
 
 ## Description

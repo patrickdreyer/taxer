@@ -1,6 +1,6 @@
 # CRQ-005: Secure Credential Input
-In order to trust the application with my sensitive information
-As a user
+In order to trust the application with my sensitive information  
+As a user  
 I want to see that my API secrets are hidden from view to protect them from shoulder surfing.
 
 ## Description

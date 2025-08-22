@@ -1,6 +1,6 @@
 # PRQ-03: Automated Data Ingestion
-In order to have all my transactions in one place without manual entry
-As a user
+In order to have all my transactions in one place without manual entry  
+As a user  
 I want to trigger a process that automatically fetches all transaction history from my configured data sources
 
 ### Description

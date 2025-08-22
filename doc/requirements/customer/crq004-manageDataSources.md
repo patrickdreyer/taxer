@@ -1,6 +1,6 @@
 # CRQ-004: Manage Existing Data Sources
-In order to keep my configuration clean and correct
-As a user
+In order to keep my configuration clean and correct  
+As a user  
 I want to see a list of all my connected sources and be able to edit or delete them.
 
 ## Description

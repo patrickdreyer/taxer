@@ -1,6 +1,6 @@
 # CRQ-011: Clear and Actionable Report View
-In order to confidently use the data in my tax return
-As a user
+In order to confidently use the data in my tax return  
+As a user  
 I want the generated report to be easy to read and understand, clearly separating wealth and income.
 
 ## Description
